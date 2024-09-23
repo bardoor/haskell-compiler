@@ -25,8 +25,8 @@ infixr   { printf("found lexem: infixr\n"); }
 instance { printf("found lexem: instance\n"); }
 import   { printf("found lexem: import\n"); }
 module   { printf("found lexem: module\n"); }
-[a-z][a-zA-Z\d']*  { printf("found function identifier: %s\n", yytext); }
-[A-Z][a-zA-Z\d']*  { printf("found constructor identifier: %s\n", yytext); }
+[a-z][\w']*  { printf("found function identifier: %s\n", yytext); }
+[a-z][\w']*  { printf("found constructor identifier: %s\n", yytext); }
 . { printf(""); }
 
 /* Числовые литералы */
