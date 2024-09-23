@@ -18,6 +18,7 @@ if       { printf("found lexem: if\n"); }
 else     { printf("found lexem: else\n"); }
 where    { printf("found lexem: where\n"); }
 let      { printf("found lexem: let\n"); }
+foreign  { printf("found lexem: foreign\n"); }
 infix    { printf("found lexem: infix\n"); }
 infixl   { printf("found lexem: infixl\n"); }
 infixr   { printf("found lexem: infixr\n"); }
@@ -27,4 +28,15 @@ module   { printf("found lexem: module\n"); }
 [a-z][a-zA-Z\d']*  { printf("found function identifier: %s\n", yytext); }
 [A-Z][a-zA-Z\d']*  { printf("found constructor identifier: %s\n", yytext); }
 . { printf(""); }
+
+/* Числовые литералы */
+
+
+/* Символьные литералы, строки */
+
+
+/* Комментарии */
+
+
+/* Операторы */
 
