@@ -313,8 +313,8 @@ int yyFlexLexer::yywrap() { return 1; }
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 2
-#define YY_END_OF_BUFFER 3
+#define YY_NUM_RULES 24
+#define YY_END_OF_BUFFER 25
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -322,9 +322,17 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static const flex_int16_t yy_accept[9] =
+static const flex_int16_t yy_accept[89] =
     {   0,
-        0,    0,    3,    2,    2,    0,    1,    0
+        0,    0,   25,   24,   23,    1,   22,   22,   22,   22,
+       22,   22,   22,   22,   22,   22,   22,   23,   22,   22,
+       22,   22,   22,   11,   22,   12,   22,   22,   22,   22,
+       22,    7,   22,   22,   22,   22,   22,   22,   22,   22,
+       22,   22,   22,   22,   15,   22,   22,   22,   22,   22,
+        2,   22,    4,   22,   22,   13,   22,   22,   22,   22,
+       22,    8,    6,   22,    3,   22,   22,   22,   16,   22,
+       22,   22,   14,   22,   22,   20,   17,   18,   22,   21,
+       22,    9,   22,   22,    5,   10,   19,    0
     } ;
 
 static const YY_CHAR yy_ec[256] =
@@ -332,17 +340,17 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,    1,    1,    2,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    3,    3,    3,    3,    3,    3,
+        3,    3,    3,    3,    3,    3,    3,    3,    3,    3,
+        3,    3,    3,    3,    3,    3,    3,    3,    3,    3,
+        1,    1,    1,    1,    4,    1,    5,    6,    7,    8,
 
-        1,    2,    1,    1,    1,    1,    1,    1,    1,    1,
-        3,    1,    1,    4,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        9,   10,   11,   12,   13,    6,    6,   14,   15,   16,
+       17,   18,    6,   19,   20,   21,   22,   23,   24,   25,
+       26,    6,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -359,33 +367,73 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static const YY_CHAR yy_meta[5] =
+static const YY_CHAR yy_meta[27] =
     {   0,
-        1,    1,    2,    3
+        1,    2,    2,    1,    2,    2,    2,    2,    2,    2,
+        2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+        2,    2,    2,    2,    2,    2
     } ;
 
-static const flex_int16_t yy_base[12] =
+static const flex_int16_t yy_base[91] =
     {   0,
-        6,    5,    6,    9,    0,    0,    9,    9,    0,    3,
-        1
+        0,    0,   97,   98,    0,   98,    0,   22,   23,   82,
+       19,   86,   77,   84,   82,   18,   79,    0,    0,   70,
+       84,   67,   23,    0,   67,    0,   68,   21,   64,   76,
+       59,    0,   73,   63,   71,   70,   58,   72,   71,   62,
+       65,   56,   59,   50,    0,   48,   48,   52,   58,   47,
+        0,   45,    0,   42,   40,    0,   43,   36,   55,   45,
+       32,    0,    0,   48,    0,   42,   42,   33,   24,   37,
+       43,   33,    0,   29,   33,    0,    0,    0,   41,    0,
+       38,    0,   35,   36,    0,    0,    0,   98,   37,   35
     } ;
 
-static const flex_int16_t yy_def[12] =
+static const flex_int16_t yy_def[91] =
     {   0,
-        9,    9,    8,    8,   10,   11,    8,    0,    8,    8,
-        8
+       88,    1,   88,   88,   89,   88,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   89,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,   90,   90,   90,
+       90,   90,   90,   90,   90,   90,   90,    0,   88,   88
     } ;
 
-static const flex_int16_t yy_nxt[14] =
+static const flex_int16_t yy_nxt[125] =
     {   0,
-        4,    4,    4,    7,    6,    8,    5,    5,    3,    8,
-        8,    8,    8
+        4,    4,    5,    6,    7,    7,    8,    9,   10,    7,
+        7,    7,   11,   12,   13,   14,   15,    7,    7,    7,
+       16,    7,    7,   17,    7,    7,   20,   22,   26,   33,
+       43,   23,   39,   27,   28,   21,   19,   77,   18,   24,
+       44,   40,   78,   34,   87,   86,   85,   84,   83,   82,
+       81,   80,   79,   76,   75,   74,   73,   72,   71,   70,
+       69,   68,   67,   66,   65,   64,   63,   62,   61,   60,
+       59,   58,   57,   56,   55,   54,   53,   52,   51,   50,
+       49,   48,   47,   46,   45,   42,   41,   38,   37,   36,
+       35,   32,   31,   30,   29,   25,   88,    3,   88,   88,
+
+       88,   88,   88,   88,   88,   88,   88,   88,   88,   88,
+       88,   88,   88,   88,   88,   88,   88,   88,   88,   88,
+       88,   88,   88,   88
     } ;
 
-static const flex_int16_t yy_chk[14] =
+static const flex_int16_t yy_chk[125] =
     {   0,
-        9,    9,    9,   11,   10,    3,    2,    1,    8,    8,
-        8,    8,    8
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,    8,    9,   11,   16,
+       28,    9,   23,   11,   11,    8,   90,   69,   89,    9,
+       28,   23,   69,   16,   84,   83,   81,   79,   75,   74,
+       72,   71,   70,   68,   67,   66,   64,   61,   60,   59,
+       58,   57,   55,   54,   52,   50,   49,   48,   47,   46,
+       44,   43,   42,   41,   40,   39,   38,   37,   36,   35,
+       34,   33,   31,   30,   29,   27,   25,   22,   21,   20,
+       17,   15,   14,   13,   12,   10,    3,   88,   88,   88,
+
+       88,   88,   88,   88,   88,   88,   88,   88,   88,   88,
+       88,   88,   88,   88,   88,   88,   88,   88,   88,   88,
+       88,   88,   88,   88
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -396,7 +444,7 @@ static const flex_int16_t yy_chk[14] =
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "haskell.flex"
-#line 399 "haskell.flex.cpp"
+#line 447 "haskell.flex.cpp"
 
 #define INITIAL 0
 
@@ -527,7 +575,7 @@ YY_DECL
 	{
 #line 4 "haskell.flex"
 
-#line 530 "haskell.flex.cpp"
+#line 578 "haskell.flex.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -554,13 +602,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 9 )
+				if ( yy_current_state >= 89 )
 					yy_c = yy_meta[yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 9 );
+		while ( yy_base[yy_current_state] != 98 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -587,14 +635,124 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 5 "haskell.flex"
-{ printf("found lexem: for\n"); }
+{ printf("found lexem: _\n"); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
 #line 6 "haskell.flex"
+{ printf("found lexem: case\n"); }
+	YY_BREAK
+case 3:
+YY_RULE_SETUP
+#line 7 "haskell.flex"
+{ printf("found lexem: class\n"); }
+	YY_BREAK
+case 4:
+YY_RULE_SETUP
+#line 8 "haskell.flex"
+{ printf("found lexem: data\n"); }
+	YY_BREAK
+case 5:
+YY_RULE_SETUP
+#line 9 "haskell.flex"
+{ printf("found lexem: newtype\n"); }
+	YY_BREAK
+case 6:
+YY_RULE_SETUP
+#line 10 "haskell.flex"
+{ printf("found lexem: type\n"); }
+	YY_BREAK
+case 7:
+YY_RULE_SETUP
+#line 11 "haskell.flex"
+{ printf("found lexem: of\n"); }
+	YY_BREAK
+case 8:
+YY_RULE_SETUP
+#line 12 "haskell.flex"
+{ printf("found lexem: then\n"); }
+	YY_BREAK
+case 9:
+YY_RULE_SETUP
+#line 13 "haskell.flex"
+{ printf("found lexem: default\n"); }
+	YY_BREAK
+case 10:
+YY_RULE_SETUP
+#line 14 "haskell.flex"
+{ printf("found lexem: deriving\n"); }
+	YY_BREAK
+case 11:
+YY_RULE_SETUP
+#line 15 "haskell.flex"
+{ printf("found lexem: do\n"); }
+	YY_BREAK
+case 12:
+YY_RULE_SETUP
+#line 16 "haskell.flex"
+{ printf("found lexem: if\n"); }
+	YY_BREAK
+case 13:
+YY_RULE_SETUP
+#line 17 "haskell.flex"
+{ printf("found lexem: else\n"); }
+	YY_BREAK
+case 14:
+YY_RULE_SETUP
+#line 18 "haskell.flex"
+{ printf("found lexem: where\n"); }
+	YY_BREAK
+case 15:
+YY_RULE_SETUP
+#line 19 "haskell.flex"
+{ printf("found lexem: let\n"); }
+	YY_BREAK
+case 16:
+YY_RULE_SETUP
+#line 20 "haskell.flex"
+{ printf("found lexem: infix\n"); }
+	YY_BREAK
+case 17:
+YY_RULE_SETUP
+#line 21 "haskell.flex"
+{ printf("found lexem: infixl\n"); }
+	YY_BREAK
+case 18:
+YY_RULE_SETUP
+#line 22 "haskell.flex"
+{ printf("found lexem: infixr\n"); }
+	YY_BREAK
+case 19:
+YY_RULE_SETUP
+#line 23 "haskell.flex"
+{ printf("found lexem: instance\n"); }
+	YY_BREAK
+case 20:
+YY_RULE_SETUP
+#line 24 "haskell.flex"
+{ printf("found lexem: import\n"); }
+	YY_BREAK
+case 21:
+YY_RULE_SETUP
+#line 25 "haskell.flex"
+{ printf("found lexem: module\n"); }
+	YY_BREAK
+case 22:
+YY_RULE_SETUP
+#line 26 "haskell.flex"
+{ printf("found function identifier: %s\n", yytext); }
+	YY_BREAK
+case 23:
+YY_RULE_SETUP
+#line 27 "haskell.flex"
+{ printf("found constructor identifier: %s\n", yytext); }
+	YY_BREAK
+case 24:
+YY_RULE_SETUP
+#line 28 "haskell.flex"
 ECHO;
 	YY_BREAK
-#line 597 "haskell.flex.cpp"
+#line 755 "haskell.flex.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1011,7 +1169,7 @@ int yyFlexLexer::yy_get_next_buffer()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 9 )
+			if ( yy_current_state >= 89 )
 				yy_c = yy_meta[yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
@@ -1039,11 +1197,11 @@ int yyFlexLexer::yy_get_next_buffer()
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 9 )
+		if ( yy_current_state >= 89 )
 			yy_c = yy_meta[yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
-	yy_is_jam = (yy_current_state == 8);
+	yy_is_jam = (yy_current_state == 88);
 
 		return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1557,4 +1715,4 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 6 "haskell.flex"
+#line 28 "haskell.flex"
