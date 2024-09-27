@@ -1,7 +1,15 @@
 %option noyywrap
 %option c++
 
+%x CHAR
+%x STRING
+
 %%
+%{
+	string str;
+	string ch;
+%}
+
 /* Ключевые слова и идентификаторы */
 _        { printf("found lexem: _\n"); }
 case     { printf("found lexem: case\n"); }
@@ -29,14 +37,31 @@ module   { printf("found lexem: module\n"); }
 [a-z][\w']*  { printf("found constructor identifier: %s\n", yytext); }
 . { printf(""); }
 
-/* ×èñëîâûå ëèòåðàëû */
+/* Операции */
 
 
-/* Ñèìâîëüíûå ëèòåðàëû, ñòðîêè */
+/* Строковые и символьные литералы */
+\'             { BEGIN(CHAR); }
+<CHAR> \\a	   { ch += "\a"; }
+<CHAR> \\b	   { ch += "\b"; }
+<CHAR> \\f	   { ch += "\f"; }
+<CHAR> \\n	   { ch += "\n"; }
+<CHAR> \\r	   { ch += "\r"; }
+<CHAR> \\t	   { ch += "\t"; }
+<CHAR> \\v	   { ch += "\v"; }
+<CHAR> \\"	   { ch += "\""; }
+<CHAR> \\'	   { ch += "\'"; }
+<CHAR> .	   { ch += yytext; }
+<CHAR> \'	   { 
+	BEGIN(INITIAL);
+	if (string.size() > 1) {
+		printf("Too long char!")
+	}
+	printf("found char: %s", ch); 
+}
+<CHAR> <<EOF>> { printf("Error! \' was not closed!"); }
 
 
-/* Êîììåíòàðèè */
+/* Комментарии */
 
-
-/* Îïåðàòîðû */
 
