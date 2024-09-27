@@ -121,6 +121,9 @@
       <Cpp>true</Cpp>
       <BisonBridge>false</BisonBridge>
     </Flex>
+    <PreBuildEvent>
+      <Command>devenv $(SolutionDir) /Clean</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -153,6 +156,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\FlexLexer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="code_examples\sample.hs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

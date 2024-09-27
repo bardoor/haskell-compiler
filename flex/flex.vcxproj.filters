@@ -23,11 +23,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Flex Include="haskell.flex" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="include\FlexLexer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="code_examples\sample.hs">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Flex Include="haskell.flex" />
   </ItemGroup>
 </Project>
