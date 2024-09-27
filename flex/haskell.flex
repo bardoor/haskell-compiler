@@ -65,3 +65,17 @@ module		 { printf("found lexem: module\n"); }
 		printf("found char: %s\n", ch.c_str()); 
 	}
 }
+	
+\"				{ BEGIN(STRING); str = ""; }
+<STRING>\\a		{ str += "\a"; }
+<STRING>\\b		{ str += "\b"; }
+<STRING>\\f		{ str += "\f"; }
+<STRING>\\n		{ str += "\n"; }
+<STRING>\\r		{ str += "\r"; }
+<STRING>\\f		{ str += "\f"; }
+<STRING>\\v		{ str += "\v"; }
+<STRING>\\\\	{ str += "\\"; }
+<STRING>\\[ \n\t]*\\ { printf(""); /* Multiline string separator */ }
+<STRING>[^\"\\]	{ str += yytext; }
+<STRING>\"		{ BEGIN(INITIAL); printf("found string: %s\n", str.c_str()); }
+
