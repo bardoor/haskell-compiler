@@ -6,6 +6,6 @@ void main() {
 	std::ifstream in;
 	in.open("./code_examples/sample.hs");
 	yyFlexLexer* lex = new yyFlexLexer(in, std::cout);
-	printf("%d\n", lex->yylex());
+	lex->yylex();
 	delete lex;
 }
