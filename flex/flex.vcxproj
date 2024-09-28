@@ -122,7 +122,8 @@
       <BisonBridge>false</BisonBridge>
     </Flex>
     <PreBuildEvent>
-      <Command>devenv $(SolutionDir) /Clean</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
