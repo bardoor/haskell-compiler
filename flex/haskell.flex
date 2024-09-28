@@ -4,6 +4,21 @@
 %{
 	#include <string>
 	#include <cstring>
+
+	unsigned occurencesCount(std::string str, std::string substr) {
+		unsigned occurences = 0;
+		int pos = 0;
+
+
+
+		while ((pos = str.find(substr, pos)) != std::string::npos) {
+			pos += substr.length();
+			occurences++;
+		}
+
+		return occurences;
+	}
+
 %}
 
 ASCSYMBOL	[!#$%&*+.\/<=>?@\\\^|\-~:]
