@@ -30,8 +30,7 @@ WORD		[a-zA-Z0-9_]
 
 %%
 %{
-	std::string str;
-	std::string ch;
+	std::string buffer;
 	unsigned lineno = 1;
 	unsigned opening_quote_line;
 %}
@@ -68,40 +67,31 @@ module		{ printf("found lexem: module\n"); }
 \[			{ printf("found opening square bracket"); }
 \]			{ printf("found closing square bracket"); }
 
-\'				{ BEGIN(CHAR); ch = ""; opening_quote_line = yylineno; }
-<CHAR>\\a		{ ch += "\a"; }
-<CHAR>\\b		{ ch += "\b"; }
-<CHAR>\\f		{ ch += "\f"; }
-<CHAR>\\n		{ ch += "\n"; }
-<CHAR>\\r		{ ch += "\r"; }
-<CHAR>\\t		{ ch += "\t"; }
-<CHAR>\\v		{ ch += "\v"; }
-<CHAR>\\		{ ch += "\\"; }
-<CHAR>[^\'\\]	{ ch += yytext; }
+\'					{ BEGIN(CHAR); buffer = ""; opening_quote_line = yylineno; }
+<STRING,CHAR>\\a	{ buffer += "\a"; }
+<STRING,CHAR>\\b	{ buffer += "\b"; }
+<STRING,CHAR>\\f	{ buffer += "\f"; }
+<STRING,CHAR>\\n	{ buffer += "\n"; }
+<STRING,CHAR>\\r	{ buffer += "\r"; }
+<STRING,CHAR>\\v	{ buffer += "\v"; }
+<STRING,CHAR>\\t	{ buffer += "\t"; }
+<STRING,CHAR>\\		{ buffer += "\\"; }
+<CHAR>[^\'\\]		{ buffer += yytext; }
 <CHAR>\'		{ 
 	BEGIN(INITIAL);
-	if (ch.size() > 1) {
+	if (buffer.size() > 1) {
 		printf("ERROR: char literal opened in %d line can't be longer than 1 symbol!\n", opening_quote_line);
 	}
 	else {
-		printf("found char: %s\n", ch.c_str()); 
+		printf("found char: %s\n", buffer.c_str()); 
 	}
 }
-<CHAR><<EOF>>	{ printf("ERROR: end of file in char literal\n"); }
+<CHAR><<EOF>>	{ printf("ERROR: end of file in char literal opened in %d line\n", opening_quote_line); }
 	
-\"						{ BEGIN(STRING); str = ""; opening_quote_line = yylineno; }
-<STRING>\\a				{ str += "\a"; }
-<STRING>\\b				{ str += "\b"; }
-<STRING>\\f				{ str += "\f"; }
-<STRING>\\n				{ str += "\n"; }
-<STRING>\\r				{ str += "\r"; }
-<STRING>\\f				{ str += "\f"; }
-<STRING>\\v				{ str += "\v"; }
-<STRING>\\t				{ str += "\t"; }
-<STRING>\\				{ str += "\\"; }
+\"						{ BEGIN(STRING); buffer = ""; opening_quote_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
-<STRING>[^\"\\]			{ str += yytext; }
-<STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", str.c_str()); }
-<STRING><<EOF>>			{ printf("ERROR: end of file in string literal!"); }
+<STRING>[^\"\\]			{ buffer += yytext; }
+<STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
+<STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opening_quote_line); }
 
 \n { yylineno++; }
