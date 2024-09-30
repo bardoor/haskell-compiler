@@ -9,12 +9,19 @@
     unsigned occurences = 0;
     int pos = 0;
 
+<<<<<<< HEAD
 
 
     while ((pos = str.find(substr, pos)) != std::string::npos) {
       pos += substr.length();
       occurences++;
     }
+=======
+		while ((pos = str.find(substr, pos)) != std::string::npos) {
+			pos += substr.length();
+			occurences++;
+		}
+>>>>>>> 0a200d470c299cdfd5c0119e0da4c5b7ad918f8c
 
     return occurences;
   }
@@ -45,12 +52,18 @@ FLOAT      ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 
 %%
 %{
+<<<<<<< HEAD
   std::string str;
   std::string ch;
   int var;
   double var_float;
   unsigned lineno = 1;
   unsigned opening_quote_line;
+=======
+	std::string buffer;
+	unsigned lineno = 1;
+	unsigned opening_quote_line;
+>>>>>>> 0a200d470c299cdfd5c0119e0da4c5b7ad918f8c
 %}
 
   // Identifiers and reserved words
@@ -130,6 +143,7 @@ xor     { printf("found operator: xor\n"); }
 {INT_16}     { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
 {FLOAT}      { var_float = strtod(yytext, NULL); printf("found float literal: %f\n", var_float); }
 
+<<<<<<< HEAD
 
 "--"								{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
@@ -179,5 +193,34 @@ xor     { printf("found operator: xor\n"); }
 <STRING>[^\"\\]      { str += yytext; }
 <STRING>\"        { BEGIN(INITIAL); printf("found string: %s\n", str.c_str()); }
 <STRING><<EOF>>      { printf("ERROR: end of file in string literal!"); }
+=======
+\'					{ BEGIN(CHAR); buffer = ""; opening_quote_line = yylineno; }
+<STRING,CHAR>\\a	{ buffer += "\a"; }
+<STRING,CHAR>\\b	{ buffer += "\b"; }
+<STRING,CHAR>\\f	{ buffer += "\f"; }
+<STRING,CHAR>\\n	{ buffer += "\n"; }
+<STRING,CHAR>\\r	{ buffer +=	"\r"; }
+<STRING,CHAR>\\v	{ buffer += "\v"; }
+<STRING,CHAR>\\t	{ buffer += "\t"; }
+<STRING,CHAR>\\		{ buffer += "\\"; }
+<CHAR>[^\'\\]		{ buffer += yytext; }
+<CHAR>\' { 
+	BEGIN(INITIAL);
+	if (buffer.size() > 1) {
+		printf("ERROR: char literal opened in %d line can't be longer than 1 symbol!\n", opening_quote_line);
+	}
+	else {
+		printf("found char: %s\n", buffer.c_str()); 
+	}
+}
+<CHAR><<EOF>>		{ printf("ERROR: end of file in char literal opened in %d line\n", opening_quote_line); return -1; }
+
+\"						{ BEGIN(STRING); buffer = ""; opening_quote_line = yylineno; }
+<STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
+<STRING>[^\"\\]			{ buffer += yytext; }
+<STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
+<STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opening_quote_line); return -1; }
+>>>>>>> 0a200d470c299cdfd5c0119e0da4c5b7ad918f8c
 
 \n { yylineno++; }
+<*><<EOF>> { return 0; }
