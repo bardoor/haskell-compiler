@@ -72,12 +72,12 @@ module		{ printf("found lexem: module\n"); }
 <STRING,CHAR>\\b	{ buffer += "\b"; }
 <STRING,CHAR>\\f	{ buffer += "\f"; }
 <STRING,CHAR>\\n	{ buffer += "\n"; }
-<STRING,CHAR>\\r	{ buffer += "\r"; }
+<STRING,CHAR>\\r	{ buffer +=	"\r"; }
 <STRING,CHAR>\\v	{ buffer += "\v"; }
 <STRING,CHAR>\\t	{ buffer += "\t"; }
 <STRING,CHAR>\\		{ buffer += "\\"; }
 <CHAR>[^\'\\]		{ buffer += yytext; }
-<CHAR>\'		{ 
+<CHAR>\' { 
 	BEGIN(INITIAL);
 	if (buffer.size() > 1) {
 		printf("ERROR: char literal opened in %d line can't be longer than 1 symbol!\n", opening_quote_line);
@@ -86,12 +86,13 @@ module		{ printf("found lexem: module\n"); }
 		printf("found char: %s\n", buffer.c_str()); 
 	}
 }
-<CHAR><<EOF>>	{ printf("ERROR: end of file in char literal opened in %d line\n", opening_quote_line); }
-	
+<CHAR><<EOF>>		{ printf("ERROR: end of file in char literal opened in %d line\n", opening_quote_line); return -1; }
+
 \"						{ BEGIN(STRING); buffer = ""; opening_quote_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
 <STRING>[^\"\\]			{ buffer += yytext; }
 <STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
-<STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opening_quote_line); }
+<STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opening_quote_line); return -1; }
 
 \n { yylineno++; }
+<*><<EOF>> { return 0; }
