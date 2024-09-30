@@ -2,39 +2,39 @@
 %option c++
 
 %{
-  #include <string>
-  #include <cstring>
+	#include <string>
+	#include <cstring>
 
-  unsigned occurencesCount(std::string str, std::string substr) {
-    unsigned occurences = 0;
-    int pos = 0;
+	unsigned occurencesCount(std::string str, std::string substr) {
+		unsigned occurences = 0;
+		int pos = 0;
 
 		while ((pos = str.find(substr, pos)) != std::string::npos) {
 			pos += substr.length();
 			occurences++;
 		}
 
-    return occurences;
-  }
+		return occurences;
+	}
 
 %}
 
-ASCSYMBOL  [!#$%&*+.\/<=>?@\\\^|\-~:]
-SPECIAL    [|,;\[\]'{}]|["']
-SMALL    [a-z]
-LARGE    [A-Z]
-WORD    [a-zA-Z0-9_]
+ASCSYMBOL	[!#$%&*+.\/<=>?@\\\^|\-~:]
+SPECIAL		[|,;\[\]'{}]|["']
+SMALL		[a-z]
+LARGE		[A-Z]
+WORD		[a-zA-Z0-9_]
 
-D8      [0-7]
-D10      [0-9]
-D16      [0-9a-fA-F]
+D8			[0-7]
+D10			[0-9]
+D16			[0-9a-fA-F]
 
-INT_8       0[oO]{D8}+
-INT_10       {D10}+
-INT_16       0[xX]{D16}+
+INT_8		0[oO]{D8}+
+INT_10      {D10}+
+INT_16      0[xX]{D16}+
       
 EXPONENT    [eE][+-]?{D10}+
-FLOAT      ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
+FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 
 %x STRING
 %x CHAR
@@ -43,10 +43,10 @@ FLOAT      ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 
 %%
 %{
-  int var;
-  double var_float;
-  unsigned lineno = 1;
-  unsigned opened_line;
+	int var;
+	double var_float;
+	unsigned lineno = 1;
+	unsigned opened_line;
 	std::string buffer;
 %}
 
@@ -111,7 +111,7 @@ xor     { printf("found operator: xor\n"); }
 \^      { printf("found operator: ^ (exponentiation)\n"); }
 \$      { printf("found operator: $ (function application)\n"); }
 \.\.    { printf("found operator: range (..)\n"); }
-::      { printf("found operator: type annotation (::)\n"); }
+::		{ printf("found operator: type annotation (::)\n"); }
 @       { printf("found operator: as-pattern (@)\n"); }
 ~       { printf("found operator: lazy pattern matching (~)\n"); }
 =>      { printf("found operator: type constraint (=>)\n"); }
@@ -119,24 +119,25 @@ xor     { printf("found operator: xor\n"); }
 {SMALL}({WORD}|')*  { printf("found function identifier: %s\n", yytext); }
 {LARGE}({WORD}|')*  { printf("found constructor identifier: %s\n", yytext); }
 
-{INT_8}      { var = strtol(yytext, NULL, 0); printf("found octal integer literal: %ld\n", var); }
-{INT_10}     { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); }
-{INT_16}     { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
-{FLOAT}      { var_float = strtod(yytext, NULL); printf("found float literal: %f\n", var_float); }
+{INT_8}  { var = strtol(yytext, NULL, 0); printf("found octal integer literal: %ld\n", var); }
+{INT_10} { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); }
+{INT_16} { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
+{FLOAT}  { var_float = strtod(yytext, NULL); printf("found float literal: %f\n", var_float); }
 
 
-"--"								          { BEGIN(SINGLE_LINE_COMMENT); }
+"--"						{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
-<SINGLE_LINE_COMMENT>\n				{ printf("found a single line comment\n"); BEGIN(INITIAL); }
+<SINGLE_LINE_COMMENT>\n		{ printf("found a single line comment\n"); BEGIN(INITIAL); }
 
 
-"{-"                          { BEGIN(MULTI_LINE_COMMENT); opened_line = yylineno; }
+"{-"                        { BEGIN(MULTI_LINE_COMMENT); opened_line = yylineno; }
 <MULTI_LINE_COMMENT>[^-]+   
 <MULTI_LINE_COMMENT>"-"[^}]  
-<MULTI_LINE_COMMENT>"-}"      { BEGIN(INITIAL); printf("found a multi line comment\n"); }
-<MULTI_LINE_COMMENT><<EOF>>   { printf("ERROR: end of file before end of comment opened in %d line", opened_line); return -1; }
+<MULTI_LINE_COMMENT>"-}"    { BEGIN(INITIAL); printf("found a multi line comment\n"); }
+<MULTI_LINE_COMMENT><<EOF>> { printf("ERROR: end of file before end of comment opened in %d line", opened_line); return -1; }
 
-\'					      { BEGIN(CHAR); buffer = ""; opened_line = yylineno; }
+
+\'					{ BEGIN(CHAR); buffer = ""; opened_line = yylineno; }
 <STRING,CHAR>\\a	{ buffer += "\a"; }
 <STRING,CHAR>\\b	{ buffer += "\b"; }
 <STRING,CHAR>\\f	{ buffer += "\f"; }
@@ -145,7 +146,7 @@ xor     { printf("found operator: xor\n"); }
 <STRING,CHAR>\\v	{ buffer += "\v"; }
 <STRING,CHAR>\\t	{ buffer += "\t"; }
 <STRING,CHAR>\\		{ buffer += "\\"; }
-<CHAR>[^\'\\]		  { buffer += yytext; }
+<CHAR>[^\'\\]		{ buffer += yytext; }
 <CHAR>\' { 
 	BEGIN(INITIAL);
 	if (buffer.size() > 1) {
@@ -155,13 +156,14 @@ xor     { printf("found operator: xor\n"); }
 		printf("found char: %s\n", buffer.c_str()); 
 	}
 }
-<CHAR><<EOF>>		  { printf("ERROR: end of file in char literal opened in %d line\n", opened_line); return -1; }
+<CHAR><<EOF>>			{ printf("ERROR: end of file in char literal opened in %d line\n", opened_line); return -1; }
 
-\"						        { BEGIN(STRING); buffer = ""; opened_line = yylineno; }
+
+\"						{ BEGIN(STRING); buffer = ""; opened_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
-<STRING>[^\"\\]			  { buffer += yytext; }
-<STRING>\"				    { BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
-<STRING><<EOF>>			  { printf("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
+<STRING>[^\"\\]			{ buffer += yytext; }
+<STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
+<STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
+
 
 \n { yylineno++; }
-<*><<EOF>> { return 0; }
