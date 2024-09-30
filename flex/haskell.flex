@@ -9,8 +9,6 @@
 		unsigned occurences = 0;
 		int pos = 0;
 
-
-
 		while ((pos = str.find(substr, pos)) != std::string::npos) {
 			pos += substr.length();
 			occurences++;
