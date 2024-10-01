@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <string>
 #include <FlexLexer.h>
 #include <filesystem>
+#include <cstdlib>
+#include <cstdio>
 
-void main() {
+int main(void) {
 	setlocale(LC_ALL, "Russian");
 	std::ifstream in;
 	in.open("flex/resources/code_examples/sample.hs");

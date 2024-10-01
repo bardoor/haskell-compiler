@@ -5,6 +5,18 @@
 	#include <string>
 	#include <cstring>
 
+	std::string replaceComma(const std::string& str) {
+		std::string result = str;
+		size_t start_pos = 0;
+
+		while ((start_pos = result.find('.', start_pos)) != std::string::npos) {
+			result.replace(start_pos, 1, ","); 
+			start_pos++;  
+		}
+
+		return result; 
+	}
+
 	unsigned occurencesCount(std::string str, std::string substr) {
 		unsigned occurences = 0;
 		size_t pos = 0;
@@ -44,7 +56,7 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 %%
 %{
 	int var;
-	double var_float;
+	long double var_float;
 	unsigned lineno = 1;
 	unsigned opened_line;
 	std::string buffer;
@@ -120,8 +132,8 @@ xor     { printf("found operation: xor\n"); }
 {INT_8}  { var = strtol(yytext, NULL, 0); printf("found octal integer literal: %ld\n", var); }
 {INT_10} { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); }
 {INT_16} { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
-{FLOAT}  { var_float = std::stod(yytext); printf("found float literal: %f\n", var_float); }
-	
+{FLOAT}  { var_float = std::stold(replaceComma(yytext)); printf("found float literal: %Lf\n", var_float); }
+
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
 <SINGLE_LINE_COMMENT>\n		{ printf("found a single line comment\n"); BEGIN(INITIAL); }
