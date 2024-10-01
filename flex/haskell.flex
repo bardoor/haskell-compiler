@@ -50,7 +50,6 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 	std::string buffer;
 %}
 
-  // Identifiers and reserved words
 _         { printf("found lexem: _\n"); }
 case      { printf("found lexem: case\n"); }
 class     { printf("found lexem: class\n"); }
@@ -75,7 +74,7 @@ import    { printf("found lexem: import\n"); }
 module    { printf("found lexem: module\n"); }
 {SMALL}({WORD}|')*  { printf("found function identifier: %s\n", yytext); }
 {LARGE}({WORD}|')*  { printf("found constructor identifier: %s\n", yytext); }
-
+	
 \(      { printf("found opening parenthesis"); }
 \)      { printf("found closing parenthesis"); }
 \{      { printf("found opening curly brace"); }
@@ -122,19 +121,16 @@ xor     { printf("found operation: xor\n"); }
 {INT_10} { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); }
 {INT_16} { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
 {FLOAT}  { var_float = strtod(yytext, NULL); printf("found float literal: %f\n", var_float); }
-
-
+	
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
 <SINGLE_LINE_COMMENT>\n		{ printf("found a single line comment\n"); BEGIN(INITIAL); }
-
 
 "{-"                        { BEGIN(MULTI_LINE_COMMENT); opened_line = yylineno; }
 <MULTI_LINE_COMMENT>[^-]+   
 <MULTI_LINE_COMMENT>"-"[^}]  
 <MULTI_LINE_COMMENT>"-}"    { BEGIN(INITIAL); printf("found a multi line comment\n"); }
 <MULTI_LINE_COMMENT><<EOF>> { printf("ERROR: end of file before end of comment opened in %d line", opened_line); return -1; }
-
 
 \'					{ BEGIN(CHAR); buffer = ""; opened_line = yylineno; }
 <STRING,CHAR>\\a	{ buffer += "\a"; }
@@ -152,11 +148,10 @@ xor     { printf("found operation: xor\n"); }
 		printf("ERROR: char literal opened in %d line can't be longer than 1 symbol!\n", opened_line);
 	}
 	else {
-		printf("found char: %s\n", buffer.c_str()); 
+		printf("found char: %s\n", buffer.c_str());
 	}
 }
 <CHAR><<EOF>>			{ printf("ERROR: end of file in char literal opened in %d line\n", opened_line); return -1; }
-
 
 \"						{ BEGIN(STRING); buffer = ""; opened_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
@@ -164,5 +159,5 @@ xor     { printf("found operation: xor\n"); }
 <STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
 <STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-
 \n { yylineno++; }
+<*><<EOF>> { return 0; }
