@@ -85,12 +85,13 @@ instance  { printf("found lexem: instance\n"); }
 import    { printf("found lexem: import\n"); }
 module    { printf("found lexem: module\n"); }
 	
-\(      { printf("found opening parenthesis"); }
-\)      { printf("found closing parenthesis"); }
-\{      { printf("found opening curly brace"); }
-\}      { printf("found closing curly brace"); }
-\[      { printf("found opening square bracket"); }
-\]      { printf("found closing square bracket"); }
+\(      { printf("found opening parenthesis\n"); }
+\)      { printf("found closing parenthesis\n"); }
+\{      { printf("found opening curly brace\n"); }
+\}      { printf("found closing curly brace\n"); }
+\[      { printf("found opening square bracket\n"); }
+\]      { printf("found closing square bracket\n"); }
+
 \+      { printf("found operator: +\n"); }
 \-      { printf("found operator: -\n"); }
 \*      { printf("found operator: *\n"); }

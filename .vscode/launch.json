@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Run flex main.cpp",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/flex/src/flex.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "CMake Build"
+        }
+    ],
+    "version": "2.0.0"
+}
