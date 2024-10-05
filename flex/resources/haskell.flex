@@ -2,33 +2,8 @@
 %option c++
 
 %{
-	#include <string>
 	#include <cstring>
-
-	std::string replaceComma(const std::string& str) {
-		std::string result = str;
-		size_t start_pos = 0;
-
-		while ((start_pos = result.find('.', start_pos)) != std::string::npos) {
-			result.replace(start_pos, 1, ","); 
-			start_pos++;  
-		}
-
-		return result; 
-	}
-
-	unsigned occurencesCount(std::string str, std::string substr) {
-		unsigned occurences = 0;
-		size_t pos = 0;
-
-		while ((pos = str.find(substr, pos)) != std::string::npos) {
-			pos += substr.length();
-			occurences++;
-		}
-
-		return occurences;
-	}
-
+	#include <FlexUtils.h>
 %}
 
 ASCSYMBOL	[!#$%&*+.\/<=>?@\\\^|\-~:]
@@ -53,6 +28,9 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 %x SINGLE_LINE_COMMENT
 %x MULTI_LINE_COMMENT
 
+%x EXPECT_OPEN_BRACE
+%x REMEMBER_INDENT
+
 %%
 %{
 	int var;
@@ -60,6 +38,19 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 	unsigned lineno = 1;
 	unsigned opened_line;
 	std::string buffer;
+
+	LayoutBuilder* layoutBuilder = new LayoutBuilder();
+	#define YY_USER_ACTION \
+    { \
+        int next_char = yytext[0]; \
+        if (next_char == '\n') { \
+            layoutBuilder->newLine(); \
+		} \
+		else if (next_char != EOF) { \
+			layoutBuilder->addSpace(strlen(yytext)); \
+			printf("Offset on %c is %d\n", next_char, layoutBuilder->getIndent() - 1); \
+		} \
+    }
 %}
 
 _         { printf("found lexem: _\n"); }
@@ -68,15 +59,15 @@ class     { printf("found lexem: class\n"); }
 data      { printf("found lexem: data\n"); }
 newtype   { printf("found lexem: newtype\n"); }
 type      { printf("found lexem: type\n"); }
-of        { printf("found lexem: of\n"); }
+of        { printf("found lexem: of\n"); BEGIN(EXPECT_OPEN_BRACE); }
 then      { printf("found lexem: then\n"); }
 default   { printf("found lexem: default\n"); }
 deriving  { printf("found lexem: deriving\n"); }
-do        { printf("found lexem: do\n"); }
+do        { printf("found lexem: do\n"); BEGIN(EXPECT_OPEN_BRACE); }
 if        { printf("found lexem: if\n"); }
 else      { printf("found lexem: else\n"); }
-where     { printf("found lexem: where\n"); }
-let       { printf("found lexem: let\n"); }
+where     { printf("found lexem: where\n"); BEGIN(EXPECT_OPEN_BRACE); }
+let       { printf("found lexem: let\n"); BEGIN(EXPECT_OPEN_BRACE); }
 foreign   { printf("found lexem: foreign\n"); }
 infix     { printf("found lexem: infix\n"); }
 infixl    { printf("found lexem: infixl\n"); }
@@ -85,12 +76,15 @@ instance  { printf("found lexem: instance\n"); }
 import    { printf("found lexem: import\n"); }
 module    { printf("found lexem: module\n"); }
 	
-\(      { printf("found opening parenthesis\n"); }
-\)      { printf("found closing parenthesis\n"); }
-\{      { printf("found opening curly brace\n"); }
-\}      { printf("found closing curly brace\n"); }
-\[      { printf("found opening square bracket\n"); }
-\]      { printf("found closing square bracket\n"); }
+\(      						{ printf("found opening parenthesis\n"); }
+\)      						{ printf("found closing parenthesis\n"); }
+<INITIAL,EXPECT_OPEN_BRACE>\{   { printf("found opening curly brace\n"); layoutBuilder->addSpace(-1); BEGIN(REMEMBER_INDENT); }
+<EXPECT_OPEN_BRACE>[^{]			{ unput('{'); }
+\}   							{ printf("found closing curly brace\n"); }
+\[      						{ printf("found opening square bracket\n"); }
+\]      						{ printf("found closing square bracket\n"); }
+
+<REMEMBER_INDENT>[[:^space:]]   { BEGIN(INITIAL); }	
 
 \+      { printf("found operator: +\n"); }
 \-      { printf("found operator: -\n"); }
@@ -172,5 +166,14 @@ xor     { printf("found operation: xor\n"); }
 <STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
 <STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-\n { yylineno++; }
-<*><<EOF>> { return 0; }
+<INITIAL,REMEMBER_INDENT>[[:space:]] { 
+	if (yytext == "\n") {
+		yylineno++; 
+		/* layoutBuilder->newLine(); */
+	}
+	else {
+		/* layoutBuilder->addSpace(strlen(yytext)); */
+	}
+}
+
+. /* ignore */ 

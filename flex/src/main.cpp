@@ -11,8 +11,7 @@
 int main(void) {
 	setlocale(LC_ALL, "Russian");
 	std::ifstream in;
-	in.open("flex/resources/code_examples/sample.hs");
+	in.open("flex/resources/code_examples/seconds_sample.hs");
 	yyFlexLexer* lex = new yyFlexLexer(in, std::cout);
 	lex->yylex();
-	delete lex;
 }

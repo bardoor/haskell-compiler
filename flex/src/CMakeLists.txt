@@ -1,1 +1,1 @@
-add_executable(${PROJECT_NAME} haskell.flex.cpp main.cpp)
+add_executable(${PROJECT_NAME} haskell.flex.cpp FlexUtils.cpp main.cpp)
