@@ -4,6 +4,8 @@
 %{
 	#include <string>
 	#include <cstring>
+	#include <memory>
+	#include "FlexUtils.h"
 
 	std::string replaceComma(const std::string& str) {
 		std::string result = str;
@@ -60,80 +62,108 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 	unsigned lineno = 1;
 	unsigned opened_line;
 	std::string buffer;
+
+	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
+	#define YY_USER_ACTION \
+    { \
+		switch(layoutBuilder->emitLexem()) { \
+			case Lexem::OPEN_BRACE: \
+            	unput('{'); \
+				break; \
+			case Lexem::CLOSING_BRACE: \
+				unput('}'); \
+				break; \
+			case Lexem::SEMICOLON: \
+				unput(';'); \
+				break; \
+			case Lexem::NONE: \
+				break; \
+		} \
+    }
 %}
 
-_         { printf("found lexem: _\n"); }
-case      { printf("found lexem: case\n"); }
-class     { printf("found lexem: class\n"); }
-data      { printf("found lexem: data\n"); }
-newtype   { printf("found lexem: newtype\n"); }
-type      { printf("found lexem: type\n"); }
-of        { printf("found lexem: of\n"); }
-then      { printf("found lexem: then\n"); }
-default   { printf("found lexem: default\n"); }
-deriving  { printf("found lexem: deriving\n"); }
-do        { printf("found lexem: do\n"); }
-if        { printf("found lexem: if\n"); }
-else      { printf("found lexem: else\n"); }
-where     { printf("found lexem: where\n"); }
-let       { printf("found lexem: let\n"); }
-foreign   { printf("found lexem: foreign\n"); }
-infix     { printf("found lexem: infix\n"); }
-infixl    { printf("found lexem: infixl\n"); }
-infixr    { printf("found lexem: infixr\n"); }
-instance  { printf("found lexem: instance\n"); }
-import    { printf("found lexem: import\n"); }
-module    { printf("found lexem: module\n"); }
+_         { printf("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext));}
+case      { printf("found lexem: case\n"); layoutBuilder->addLexem(std::string(yytext));}
+class     { printf("found lexem: class\n"); layoutBuilder->addLexem(std::string(yytext));}
+data      { printf("found lexem: data\n"); layoutBuilder->addLexem(std::string(yytext));}
+newtype   { printf("found lexem: newtype\n"); layoutBuilder->addLexem(std::string(yytext));}
+type      { printf("found lexem: type\n"); layoutBuilder->addLexem(std::string(yytext));}
+of        { printf("found lexem: of\n"); layoutBuilder->addLexem(std::string(yytext));}
+then      { printf("found lexem: then\n"); layoutBuilder->addLexem(std::string(yytext));}
+default   { printf("found lexem: default\n"); layoutBuilder->addLexem(std::string(yytext));}
+deriving  { printf("found lexem: deriving\n"); layoutBuilder->addLexem(std::string(yytext));}
+do        { printf("found lexem: do\n"); layoutBuilder->addLexem(std::string(yytext));}
+if        { printf("found lexem: if\n"); layoutBuilder->addLexem(std::string(yytext));}
+else      { printf("found lexem: else\n"); layoutBuilder->addLexem(std::string(yytext));}
+where     { printf("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext));}
+let       { printf("found lexem: let\n"); layoutBuilder->addLexem(std::string(yytext));}
+foreign   { printf("found lexem: foreign\n"); layoutBuilder->addLexem(std::string(yytext));}
+infix     { printf("found lexem: infix\n"); layoutBuilder->addLexem(std::string(yytext));}
+infixl    { printf("found lexem: infixl\n"); layoutBuilder->addLexem(std::string(yytext));}
+infixr    { printf("found lexem: infixr\n"); layoutBuilder->addLexem(std::string(yytext));}
+instance  { printf("found lexem: instance\n"); layoutBuilder->addLexem(std::string(yytext));}
+import    { printf("found lexem: import\n"); layoutBuilder->addLexem(std::string(yytext));}
+module    { printf("found lexem: module\n"); layoutBuilder->addLexem(std::string(yytext));}
 	
-\(      { printf("found opening parenthesis\n"); }
-\)      { printf("found closing parenthesis\n"); }
-\{      { printf("found opening curly brace\n"); }
-\}      { printf("found closing curly brace\n"); }
-\[      { printf("found opening square bracket\n"); }
-\]      { printf("found closing square bracket\n"); }
+\(      { printf("found opening parenthesis\n"); layoutBuilder->addLexem(std::string(yytext));}
+\)      { printf("found closing parenthesis\n"); layoutBuilder->addLexem(std::string(yytext));}
+\{      { printf("found opening curly brace\n"); layoutBuilder->addLexem(std::string(yytext));}
+\}      { printf("found closing curly brace\n"); layoutBuilder->addLexem(std::string(yytext));}
+\[      { printf("found opening square bracket\n"); layoutBuilder->addLexem(std::string(yytext));}
+\]      { printf("found closing square bracket\n"); layoutBuilder->addLexem(std::string(yytext));}
+\;		{ printf("found semicolon\n"); layoutBuilder->addLexem(std::string(yytext));}
 
-\+      { printf("found operator: +\n"); }
-\-      { printf("found operator: -\n"); }
-\*      { printf("found operator: *\n"); }
-\/      { printf("found operator: /\n"); }
-div     { printf("found operation: div\n"); }
-mod     { printf("found operation: mod\n"); }
-negate  { printf("found operation: negate\n"); }
-not     { printf("found operation: not\n"); }
-xor     { printf("found operation: xor\n"); }
-==      { printf("found operator: ==\n"); }
-"/="    { printf("found operator: /=\n"); }
-"<"		{ printf("found operator: <\n"); }
-">"		{ printf("found operator: >\n");}
-"<="	{ printf("found operator: <=\n"); }
-">="	{ printf("found operator: >=\n"); }
-&&		{ printf("found operator: &&\n"); }
-"||"    { printf("found operator: ||\n"); }
-"="		{ printf("found operator: = (assignment or pattern matching)\n"); }
-:		{ printf("found operator: : (cons)\n"); }
-"++"    { printf("found operator: ++ (list concatenation)\n"); }
-"."     { printf("found operator: . (function composition)\n"); }
-"->"	{ printf("found operator: -> (function type)\n"); }
-"<-"	{ printf("found operator: <- (monad binding)\n"); }
-"|"     { printf("found operator: | (guards)\n"); }
-!!		{ printf("found operator: !! (list indexing)\n"); }
-\\      { printf("found operator: \\ (lambda)\n"); }
-%		{ printf("found operator: % (modulus)\n"); }
-"^"     { printf("found operator: ^ (exponentiation)\n"); }
-"$"     { printf("found operator: $ (function application)\n"); }
-".."    { printf("found operator: range (..)\n"); }
-::		{ printf("found operator: type annotation (::)\n"); }
-@       { printf("found operator: as-pattern (@)\n"); }
-~       { printf("found operator: lazy pattern matching (~)\n"); }
-=>      { printf("found operator: type constraint (=>)\n"); }
+\+      { printf("found operator: +\n"); layoutBuilder->addLexem(std::string(yytext));}
+\-      { printf("found operator: -\n"); layoutBuilder->addLexem(std::string(yytext));}
+\*      { printf("found operator: *\n"); layoutBuilder->addLexem(std::string(yytext));}
+\/      { printf("found operator: /\n"); layoutBuilder->addLexem(std::string(yytext));}
+div     { printf("found operation: div\n"); layoutBuilder->addLexem(std::string(yytext));}
+mod     { printf("found operation: mod\n"); layoutBuilder->addLexem(std::string(yytext));}
+negate  { printf("found operation: negate\n"); layoutBuilder->addLexem(std::string(yytext));}
+not     { printf("found operation: not\n"); layoutBuilder->addLexem(std::string(yytext));}
+xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(yytext));}
+==      { printf("found operator: ==\n"); layoutBuilder->addLexem(std::string(yytext));}
+"/="    { printf("found operator: /=\n"); layoutBuilder->addLexem(std::string(yytext));}
+"<"		{ printf("found operator: <\n"); layoutBuilder->addLexem(std::string(yytext));}
+">"		{ printf("found operator: >\n");layoutBuilder->addLexem(std::string(yytext));}
+"<="	{ printf("found operator: <=\n"); layoutBuilder->addLexem(std::string(yytext));}
+">="	{ printf("found operator: >=\n"); layoutBuilder->addLexem(std::string(yytext));}
+&&		{ printf("found operator: &&\n"); layoutBuilder->addLexem(std::string(yytext));}
+"||"    { printf("found operator: ||\n"); layoutBuilder->addLexem(std::string(yytext));}
+"="		{ printf("found operator: = (assignment or pattern matching)\n"); layoutBuilder->addLexem(std::string(yytext));}
+:		{ printf("found operator: : (cons)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"++"    { printf("found operator: ++ (list concatenation)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"."     { printf("found operator: . (function composition)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"->"	{ printf("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"<-"	{ printf("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"|"     { printf("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext));}
+!!		{ printf("found operator: !! (list indexing)\n"); layoutBuilder->addLexem(std::string(yytext));}
+\\      { printf("found operator: \\ (lambda)\n"); layoutBuilder->addLexem(std::string(yytext));}
+%		{ printf("found operator: % (modulus)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"^"     { printf("found operator: ^ (exponentiation)\n"); layoutBuilder->addLexem(std::string(yytext));}
+"$"     { printf("found operator: $ (function application)\n"); layoutBuilder->addLexem(std::string(yytext));}
+".."    { printf("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext));}
+::		{ printf("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext));}
+@       { printf("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext));}
+~       { printf("found operator: lazy pattern matching (~)\n"); layoutBuilder->addLexem(std::string(yytext));}
+=>      { printf("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext));}
 	
-{SMALL}({WORD}|')*  { printf("found function identifier: %s\n", yytext); }
-{LARGE}({WORD}|')*  { printf("found constructor identifier: %s\n", yytext); }
+{SMALL}({WORD}|')*  { 
+	layoutBuilder->addLexem(std::string(yytext)); 
+	if (layoutBuilder->canEmit()) {
+		yyless(0);
+		YY_USER_ACTION
+	} 
+	else {
+		printf("found function identifier: %s\n", yytext); 
+	}
+}
+{LARGE}({WORD}|')*  { printf("found constructor identifier: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext));}
 
-{INT_8}  { var = strtol(yytext, NULL, 0); printf("found octal integer literal: %ld\n", var); }
-{INT_10} { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); }
-{INT_16} { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
-{FLOAT}  { var_float = std::stold(replaceComma(yytext)); printf("found float literal: %Lf\n", var_float); }
+{INT_8}  { var = strtol(yytext, NULL, 0); printf("found octal integer literal: %ld\n", var); layoutBuilder->addLexem(std::string(yytext));}
+{INT_10} { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); layoutBuilder->addLexem(std::string(yytext));}
+{INT_16} { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); layoutBuilder->addLexem(std::string(yytext));}
+{FLOAT}  { var_float = std::stold(replaceComma(yytext)); printf("found float literal: %Lf\n", var_float); layoutBuilder->addLexem(std::string(yytext));}
 
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
@@ -172,5 +202,9 @@ xor     { printf("found operation: xor\n"); }
 <STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
 <STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-\n { yylineno++; }
+\n { yylineno++; layoutBuilder->addLexem(std::string(yytext)); }
+[[:space:]] { layoutBuilder->addOffset(std::string(yytext).length()); }
+
 <*><<EOF>> { return 0; }
+
+%%
