@@ -29,6 +29,77 @@
 		return occurences;
 	}
 
+	int clean_octal_digits(char *number, char *cleaned) {
+		int len = strlen(number);
+		int j = 0;  // Индекс для cleaned
+
+		// Проверяем длину числа, чтобы убедиться, что оно не слишком короткое для префикса
+		if (len < 3) {
+			printf("Error: Octal number is too short.\n");
+			return 0;
+		}
+
+		// Проверяем правильность префикса (0o или 0O)
+		if (!(number[0] == '0' && (number[1] == 'o' || number[1] == 'O'))) {
+			printf("Error: Invalid prefix for octal number.\n");
+			return 0;
+		}
+
+		// Обрабатываем символы числа после префикса
+		for (int i = 2; i < len; i++) {
+			if (number[i] == '_') {
+				// Пропускаем подчеркивания
+				continue;
+		}
+
+		// Проверяем, что цифры в восьмеричной системе валидные (от 0 до 7)
+		if (number[i] < '0' || number[i] > '7') {
+			printf("Error: Invalid digit in octal number.\n");
+			return 0;
+		}
+
+		// Добавляем валидный символ в cleaned
+		cleaned[j++] = number[i];
+		}
+
+		cleaned[j] = '\0';  // Завершаем строку
+
+		// Проверка, остались ли валидные цифры после удаления подчеркиваний
+		if (j == 0) {
+			printf("Error: No valid digits left after removing underscores.\n");
+			return 0;
+		}
+
+		return 1; // Успешно очищено
+	}
+
+	int has_invalid_underscore_position(char *number) {
+		int len = strlen(number);
+		
+		// Проверка на подчеркивания в начале и конце
+		if (number[0] == '_' || number[len - 1] == '_') {
+			return 1;
+		}
+
+		return 0;
+	}
+	
+	int clean_octal_number(char *number, char *cleaned) {
+
+		if (has_invalid_underscore_position(number)) {
+			printf("Error: Underscores cannot be at the beginning or end of the number.\n");
+			return 0;
+		}
+
+		// Копируем префикс в cleaned
+		cleaned[0] = number[0];
+		cleaned[1] = number[1];
+
+		// Очищаем остальные цифры
+		return clean_octal_digits(number, cleaned);
+	}
+
+
 %}
 
 ASCSYMBOL	[!#$%&*+.\/<=>?@\\\^|\-~:]
@@ -41,7 +112,9 @@ D8			[0-7]
 D10			[0-9]
 D16			[0-9a-fA-F]
 
-INT_8		0[oO]{D8}+
+UNDERSCORE  (_+)
+
+INT_8    	{UNDERSCORE}?0{UNDERSCORE}?[oO]({UNDERSCORE}?{D8})+{UNDERSCORE}?
 INT_10      {D10}+
 INT_16      0[xX]{D16}+
       
@@ -130,7 +203,13 @@ xor     { printf("found operation: xor\n"); }
 {SMALL}({WORD}|')*  { printf("found function identifier: %s\n", yytext); }
 {LARGE}({WORD}|')*  { printf("found constructor identifier: %s\n", yytext); }
 
-{INT_8}  { var = strtol(yytext, NULL, 0); printf("found octal integer literal: %ld\n", var); }
+{INT_8}  { 
+  char cleaned_number[100]; 
+  if (clean_octal_number(yytext, cleaned_number)) {
+        long var = strtol(cleaned_number, NULL, 8); 
+        printf("found octal integer literal: %ld\n", var);
+    }
+}
 {INT_10} { var = strtol(yytext, NULL, 0); printf("found decimal integer literal: %ld\n", var); }
 {INT_16} { var = strtol(yytext, NULL, 0); printf("found hexadecimal integer literal: %ld\n", var); }
 {FLOAT}  { var_float = std::stold(replaceComma(yytext)); printf("found float literal: %Lf\n", var_float); }
