@@ -170,6 +170,7 @@ do        { printf("found lexem: do\n"); layoutBuilder->addLexem(std::string(yyt
 if        { printf("found lexem: if\n"); layoutBuilder->addLexem(std::string(yytext));}
 else      { printf("found lexem: else\n"); layoutBuilder->addLexem(std::string(yytext));}
 where     { printf("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext));}
+where\n     { printf("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext));}
 let       { printf("found lexem: let\n"); layoutBuilder->addLexem(std::string(yytext));}
 foreign   { printf("found lexem: foreign\n"); layoutBuilder->addLexem(std::string(yytext));}
 infix     { printf("found lexem: infix\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -312,7 +313,9 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 <STRING,CHAR>\\r	{ buffer +=	"\r"; }
 <STRING,CHAR>\\v	{ buffer += "\v"; }
 <STRING,CHAR>\\t	{ buffer += "\t"; }
+<STRING>\\({INT_8}|{INT_10}|{INT_16}) { buffer += (char) strtol(yytext + 1, NULL, 0); }
 <STRING,CHAR>\\		{ buffer += "\\"; }
+<STRING>\\&			{ }
 <CHAR>[^\'\\]		{ buffer += yytext; }
 <CHAR>\' { 
 	BEGIN(INITIAL);
@@ -327,13 +330,21 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 
 \"						{ BEGIN(STRING); buffer = ""; opened_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
-<STRING>[^\"\\]			{ buffer += yytext; }
+<STRING>[^\"\\] 		{ buffer += yytext; }
 <STRING>\"				{ BEGIN(INITIAL); printf("found string: %s\n", buffer.c_str()); }
 <STRING><<EOF>>			{ printf("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
 \n { yylineno++; layoutBuilder->addLexem(std::string(yytext)); }
 [[:space:]] { layoutBuilder->addOffset(std::string(yytext).length()); }
 
-<*><<EOF>> { return 0; }
+<*><<EOF>> { 
+	layoutBuilder->eof();  
+	if(!layoutBuilder->canEmit()) {
+		return 0;
+	}
+	else {
+		EMIT_LEXEM;
+	}
+}
 
 %%

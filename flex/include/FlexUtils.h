@@ -5,6 +5,7 @@
 #include <queue>
 #include <string>
 #include <memory>
+#include <algorithm>
 #include <stdexcept>
 
 enum class Lexem {
@@ -26,6 +27,7 @@ public:
     LayoutBuilderState(LayoutBuilder* stateOwner);
     virtual void addLexem(const std::string& lexem) = 0;
     bool needToAddLexem() { return needAddLexem; }
+    void eof();
     virtual ~LayoutBuilderState();
 };
 
@@ -78,6 +80,7 @@ public:
     LayoutBuilder();
     void newLine();
     void addLexem(const std::string& lexem);
+    void eof();
 
     /** 
      * Функция получения логической разности индентации
@@ -90,6 +93,7 @@ public:
     bool topOffsetIsZero() const;
     bool canEmit();
 
+    bool stackEmpty();
     void pushOffsetZero();
     void pushCurrentOffset();
     void popOffset();

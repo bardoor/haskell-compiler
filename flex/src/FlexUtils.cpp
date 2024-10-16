@@ -41,6 +41,13 @@ LayoutBuilderState::LayoutBuilderState(LayoutBuilder* stateOwner) : owner(stateO
 
 LayoutBuilderState::~LayoutBuilderState() {}
 
+void LayoutBuilderState::eof() {
+    while (!owner->stackEmpty()) {
+        owner->popOffset();
+        owner->pushLexem(Lexem::CLOSING_BRACE);
+    }
+}
+
 NewLineState::NewLineState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
 NewLineState::NewLineState(LayoutBuilder* owner, const std::string& lexem) 
     : LayoutBuilderState(owner) {
@@ -49,7 +56,7 @@ NewLineState::NewLineState(LayoutBuilder* owner, const std::string& lexem)
 
 void NewLineState::addLexem(const std::string& lexem) {
     needAddLexem = false;
-    //std::cout << "DEBUG: NewLineState lexem: " << escape_cpp(lexem) << std::endl;
+    //std::cout << "-- NewLineState -- lexem: " << escape_cpp(lexem) << std::endl;
 
     if (lexem == " ") {
         owner->addOffset(1);
@@ -72,7 +79,7 @@ ZeroLayoutState::ZeroLayoutState(LayoutBuilder* owner) : LayoutBuilderState(owne
 void ZeroLayoutState::addLexem(const std::string& lexem) {
     needAddLexem = false;
 
-    //std::cout << "DEBUG: ZeroLayoutState lexem: " << escape_cpp(lexem) << std::endl;
+    std::cout << "-- ZeroLayoutState -- lexem: " << escape_cpp(lexem) << std::endl;
 
     // Окончание нулевого контекста размещения
     if (lexem == "}") {
@@ -102,7 +109,16 @@ StartLayoutState::StartLayoutState(LayoutBuilder* owner, bool bracketIsExplicit,
 void StartLayoutState::addLexem(const std::string& lexem) {
     needAddLexem = false;
 
-    //std::cout << "DEBUG: StartLayoutState lexem: " << escape_cpp(lexem) << std::endl;
+    //std::cout << "-- START LAYOUT -- lexem: " << escape_cpp(lexem) << std::endl;
+    if (lexem.length() == 1 && std::isspace(lexem[0])) {
+        if (lexem[0] == '\n') {
+            owner->newLine();
+        }
+        else {
+            owner->addOffset(1);
+        }
+        return;
+    }
 
     if (lexem == "{") {
         // Следующая лексема идет в состояние нулевого размещения
@@ -117,6 +133,7 @@ void StartLayoutState::addLexem(const std::string& lexem) {
     }
     else {
         // Переход к состоянию MiddlePositionState с текущим смещением
+        //std::cout << "-- START LAYOUT -- pushed offset on " << lexem << std::endl;
         owner->pushCurrentOffset();
         owner->changeState(std::make_unique<MiddlePositionState>(owner, lexem));
     }
@@ -130,31 +147,41 @@ LeadingLexemState::LeadingLexemState(LayoutBuilder* owner, const std::string& le
 void LeadingLexemState::addLexem(const std::string& lexem) {
     needAddLexem = false;
 
-    //std::cout << "DEBUG: LeadingLexemState lexem: " << escape_cpp(lexem) << std::endl;
+    //std::cout << "-- LEADING LEXEM -- lexem: " << escape_cpp(lexem) << std::endl;
 
     if (lexem == " " || lexem == "\t" || lexem == "\n") {
         throw std::runtime_error("Unresolved space character in LeadingLexemState: " + escape_cpp(lexem));
     }
     
 
-    if (lexem == "where" || lexem == "do" || lexem == "let" || lexem == "of") {
+    if (lexem == "where" || lexem == "where\n" || lexem == "do" || lexem == "let" || lexem == "of") {
+        //std::cout << "-- LEADING LEXEM -- emit open brace" << std::endl;
         owner->addOffset(static_cast<int>(lexem.length()));
         owner->pushLexem(Lexem::OPEN_BRACE);
+        if (lexem.back() == '\n') {
+            owner->newLine();
+        }
         owner->changeState(std::make_unique<StartLayoutState>(owner, false));
         return;
     }
 
-    if (owner->offsetDifference() == 0) {
-        owner->pushLexem(Lexem::SEMICOLON);
-    }
-
     while (owner->offsetDifference() == -1) {
+        //std::cout << "-- LEADING LEXEM -- emit closing brace" << std::endl;
         owner->popOffset();
         owner->pushLexem(Lexem::CLOSING_BRACE);
+        if (owner->offsetDifference()) {
+            std::cerr << "Error: incorrect indentation!" << std::endl;
+        }
         owner->changeState(std::make_unique<MiddlePositionState>(owner, lexem));
         return;
     }
 
+    if (owner->offsetDifference() == 0) {
+        //std::cout << "-- LEADING LEXEM -- emit semicolon" << std::endl;
+        owner->pushLexem(Lexem::SEMICOLON);
+    }
+
+    owner->addOffset(lexem.length());
     owner->changeState(std::make_unique<MiddlePositionState>(owner));
 }
 
@@ -168,7 +195,7 @@ MiddlePositionState::MiddlePositionState(LayoutBuilder* owner, const std::string
 void MiddlePositionState::addLexem(const std::string& lexem) {
     needAddLexem = false;
     
-    //std::cout << "DEBUG: MiddlePosState lexem: " << escape_cpp(lexem) << std::endl;
+    //std::cout << "-- MiddlePosState -- lexem: " << escape_cpp(lexem) << std::endl;
 
     if (lexem == "\n" || lexem == "where" || lexem == "do" || lexem == "let" || lexem == "of") {
         owner->changeState(std::make_unique<NewLineState>(owner, lexem));
@@ -193,6 +220,10 @@ void LayoutBuilder::addLexem(const std::string& lexem) {
     } while (state->needToAddLexem());
 }
 
+void LayoutBuilder::eof() {
+    state->eof();
+}
+
 int LayoutBuilder::offsetDifference() {
     if (offsetStack.empty()) return -2; // Проверка на пустоту стэка
     if (offsetStack.top() == static_cast<int>(currentOffset)) {
@@ -202,6 +233,7 @@ int LayoutBuilder::offsetDifference() {
         return 1;
     }
     else {
+        //std::cout << "++ OFFSET DIFFERENCE ++ stack: " << offsetStack.top() << " current: " << currentOffset << std::endl;
         return -1;
     }
 }
@@ -218,7 +250,12 @@ void LayoutBuilder::pushOffsetZero() {
 }
 
 void LayoutBuilder::pushCurrentOffset() {
+    //std::cout << "++ LAYOUT BUILDER ++ pushing " << currentOffset << std::endl;
     offsetStack.push(static_cast<int>(currentOffset));
+}
+
+bool LayoutBuilder::stackEmpty() {
+    return offsetStack.empty();
 }
 
 void LayoutBuilder::popOffset() {
