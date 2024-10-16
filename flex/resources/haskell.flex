@@ -5,6 +5,7 @@
 	#include <string>
 	#include <cstring>
 	#include <memory>
+	#include <algorithm>
 	#include "FlexUtils.h"
 
 	static bool check_prefix(const std::string& input_string, int base) {
@@ -235,10 +236,22 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 
 {INT_8}  { 
   	std::string cleaned;
-  	if (clean_integer(yytext, cleaned, 8)) {
-        long var = strtol(cleaned.c_str(), NULL, 8);
-        printf("found octal integer literal: %ld\n", var);
+  	if (!clean_integer(yytext, cleaned, 8)) {
+		return -1;
     }
+
+	std::string after_literal;
+	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
+	LOOKAHEAD(after_literal);
+	
+	if (after_literal.length() > 0) {
+		std::cerr << "Error! Incorrect literal: " << cleaned + after_literal << std::endl;
+		return -1;
+	} 
+
+	long var = strtol(cleaned.c_str(), NULL, 8);
+
+	printf("found octal integer literal: %ld\n", var);
 }
 
 {INT_10} {
@@ -262,10 +275,21 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 
 {INT_16} { 
 	std::string cleaned;
-  	if (clean_integer(yytext, cleaned, 16)) {
-        long var = strtol(cleaned.c_str(), NULL, 16); 
-        printf("found hexadecimal integer literal: %ld\n", var);
+  	if (!clean_integer(yytext, cleaned, 16)) {
+		return -1;
     }
+
+	std::string after_literal;
+	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
+	LOOKAHEAD(after_literal);
+	
+	if (after_literal.length() > 0) {
+		std::cerr << "Error! Incorrect decimal literal: " << cleaned + after_literal << std::endl;
+		return -1;
+	} 
+	
+	long var = strtol(cleaned.c_str(), NULL, 16); 
+	printf("found hexadecimal integer literal: %ld\n", var);
 }
 
 {FLOAT}  { var_float = std::stold(replaceComma(yytext)); printf("found float literal: %Lf\n", var_float); }
