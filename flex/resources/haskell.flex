@@ -99,14 +99,12 @@ D8			[0-7]
 D10			[0-9]
 D16			[0-9a-fA-F]
 
-UNDERSCORE  (_+)
-
-INT_8    	{UNDERSCORE}?0{UNDERSCORE}?[oO]({UNDERSCORE}?{D8})+{UNDERSCORE}?
-INT_10      {UNDERSCORE}?({D10}+{UNDERSCORE}?)+{UNDERSCORE}?
-INT_16      {UNDERSCORE}?0{UNDERSCORE}?[xX]({UNDERSCORE}?{D16})+{UNDERSCORE}?
+INT_8    	(_+)?0(_+)?[oO]((_+)?{D8})+(_+)?
+INT_10      (_+)?({D10}+(_+)?)+(_+)?
+INT_16      (_+)?0(_+)?[xX]((_+)?{D16})+(_+)?
       
-EXPONENT    [eE][+-]?{D10}+
-FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
+EXPONENT    (_+)?[eE](_+)?[+-]?(_+)?({D10}+(_+)?)+(_+)?
+FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+)?({D10}+(_+)?)+{EXPONENT})
 
 %x STRING
 %x CHAR
@@ -245,7 +243,7 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 	LOOKAHEAD(after_literal);
 	
 	if (after_literal.length() > 0) {
-		std::cerr << "Error! Incorrect literal: " << cleaned + after_literal << std::endl;
+		std::cerr << "Error! Incorrect octal integer literal: " << cleaned + after_literal << std::endl;
 		return -1;
 	} 
 
@@ -265,7 +263,7 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 	LOOKAHEAD(after_literal);
 	
 	if (after_literal.length() > 0) {
-		std::cerr << "Error! Incorrect decimal literal: " << cleaned + after_literal << std::endl;
+		std::cerr << "Error! Incorrect decimal integer literal: " << cleaned + after_literal << std::endl;
 		return -1;
 	} 
 
@@ -284,7 +282,7 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 	LOOKAHEAD(after_literal);
 	
 	if (after_literal.length() > 0) {
-		std::cerr << "Error! Incorrect decimal literal: " << cleaned + after_literal << std::endl;
+		std::cerr << "Error! Incorrect hexadecimal integer literal: " << cleaned + after_literal << std::endl;
 		return -1;
 	} 
 	
