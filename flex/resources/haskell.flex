@@ -121,8 +121,21 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 	std::string buffer;
 
 	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
-	#define YY_USER_ACTION \
-    { \
+
+	#define LOOKAHEAD(res) \
+		res = ""; \
+		char next_char; \
+		do { \
+			next_char = yyinput(); \
+			if (std::isspace(next_char)) { \
+				unput(next_char); \
+			} else { \
+				res += next_char; \
+			} \
+		} while (!std::isspace(next_char));
+
+	#define EMIT_LEXEM \
+	{ \
 		switch(layoutBuilder->emitLexem()) { \
 			case Lexem::OPEN_BRACE: \
             	unput('{'); \
@@ -137,6 +150,9 @@ FLOAT       ({D10}+[\.]{D10}+{EXPONENT}?|{D10}+{EXPONENT})
 				break; \
 		} \
     }
+
+	#define YY_USER_ACTION EMIT_LEXEM
+    
 %}
 
 _         { printf("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -209,7 +225,7 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 	layoutBuilder->addLexem(std::string(yytext)); 
 	if (layoutBuilder->canEmit()) {
 		yyless(0);
-		YY_USER_ACTION
+		EMIT_LEXEM
 	} 
 	else {
 		printf("found function identifier: %s\n", yytext); 
@@ -227,10 +243,21 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 
 {INT_10} {
 	std::string cleaned;
-  	if (clean_integer(yytext, cleaned, 10)) {
-        long var = strtol(cleaned.c_str(), NULL, 0); 
-        printf("found decimal integer literal: %ld\n", var);
+  	if (!clean_integer(yytext, cleaned, 10)) {
+		return -1;
     }
+
+	std::string after_literal;
+	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
+	LOOKAHEAD(after_literal);
+	
+	if (after_literal.length() > 0) {
+		std::cerr << "Error! Incorrect decimal literal: " << cleaned + after_literal << std::endl;
+		return -1;
+	} 
+
+	long var = strtol(cleaned.c_str(), NULL, 0); 
+	printf("found decimal integer literal: %ld\n", var);
 }
 
 {INT_16} { 
