@@ -8,84 +8,10 @@
 	#include <algorithm>
 	#include "FlexUtils.h"
 
-	static bool check_prefix(const std::string& input_string, int base) {
-        int len = input_string.length();
-        if (base == 8) {
-            if (len < 3 || !(input_string[0] == '0' && (input_string[1] == 'o' || input_string[1] == 'O'))) {
-                std::cerr << "Error: invalid prefix for octal number\n";
-                return false;
-            }
-        } else if (base == 16) {
-            if (len < 3 || !(input_string[0] == '0' && (input_string[1] == 'x' || input_string[1] == 'X'))) {
-                std::cerr << "Error: invalid prefix for hexadecimal number\n";
-                return false;
-            }
-        }
-        return true; // Префикс корректен
-    }
-
-	static int clean_integer(const std::string& input_string, std::string& cleaned, int base) {
-		int len = input_string.length();
-        bool has_valid_digits = false;
-
-		// Проверка на подчеркивания в начале и конце
-	 	if (input_string.front() == '_' || input_string.back() == '_') {
-            std::cerr << "Error: underscores cannot be at the beginning or end of the number\n";
-            return 0;
-        }
-
-		// Проверка на префиксы для восьмеричных и шестнадцатеричных чисел
-		if (!check_prefix(input_string, base)) {
-            return 0;
-        }
-
-		// Пропускаем префикс для восьмеричных и шестнадцатеричных чисел
-		int start_idx = (base == 10) ? 0 : 2;
-
-		// Обрабатываем символы числа после префикса
-		for (int i = start_idx; i < len; i++) {
-			if (input_string[i] == '_') {
-				// Пропускаем подчеркивания
-				continue;
-			}
-
-			// Добавляем валидный символ в cleaned
-			cleaned += input_string[i];
-			has_valid_digits = true;
-		}
-
-		// Проверка, остались ли валидные цифры после удаления подчеркиваний
-		if (!has_valid_digits) {
-			std::cerr << "Error: no valid digits left after removing underscores\n";
-			return 0;
-		}
-
-		return 1; 
-	}
-
-	std::string replaceComma(const std::string& str) {
-		std::string result = str;
-		size_t start_pos = 0;
-
-		while ((start_pos = result.find('.', start_pos)) != std::string::npos) {
-			result.replace(start_pos, 1, ","); 
-			start_pos++;  
-		}
-
-		return result; 
-	}
-
-	unsigned occurencesCount(std::string str, std::string substr) {
-		unsigned occurences = 0;
-		size_t pos = 0;
-
-		while ((pos = str.find(substr, pos)) != std::string::npos) {
-			pos += substr.length();
-			occurences++;
-		}
-
-		return occurences;
-	}
+	static bool check_prefix(const std::string& input_string, int base);
+	static int clean_integer(const std::string& input_string, std::string& cleaned, int base);
+	std::string replaceComma(const std::string& str);
+	unsigned occurencesCount(std::string str, std::string substr);
 
 %}
 
@@ -346,3 +272,91 @@ xor     { printf("found operation: xor\n"); layoutBuilder->addLexem(std::string(
 }
 
 %%
+
+static bool check_prefix(const std::string& input_string, int base) {
+	int len = input_string.length();
+	if (base == 8) {
+		if (len < 3 || !(input_string[0] == '0' && (input_string[1] == 'o' || input_string[1] == 'O'))) {
+			std::cerr << "Error: invalid prefix for octal number\n";
+			return false;
+		}
+	} else if (base == 16) {
+		if (len < 3 || !(input_string[0] == '0' && (input_string[1] == 'x' || input_string[1] == 'X'))) {
+			std::cerr << "Error: invalid prefix for hexadecimal number\n";
+			return false;
+		}
+	}
+	return true; // Префикс корректен
+}
+
+static int clean_integer(const std::string& input_string, std::string& cleaned, int base) {
+	int len = input_string.length();
+	bool has_valid_digits = false;
+
+	// Проверка на подчеркивания в начале и конце
+	if (input_string.front() == '_' || input_string.back() == '_') {
+		std::cerr << "Error: underscores cannot be at the beginning or end of the number\n";
+		return 0;
+	}
+
+	// Проверка на префиксы для восьмеричных и шестнадцатеричных чисел
+	if (!check_prefix(input_string, base)) {
+		return 0;
+	}
+
+	// Пропускаем префикс для восьмеричных и шестнадцатеричных чисел
+	int start_idx = (base == 10) ? 0 : 2;
+
+	// Обрабатываем символы числа после префикса
+	for (int i = start_idx; i < len; i++) {
+		if (input_string[i] == '_') {
+			// Пропускаем подчеркивания
+			continue;
+		}
+
+		// Добавляем валидный символ в cleaned
+		cleaned += input_string[i];
+		has_valid_digits = true;
+	}
+
+	// Проверка, остались ли валидные цифры после удаления подчеркиваний
+	if (!has_valid_digits) {
+		std::cerr << "Error: no valid digits left after removing underscores\n";
+		return 0;
+	}
+
+	return 1; 
+}
+
+std::string replaceComma(const std::string& str) {
+	std::locale currentLocale("");
+    // Получаем разделитель целой и дробной части в текущей локали
+    const std::numpunct<char>& numPunct = std::use_facet<std::numpunct<char>>(currentLocale);
+
+	// Не меняем строку если в текущий локали разделителем уже является . (как в хаскелле)
+	if (numPunct.decimal_point() == '.') {
+		return str;
+	}
+
+	std::string result = str;
+	size_t start_pos = 0;
+
+	while ((start_pos = result.find('.', start_pos)) != std::string::npos) {
+		result.replace(start_pos, 1, ","); 
+		start_pos++;  
+	}
+
+	return result; 
+}
+
+unsigned occurencesCount(std::string str, std::string substr) {
+	unsigned occurences = 0;
+	size_t pos = 0;
+
+	while ((pos = str.find(substr, pos)) != std::string::npos) {
+		pos += substr.length();
+		occurences++;
+	}
+
+	return occurences;
+}
