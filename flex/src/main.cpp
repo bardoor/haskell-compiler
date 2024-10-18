@@ -9,9 +9,6 @@
 
 #include <FlexLexer.h>
 
-#define DEBUG_STATES
-#define DEBUG_LEXEMS
-
 int main(void) {
 	setlocale(LC_ALL, "Russian");
 	std::ifstream in;
