@@ -1,4 +1,3 @@
-// FlexUtils.h
 #pragma once
 
 #include <stack>
@@ -7,6 +6,15 @@
 #include <memory>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
+#ifdef DEBUG_STATES
+    #define LOG_STATE(msg) std::cout << msg << std::endl;
+#else
+    #define LOG_STATE(msg)
+#endif
 
 enum class Lexem {
     OPEN_BRACE, 

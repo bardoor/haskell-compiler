@@ -8,6 +8,12 @@
 	#include <algorithm>
 	#include "FlexUtils.h"
 
+	#ifdef DEBUG_LEXEMS
+		#define LOG_LEXEM(msg) std::cout << msg << std::endl;
+	#else
+		#define LOG_LEXEM(msg)
+	#endif
+
 	#define LOOKAHEAD(res) \
 		res = ""; \
 		char next_char; \
