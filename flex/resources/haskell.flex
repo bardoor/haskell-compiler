@@ -8,45 +8,6 @@
 	#include <algorithm>
 	#include "FlexUtils.h"
 
-	static bool check_prefix(const std::string& input_string, int base);
-	static int clean_integer(const std::string& input_string, std::string& cleaned, int base);
-	std::string replaceComma(const std::string& str);
-	unsigned occurencesCount(std::string str, std::string substr);
-
-%}
-
-ASCSYMBOL	[!#$%&*+.\/<=>?@\\\^|\-~:]
-SPECIAL		[|,;\[\]'{}]|["']
-SMALL		[a-z]
-LARGE		[A-Z]
-WORD		[a-zA-Z0-9_]
-
-D8			[0-7]
-D10			[0-9]
-D16			[0-9a-fA-F]
-
-INT_8    	(_+)?0(_+)?[oO]((_+)?{D8})+(_+)?
-INT_10      (_+)?({D10}+(_+)?)+(_+)?
-INT_16      (_+)?0(_+)?[xX]((_+)?{D16})+(_+)?
-      
-EXPONENT    (_+)?[eE](_+)?[+-]?(_+)?({D10}+(_+)?)+(_+)?
-FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+)?({D10}+(_+)?)+{EXPONENT})
-
-%x STRING
-%x CHAR
-%x SINGLE_LINE_COMMENT
-%x MULTI_LINE_COMMENT
-
-%%
-%{
-	int var;
-	long double var_float;
-	unsigned lineno = 1;
-	unsigned opened_line;
-	std::string buffer;
-
-	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
-
 	#define LOOKAHEAD(res) \
 		res = ""; \
 		char next_char; \
@@ -77,6 +38,43 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
     }
 
 	#define YY_USER_ACTION EMIT_LEXEM
+
+	static bool check_prefix(const std::string& input_string, int base);
+	static int clean_integer(const std::string& input_string, std::string& cleaned, int base);
+	std::string replaceComma(const std::string& str);
+	unsigned occurencesCount(std::string str, std::string substr);
+
+%}
+
+SMALL		[a-z]
+LARGE		[A-Z]
+WORD		[a-zA-Z0-9_]
+
+D8			[0-7]
+D10			[0-9]
+D16			[0-9a-fA-F]
+
+INT_8    	(_+)?0(_+)?[oO]((_+)?{D8})+(_+)?
+INT_10      (_+)?({D10}+(_+)?)+(_+)?
+INT_16      (_+)?0(_+)?[xX]((_+)?{D16})+(_+)?
+      
+EXPONENT    (_+)?[eE](_+)?[+-]?(_+)?({D10}+(_+)?)+(_+)?
+FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+)?({D10}+(_+)?)+{EXPONENT})
+
+%x STRING
+%x CHAR
+%x SINGLE_LINE_COMMENT
+%x MULTI_LINE_COMMENT
+
+%%
+%{
+	int var;
+	long double var_float;
+	unsigned lineno = 1;
+	unsigned opened_line;
+	std::string buffer;
+
+	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
     
 %}
 
