@@ -261,8 +261,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 <STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); }
 <STRING><<EOF>>			{ LOG_LEXEM("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-\n { yylineno++; layoutBuilder->addLexem(std::string(yytext)); }
-[[:space:]] { layoutBuilder->addOffset(std::string(yytext).length()); }
+[[:space:]] { if (yytext[0] == '\n') { yylineno++; } layoutBuilder->addSpace(yytext[0]); }
 
 <*><<EOF>> { 
 	layoutBuilder->eof();  

@@ -37,6 +37,18 @@ LayoutBuilderState::LayoutBuilderState(LayoutBuilder* stateOwner) : owner(stateO
 
 LayoutBuilderState::~LayoutBuilderState() {}
 
+void LayoutBuilderState::addSpace(const char lexem) {
+    if (lexem == ' ') {
+        owner->addOffset(1);
+    }
+    else if (lexem == '\t') {
+        owner->addOffset(TAB_SIZE);
+    }
+    else if (lexem == '\n') {
+        owner->resetOffset();
+    }
+}
+
 void LayoutBuilderState::eof() {
     while (!owner->stackEmpty()) {
         owner->popOffset();
@@ -54,14 +66,8 @@ void NewLineState::addLexem(const std::string& lexem) {
     needAddLexem = false;
     LOG_STATE("-- NewLineState -- lexem: " << escape_cpp(lexem));
 
-    if (lexem == " ") {
-        owner->addOffset(1);
-    }
-    else if (lexem == "\t") {
-        owner->addOffset(TAB_SIZE);
-    }
-    else if (lexem == "\n") {
-        owner->resetOffset();
+    if (std::isspace(lexem[0])) {
+        addSpace(lexem[0]);
     }
     else {
         // Переход к состоянию LeadingLexemState
@@ -212,6 +218,10 @@ LayoutBuilder::LayoutBuilder() {
 
 void LayoutBuilder::newLine() {
     currentOffset = 0;
+}
+
+void LayoutBuilder::addSpace(const char lexem) {
+    state->addSpace(lexem);
 }
 
 void LayoutBuilder::addLexem(const std::string& lexem) {

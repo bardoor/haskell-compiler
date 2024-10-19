@@ -37,6 +37,7 @@ protected:
 public:
     LayoutBuilderState(LayoutBuilder* stateOwner);
     virtual void addLexem(const std::string& lexem) = 0;
+    void addSpace(const char lexem);
     bool needToAddLexem() { return needAddLexem; }
     void eof();
     virtual ~LayoutBuilderState();
@@ -91,6 +92,7 @@ public:
     LayoutBuilder();
     void newLine();
     void addLexem(const std::string& lexem);
+    void addSpace(const char lexem);
     void eof();
 
     /** 
