@@ -14,17 +14,22 @@
 		#define LOG_LEXEM(msg, ...)
 	#endif
 
+	#define UNPUT_STR(str) \
+		for (auto it = str.end(); it >= str.begin(); it--) { \
+			unput(*it); \
+		}
+
 	#define LOOKAHEAD(res) \
 		res = ""; \
 		char next_char; \
 		do { \
 			next_char = yyinput(); \
-			if (std::isspace(next_char)) { \
+			if (next_char == EOF || next_char == '\0') { \
 				unput(next_char); \
 			} else { \
 				res += next_char; \
 			} \
-		} while (!std::isspace(next_char));
+		} while (next_char != EOF && next_char != '\0' || std::isalpha(next_char));
 
 	#define EMIT_LEXEM \
 	{ \
@@ -135,6 +140,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 "="		{ LOG_LEXEM("found operator: = (assignment or pattern matching)\n"); layoutBuilder->addLexem(std::string(yytext));}
 :		{ LOG_LEXEM("found operator: : (cons)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "++"    { LOG_LEXEM("found operator: ++ (list concatenation)\n"); layoutBuilder->addLexem(std::string(yytext));}
+".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "."     { LOG_LEXEM("found operator: . (function composition)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "->"	{ LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "<-"	{ LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -144,7 +150,6 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 %		{ LOG_LEXEM("found operator: % (modulus)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "^"     { LOG_LEXEM("found operator: ^ (exponentiation)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "$"     { LOG_LEXEM("found operator: $ (function application)\n"); layoutBuilder->addLexem(std::string(yytext));}
-".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext));}
 ::		{ LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext));}
 @       { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext));}
 ~       { LOG_LEXEM("found operator: lazy pattern matching (~)\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -172,14 +177,18 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
 	LOOKAHEAD(after_literal);
 	
-	if (after_literal.length() > 0) {
+	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
+												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
+		long var = strtol(cleaned.c_str(), NULL, 8);
+		LOG_LEXEM("found octal integer literal: %ld\n", var);
+		if (after_literal.length() > 0) {
+			UNPUT_STR(after_literal);
+		}
+	}
+	else {
 		std::cerr << "Error! Incorrect octal integer literal: " << cleaned + after_literal << std::endl;
 		return -1;
-	} 
-
-	long var = strtol(cleaned.c_str(), NULL, 8);
-
-	LOG_LEXEM("found octal integer literal: %ld\n", var);
+	}
 }
 
 {INT_10} {
@@ -192,13 +201,18 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
 	LOOKAHEAD(after_literal);
 	
-	if (after_literal.length() > 0) {
+	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
+												   [](char c) {return std::isalpha(c); })) {
+		long var = strtol(cleaned.c_str(), NULL, 0); 
+		LOG_LEXEM("found decimal integer literal: %ld\n", var);
+		if (after_literal.length() > 0) {
+			UNPUT_STR(after_literal);
+		}
+	}
+	else {
 		std::cerr << "Error! Incorrect decimal integer literal: " << cleaned + after_literal << std::endl;
 		return -1;
-	} 
-
-	long var = strtol(cleaned.c_str(), NULL, 0); 
-	LOG_LEXEM("found decimal integer literal: %ld\n", var);
+	}
 }
 
 {INT_16} { 
@@ -211,13 +225,18 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
 	LOOKAHEAD(after_literal);
 	
-	if (after_literal.length() > 0) {
+	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
+												   [](char c) {return std::isalpha(c); })) {
+		long var = strtol(cleaned.c_str(), NULL, 16); 
+		LOG_LEXEM("found hexadecimal integer literal: %ld\n", var);
+		if (after_literal.length() > 0) {
+			UNPUT_STR(after_literal);
+		}
+	}
+	else {
 		std::cerr << "Error! Incorrect hexadecimal integer literal: " << cleaned + after_literal << std::endl;
 		return -1;
-	} 
-	
-	long var = strtol(cleaned.c_str(), NULL, 16); 
-	LOG_LEXEM("found hexadecimal integer literal: %ld\n", var);
+	}	
 }
 
 {FLOAT}  { var_float = std::stold(replaceComma(yytext)); LOG_LEXEM("found float literal: %Lf\n", var_float); }
