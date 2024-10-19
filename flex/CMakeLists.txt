@@ -11,6 +11,7 @@ set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
 if(WIN32)
     set(FLEX_CMD "${RESOURCES_DIR}/win_flex.exe --wincompat")
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include_win)
 else()
     set(FLEX_CMD "flex")
 endif()
