@@ -7,6 +7,7 @@ add_custom_target(clean_build
     COMMENT "Cleaning build directory"
 )
 
+set(INCLUDE_TESTS TRUE)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
 if(WIN32)
@@ -14,6 +15,19 @@ if(WIN32)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include_win)
 else()
     set(FLEX_CMD "flex")
+endif()
+
+if(INCLUDE_TESTS)
+    enable_testing()
+    add_executable(test ${CMAKE_CURRENT_SOURCE_DIR}/test/test.cpp)
+
+    target_link_libraries(
+        test
+        GTest::gtest_main
+    )
+
+    include(GoogleTest)
+    gtest_discover_tests(test)
 endif()
 
 add_custom_target(
