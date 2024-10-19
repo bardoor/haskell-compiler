@@ -9,9 +9,15 @@ add_custom_target(clean_build
 
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
+if(WIN32)
+    set(FLEX_CMD "${RESOURCES_DIR}/win_flex.exe --wincompat")
+else()
+    set(FLEX_CMD "flex")
+endif()
+
 add_custom_target(
     generate_flexer
-    COMMAND ${CMAKE_COMMAND} -E env ${RESOURCES_DIR}/win_flex.exe -+ --wincompat --outfile="${CMAKE_CURRENT_SOURCE_DIR}/src/haskell.flex.cpp" ${RESOURCES_DIR}/haskell.flex 
+    COMMAND ${CMAKE_COMMAND} -E env ${FLEX_CMD} -+ --outfile="${CMAKE_CURRENT_SOURCE_DIR}/src/haskell.flex.cpp" ${RESOURCES_DIR}/haskell.flex
 )
 
 add_subdirectory(src)
