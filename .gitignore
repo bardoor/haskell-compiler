@@ -1,3 +1,5 @@
 build
 flex/src/haskell.flex.cpp
 debug
+
+.vscode/settings.json
