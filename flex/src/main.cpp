@@ -10,11 +10,12 @@
 #include <FlexLexer.h>
 
 int main(void) {
-	setlocale(LC_ALL, "Russian");
 	std::ifstream in;
 	in.open("flex/resources/code_examples/sample.hs");
 
 	if (!in.is_open()) {
+		std::filesystem::path currentPath = std::filesystem::current_path();
+    	std::cout << "Current Directory: " << currentPath << std::endl;
 		throw std::runtime_error("Can't open file!");
 	}
 

@@ -11,14 +11,6 @@
             },
             "problemMatcher": ["$gcc"],
             "detail": "CMake build task"
-        },
-        {
-            "label": "Run Executable",
-            "type": "shell",
-            "command": "${workspaceFolder}/build/YourExecutableName",  // Команда для запуска
-            "group": "none",
-            "dependsOn": "CMake Build",
-            "problemMatcher": []
         }
     ]
 }
