@@ -350,7 +350,15 @@ static int clean_integer(const std::string& input_string, std::string& cleaned, 
 }
 
 std::string replaceComma(const std::string& str) {
-	std::locale currentLocale("");
+	// TODO: разобраться почему возникает проблема с определением локали
+	/* 
+	#if defined(_WIN32) || defined(_WIN64)
+		std::locale currentLocale("en-US");  // Windows
+	#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+		std::locale currentLocale("en_US.UTF-8");  // Linux/macOS
+	#else
+		std::locale currentLocale("");  // Используем локаль по умолчанию
+	#endif
     // Получаем разделитель целой и дробной части в текущей локали
     const std::numpunct<char>& numPunct = std::use_facet<std::numpunct<char>>(currentLocale);
 
@@ -358,6 +366,7 @@ std::string replaceComma(const std::string& str) {
 	if (numPunct.decimal_point() == '.') {
 		return str;
 	}
+	*/
 
 	std::string result = str;
 	size_t start_pos = 0;

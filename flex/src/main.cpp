@@ -15,7 +15,7 @@ int main(void) {
 	in.open("flex/resources/code_examples/sample.hs");
 
 	if (!in.is_open()) {
-		throw std::runtime_error("Не получилось открыть файл с кодом!");
+		throw std::runtime_error("Can't open file!");
 	}
 
 	yyFlexLexer* lex = new yyFlexLexer(in, std::cout);
