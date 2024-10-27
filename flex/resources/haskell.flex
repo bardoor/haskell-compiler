@@ -6,8 +6,13 @@
 	#include <cstring>
 	#include <memory>
 	#include <algorithm>
+
 	#include "FlexUtils.h"
-	#include "parser.tab.h"
+	#include "BisonUtils.h"
+
+	enum Tokens {
+   		WHEREKW, FUNC_ID, CONSTRUCT_ID, INTC, MODULEKW
+	};
 
 	#ifdef DEBUG_LEXEMS
 		 #define LOG_LEXEM(msg, ...) printf(msg, ##__VA_ARGS__);
@@ -393,7 +398,3 @@ unsigned occurencesCount(std::string str, std::string substr) {
 	return occurences;
 }
 
-int main() {
-    yylex();
-    return 0;
-}

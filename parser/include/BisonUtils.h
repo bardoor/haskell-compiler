@@ -1,19 +1,14 @@
-#ifndef __PARSER_H
-#define __PARSER_H
-
 #include <memory>
 #include <vector>
+
+
+class FunDecl {};
+class Expr {};
 
 class Module {
 protected:
     std::vector<FunDecl> funDecls;
 };
-
-class FunDecl {
-
-};
-
-class Expr {};
 
 class BinaryExpr : public Expr {
 protected:
@@ -27,6 +22,3 @@ class NumbericLiteral : public Expr {
 protected:
     long long value;
 };
-
-
-#endif
