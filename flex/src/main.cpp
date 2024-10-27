@@ -20,6 +20,6 @@ int main(void) {
 	}
 
 	yyFlexLexer* lex = new yyFlexLexer(in, std::cout);
-	lex->yylex();
+	while (lex->yylex() != 0);
 	delete lex;
 }
