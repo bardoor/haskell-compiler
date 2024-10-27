@@ -1,15 +1,3 @@
+module Sample where
 
-
-someStr = "hehehehehe"
-
-a = 1.9
-
-=
-||
-..
-::
--> <- >= <=
-.
-
-^
-$
+a = 5 + 10
