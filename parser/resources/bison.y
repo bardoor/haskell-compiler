@@ -38,7 +38,7 @@ expr : INTC '+' INTC { $$ = $1 + $3; std::cout << "Add result: " << $$ << std::e
 void yyerror(const char *s) {
     cerr << "Error: " << s << " on line " << yylineno << endl;
 }
-b
+
 int main() {
     yyparse(); 
     return 0;

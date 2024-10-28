@@ -157,14 +157,12 @@ void LeadingLexemState::addLexem(const std::string& lexem) {
     }
     
 
-    if (lexem == "where" || lexem == "where\n" || lexem == "do" || lexem == "let" || lexem == "of") {
+    if (lexem == "where" || lexem == "do" || lexem == "let" || lexem == "of") {
         LOG_STATE("-- LEADING LEXEM -- emit open brace");
 
         owner->addOffset(static_cast<int>(lexem.length()));
         owner->pushLexem(Lexem::OPEN_BRACE);
-        if (lexem.back() == '\n') {
-            owner->newLine();
-        }
+
         owner->changeState(std::make_unique<StartLayoutState>(owner, false));
         return;
     }
@@ -187,6 +185,7 @@ void LeadingLexemState::addLexem(const std::string& lexem) {
         owner->pushLexem(Lexem::SEMICOLON);
     }
 
+    LOG_STATE("-- LEADING LEXEM -- GOING TO MIDDLE POSITION")
     owner->addOffset(lexem.length());
     owner->changeState(std::make_unique<MiddlePositionState>(owner));
 }
@@ -203,11 +202,24 @@ void MiddlePositionState::addLexem(const std::string& lexem) {
     
     LOG_STATE("-- MiddlePosState -- lexem: " << escape_cpp(lexem));
 
-    if (lexem == "\n" || lexem == "where" || lexem == "do" || lexem == "let" || lexem == "of") {
+    if (lexem == "where" || lexem == "do" || lexem == "let" || lexem == "of") {
         owner->changeState(std::make_unique<NewLineState>(owner, lexem));
     }
     else {
         owner->addOffset(static_cast<int>(lexem.length()));
+    }
+}
+
+void MiddlePositionState::addSpace(const char lexem) {
+    if (lexem == ' ') {
+        owner->addOffset(1);
+    }
+    else if (lexem == '\t') {
+        owner->addOffset(TAB_SIZE);
+    }
+    else if (lexem == '\n') {
+        owner->resetOffset();
+        owner->changeState(std::make_unique<NewLineState>(owner, std::string(1, lexem)));
     }
 }
 

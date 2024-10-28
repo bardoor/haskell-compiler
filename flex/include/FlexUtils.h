@@ -37,7 +37,7 @@ protected:
 public:
     LayoutBuilderState(LayoutBuilder* stateOwner);
     virtual void addLexem(const std::string& lexem) = 0;
-    void addSpace(const char lexem);
+    virtual void addSpace(const char lexem);
     bool needToAddLexem() { return needAddLexem; }
     void eof();
     virtual ~LayoutBuilderState();
@@ -77,6 +77,7 @@ public:
     MiddlePositionState(LayoutBuilder* owner);
     MiddlePositionState(LayoutBuilder* owner, const std::string& lexem);
     virtual void addLexem(const std::string& lexem) override;
+    void addSpace(const char lexem) override;
 };
 
 class LayoutBuilder {

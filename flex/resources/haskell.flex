@@ -37,13 +37,13 @@
 	{ \
 		switch(layoutBuilder->emitLexem()) { \
 			case Lexem::OPEN_BRACE: \
-            	unput('{'); \
+				layoutBuilder->addLexem("{"); \
 				break; \
 			case Lexem::CLOSING_BRACE: \
-				unput('}'); \
+				layoutBuilder->addLexem("}"); \
 				break; \
 			case Lexem::SEMICOLON: \
-				unput(';'); \
+				layoutBuilder->addLexem(";"); \
 				break; \
 			case Lexem::NONE: \
 				break; \
@@ -287,7 +287,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 <STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); }
 <STRING><<EOF>>			{ LOG_LEXEM("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-[[:space:]] { if (yytext[0] == '\n') { yylineno++; } layoutBuilder->addSpace(yytext[0]); }
+[\n\t ] { if (yytext[0] == '\n') { yylineno++; } layoutBuilder->addSpace(yytext[0]); }
 
 <*><<EOF>> { 
 	layoutBuilder->eof();  
