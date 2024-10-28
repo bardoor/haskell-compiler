@@ -61,6 +61,13 @@
 	std::string replaceComma(const std::string& str);
 	unsigned occurencesCount(std::string str, std::string substr);
 
+	int var;
+	long double var_float;
+	unsigned lineno = 1;
+	unsigned opened_line;
+	std::string buffer;
+
+	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
 %}
 
 SMALL		[a-z]
@@ -85,14 +92,8 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 
 %%
 %{
-	int var;
-	long double var_float;
-	unsigned lineno = 1;
-	unsigned opened_line;
-	std::string buffer;
-
-	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
-    
+	// Если вставить сюда локальные переменные, то они будут пересоздаваться каждый раз при вызове yylex
+	// Поэтому вынес отсюда всё что можно во избежание потери значений переменных между выховами yylex
 %}
 
 _         { LOG_LEXEM("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext));}
