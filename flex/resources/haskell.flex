@@ -10,14 +10,6 @@
 	#include "FlexUtils.h"
 	#include "BisonUtils.h"
 
-	enum Tokens {
-   		WHEREKW = 1, 
-		FUNC_ID = 2, 
-		CONSTRUCT_ID = 3, 
-		INTC = 4, 
-		MODULEKW = 5
-	};
-
 	#ifdef DEBUG_LEXEMS
 		 #define LOG_LEXEM(msg, ...) printf(msg, ##__VA_ARGS__);
 	#else
