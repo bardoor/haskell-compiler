@@ -11,7 +11,11 @@
 	#include "BisonUtils.h"
 
 	enum Tokens {
-   		WHEREKW, FUNC_ID, CONSTRUCT_ID, INTC, MODULEKW
+   		WHEREKW = 1, 
+		FUNC_ID = 2, 
+		CONSTRUCT_ID = 3, 
+		INTC = 4, 
+		MODULEKW = 5
 	};
 
 	#ifdef DEBUG_LEXEMS
@@ -93,7 +97,7 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 %%
 %{
 	// Если вставить сюда локальные переменные, то они будут пересоздаваться каждый раз при вызове yylex
-	// Поэтому вынес отсюда всё что можно во избежание потери значений переменных между выховами yylex
+	// Поэтому вынес отсюда всё что можно во избежание потери значений переменных между вызовами yylex
 %}
 
 _         { LOG_LEXEM("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -178,6 +182,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 {INT_8}  { 
   	std::string cleaned;
   	if (!clean_integer(yytext, cleaned, 8)) {
+		std::cerr << "Error! Incorrect octal literal: " << yytext << std::endl;
 		return -1;
     }
 
@@ -202,6 +207,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 {INT_10} {
 	std::string cleaned;
   	if (!clean_integer(yytext, cleaned, 10)) {
+		std::cerr << "Error! Incorrect decimal literal: " << yytext << std::endl;
 		return -1;
     }
 
@@ -226,6 +232,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 {INT_16} { 
 	std::string cleaned;
   	if (!clean_integer(yytext, cleaned, 16)) {
+		std::cerr << "Error! Incorrect hexadecimal integer literal: " << yytext << std::endl;
 		return -1;
     }
 
