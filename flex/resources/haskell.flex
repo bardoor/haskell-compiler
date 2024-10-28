@@ -62,6 +62,7 @@
 
 	static bool check_prefix(const std::string& input_string, int base);
 	static int clean_integer(const std::string& input_string, std::string& cleaned, int base);
+	static int clean_float(const std::string& input_string, std::string& cleaned);
 	std::string replaceComma(const std::string& str);
 	unsigned occurencesCount(std::string str, std::string substr);
 
@@ -254,7 +255,30 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	}	
 }
 
-{FLOAT}  { var_float = std::stold(replaceComma(yytext)); LOG_LEXEM("found float literal: %Lf\n", var_float); }
+{FLOAT}  {
+  	std::string cleaned;
+    if (!clean_float(yytext, cleaned)) {
+      std::cerr << "Error! Incorrect float literal: " << yytext << std::endl;
+      return -1;
+    }
+
+	std::string after_literal;
+	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
+	LOOKAHEAD(after_literal);
+  
+    if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
+                           [](char c) {return std::isalpha(c); })) {
+		var_float = std::stold(replaceComma(cleaned));
+		LOG_LEXEM("found float literal: %Lf\n", var_float);
+		if (after_literal.length() > 0) {
+			UNPUT_STR(after_literal);
+		}
+	}  
+  	else {
+    std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;
+    return -1;
+  	}  
+}
 
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
@@ -362,6 +386,58 @@ static int clean_integer(const std::string& input_string, std::string& cleaned, 
 	}
 
 	return 1; 
+}
+
+static int clean_float(const std::string& input_string, std::string& cleaned) {
+    int len = input_string.length();
+    
+    // Проверка на подчеркивания в конце числа
+    if (input_string.back() == '_') {
+        std::cerr << "Error: underscores cannot be at the end of the number\n";
+        return 0;
+    }
+
+    for (int i = 0; i < len; i++) {
+        char c = input_string[i];
+        
+        if (c == '_') {
+            // Проверка, что подчеркивание не идет перед или сразу после точки
+            if ((i > 0 && input_string[i - 1] == '.') || (i < len - 1 && input_string[i + 1] == '.')) {
+                std::cerr << "Error: underscore cannot be adjacent to the decimal point\n";
+                return 0;
+            }
+            // Пропускаем подчеркивания
+            continue;
+        } else if (c == '.') {
+            cleaned += c;
+        } else if (c == 'e' || c == 'E') {
+            cleaned += 'e';
+            i++; // Переход к следующему символу после 'e'/'E'
+
+            // Проверка на знак после экспоненты
+            if (i < len && (input_string[i] == '+' || input_string[i] == '-')) {
+                cleaned += input_string[i];
+                i++;
+            }
+
+            // Если после 'e'/'E' сразу подчеркивание или отсутствуют цифры
+            if (i >= len || input_string[i] == '_' || !std::isdigit(input_string[i])) {
+                std::cerr << "Error: invalid exponent format\n";
+                return 0;
+            }
+
+            // После экспоненты ожидаем цифры
+            
+            cleaned += input_string[i];
+            continue;
+
+        } else if (std::isdigit(c)) {
+            cleaned += c;
+            
+        }
+    }
+
+    return 1;
 }
 
 std::string replaceComma(const std::string& str) {
