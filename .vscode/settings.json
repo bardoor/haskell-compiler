@@ -1,5 +1,15 @@
 {
-    "files.associations": {
-        "iostream": "cpp"
-    }
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Users\\barten\\github\\hc2\\haskell-compiler\\bin",
+            "binaryPath": "c:\\Users\\barten\\github\\hc2\\haskell-compiler\\bin\\main_program.exe",
+            "binaryArgs": []
+        },
+        {
+            "cwd": "c:\\Users\\barten\\github\\hc2\\haskell-compiler",
+            "binaryPath": "c:\\Users\\barten\\github\\hc2\\haskell-compiler\\main_program",
+            "binaryArgs": []
+        }
+    ]
 }
