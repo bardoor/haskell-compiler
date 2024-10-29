@@ -1,44 +1,33 @@
+%language "C++"
+%defines
+%locations
+
 %{
-#include <iostream>
+#include <BisonUtils.h>
 
 extern int yylex();
 extern int yylineno;
-
+void yyerror(const char* s);
 %}
 
 %union {
     long long val;
-    std::unique_ptr<BinaryExpr> bin_expr;
+    Expr* expr;
 }
 
-%start module
-
-%type <bin_expr> expr
-%type <val> INTC
+%type <val> INTC;
+%type <expr> expr;
 
 %token FUNC_ID INTC MODULEKW CONSTRUCT_ID WHEREKW
 
 %%
-module : MODULEKW CONSTRUCT_ID WHEREKW funcList
-       ;
-
-funcList : funcDecl
-         : funcList funcDecl
-         ;
-
-funcDecl : FUNC_ID '=' expr
-         ;
-
-expr : INTC '+' INTC { $$ = $1 + $3; std::cout << "Add result: " << $$ << std::endl; }
+expr : INTC { $$ = new NumericLiteral($1); }
+     | expr '+' expr { 
+        $$ = new BinaryExpr($1, $3); 
+        std::cout << "Add result: " << $$ << std::endl; }
      ;
 
-
 %%
-void yyerror(const char *s) {
-    cerr << "Error: " << s << " on line " << yylineno << endl;
-}
-
-int main() {
-    yyparse(); 
-    return 0;
+void yyerror(const char* s) {
+    std::cerr << "Error: " << s << " on line " << yylineno << std::endl;
 }
