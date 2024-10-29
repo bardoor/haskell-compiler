@@ -1,5 +1,8 @@
 build
-flex/src/haskell.flex.cpp
 debug
+bin
 
 .vscode/settings.json
+Parser.hpp
+Parser.cpp
+haskell.flex.cpp
