@@ -1,15 +1,9 @@
+#pragma once
+
 #include <memory>
 #include <vector>
 #include <iostream>
-#include "Parser.h"
-
-enum Tokens {
-    WHEREKW = 1, 
-    FUNC_ID = 2, 
-    CONSTRUCT_ID = 3, 
-    INTC = 4, 
-    MODULEKW = 5
-};
+#include "Parser.hpp"
 
 class FunDecl {};
 class Expr {};
