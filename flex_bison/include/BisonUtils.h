@@ -3,26 +3,43 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <string>
 #include "Parser.hpp"
 
-class FunDecl {};
-class Expr {};
-
-class Module {
+struct Node {
+public:
+    Node() : id(nextId++) { id = nextId; }
+    virtual std::string generateDot() = 0;
+    virtual ~Node() = default;
+    
 protected:
-    std::vector<FunDecl> funDecls;
+    static int nextId;
+    long long id;
 };
 
-class BinaryExpr : public Expr {
-protected:
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
+struct FuncDecl {
 };
 
-class BinaryPlusExpr : public BinaryExpr {};
-
-class NumbericLiteral : public Expr {
-protected:
-    long long value;
+struct Module {
+    Module(Expression* e) {
+        expr = e;
+    }
+    Expression* expr;
 };
+
+struct Expression {
+    virtual ~Expression() = default;
+};
+
+struct BinaryExpr : public Expression {
+    BinaryExpr(Expression* l, Expression* r) : left(l), right(r) {}
+    Expression* left;
+    Expression* right;
+};
+
+struct NumericLiteral : public Expression {
+    NumericLiteral(long long v) : val(v) {}
+    long long val;
+};
+
 
