@@ -9,10 +9,14 @@ OBJ = $(patsubst flex_bison/src/%.cpp, $(OBJ_DIR)/%.o, $(SRC))
 
 TARGET = $(BIN_DIR)/main.exe
 
-all: generate_flexer $(TARGET)
+all: generate_bison generate_flexer $(TARGET)
 
 generate_flexer:
-	flex -+ --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/haskell.flex
+	flex --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/haskell.flex
+
+generate_bison:
+	bison -d -o flex_bison/src/Parser.cpp flex_bison/resources/parser.y
+	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $^
