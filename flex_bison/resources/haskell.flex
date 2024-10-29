@@ -60,7 +60,7 @@
 	std::string replaceComma(const std::string& str);
 	unsigned occurencesCount(std::string str, std::string substr);
 
-	int var;
+	long long intc;
 	long double var_float;
 	unsigned lineno = 1;
 	unsigned opened_line;
@@ -186,8 +186,8 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
-		long var = strtol(cleaned.c_str(), NULL, 8);
-		LOG_LEXEM("found octal integer literal: %ld\n", var);
+		yylval.intVal = strtoll(cleaned.c_str(), NULL, 8);
+		LOG_LEXEM("found octal integer literal: %ld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -211,8 +211,8 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		long var = strtol(cleaned.c_str(), NULL, 0); 
-		LOG_LEXEM("found decimal integer literal: %ld\n", var);
+		yylval.intVal = strtoll(cleaned.c_str(), NULL, 0); 
+		LOG_LEXEM("found decimal integer literal: %ld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -236,8 +236,8 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		long var = strtol(cleaned.c_str(), NULL, 16); 
-		LOG_LEXEM("found hexadecimal integer literal: %ld\n", var);
+		yylval.intVal = strtoll(cleaned.c_str(), NULL, 16); 
+		LOG_LEXEM("found hexadecimal integer literal: %ld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
