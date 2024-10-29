@@ -1,30 +1,37 @@
-%language "C++"
-%defines
+%require "3.2"
 %locations
 
 %{
 #include <BisonUtils.h>
 
+Module* root;
+
 extern int yylex();
 extern int yylineno;
+
 void yyerror(const char* s);
 %}
 
 %union {
-    long long val;
-    Expr* expr;
+    long long intVal;
+    const char* str;
+    struct Expression* expr;
+    struct Module* module;
 }
 
-%type <val> INTC;
+%start module
+
 %type <expr> expr;
+%type <module> module;
 
 %token FUNC_ID INTC MODULEKW CONSTRUCT_ID WHEREKW
 
 %%
-expr : INTC { $$ = new NumericLiteral($1); }
-     | expr '+' expr { 
-        $$ = new BinaryExpr($1, $3); 
-        std::cout << "Add result: " << $$ << std::endl; }
+module : expr { $$ = root = new Module($1); }
+       ;
+
+expr : INTC { $$ = new NumericLiteral(intc); }
+     | expr '+' expr { $$ = new BinaryExpr($1, $3);  }
      ;
 
 %%
