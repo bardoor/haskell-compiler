@@ -3,6 +3,9 @@ debug
 bin
 
 .vscode/settings.json
+
 Parser.hpp
 Parser.cpp
 haskell.flex.cpp
+
+*.hs
