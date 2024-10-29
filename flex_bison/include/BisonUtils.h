@@ -17,13 +17,38 @@ protected:
     long long id;
 };
 
+struct Param : public Node {
+
+};
+
+struct ParamList : public Node {
+public:
+    ParamList(std::vector<Param*>& parameters) {
+        params = parameters;
+    }
+
+protected:
+    std::vector<Param*> params;
+};
+
+
 struct FuncDecl {
+public:
+    FuncDecl(std::string& functionName, ParamList* parametersList) {
+        name = functionName;
+        paramList = std::unique_ptr<ParamList>(parametersList);
+    }
+
+protected:
+    std::string& name;
+    std::unique_ptr<ParamList> paramList;
 };
 
 struct Module {
     Module(Expression* e) {
         expr = e;
     }
+    
     Expression* expr;
 };
 
