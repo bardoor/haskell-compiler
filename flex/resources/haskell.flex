@@ -38,12 +38,15 @@
 		switch(layoutBuilder->emitLexem()) { \
 			case Lexem::OPEN_BRACE: \
 				layoutBuilder->addLexem("{"); \
+				printf("{\n"); \
 				break; \
 			case Lexem::CLOSING_BRACE: \
 				layoutBuilder->addLexem("}"); \
+				printf("}\n"); \
 				break; \
 			case Lexem::SEMICOLON: \
 				layoutBuilder->addLexem(";"); \
+				printf(";\n"); \
 				break; \
 			case Lexem::NONE: \
 				break; \
@@ -250,7 +253,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }
 <SINGLE_LINE_COMMENT>[^\n]			
-<SINGLE_LINE_COMMENT>\n		{ LOG_LEXEM("found a single line comment\n"); BEGIN(INITIAL); }
+<SINGLE_LINE_COMMENT>\n		{ LOG_LEXEM("found a single line comment\n"); BEGIN(INITIAL); yyless(0); }
 
 "{-"                        { BEGIN(MULTI_LINE_COMMENT); opened_line = yylineno; }
 <MULTI_LINE_COMMENT>[^-]+   

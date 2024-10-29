@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include "parser.tab.h"
 
 enum Tokens {
     WHEREKW = 1, 
