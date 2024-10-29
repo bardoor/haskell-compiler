@@ -1,26 +1,25 @@
 #include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <filesystem>
-#include <cstdlib>
-#include <cstdio>
+#include <stdlib.h>
+#include <Parser.hpp>
 
-#include <FlexLexer.h>
+extern int yylex();
+extern FILE* yyin;
 
-int main(void) {
-	std::ifstream in;
-	in.open("flex_bison/resources/code_examples/sample.hs");
+int main(int argc, char *argv[]) {
+	const char* file = "flex_bison/resources/code_examples/sample.hs";
 
-	if (!in.is_open()) {
-		std::filesystem::path currentPath = std::filesystem::current_path();
-    	std::cout << "Current Directory: " << currentPath << std::endl;
-		throw std::runtime_error("Can't open file!");
+    FILE* input_file = fopen(file, "r");
+    if (!input_file) {
+        perror("Error opening input file");
+        return EXIT_FAILURE;
+    }
+
+    yyin = input_file;
+
+	while (yylex() != 0) {
+		yyparse();
 	}
 
-	yyFlexLexer* lex = new yyFlexLexer(in, std::cout);
-	while (lex->yylex() != 0);
-	delete lex;
+	return EXIT_SUCCESS;
 }
 
