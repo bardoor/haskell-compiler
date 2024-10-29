@@ -1,5 +1,4 @@
 %option noyywrap
-%option c++
 
 %{
 	#include <string>
@@ -108,7 +107,7 @@ deriving  { LOG_LEXEM("found lexem: deriving\n"); layoutBuilder->addLexem(std::s
 do        { LOG_LEXEM("found lexem: do\n"); layoutBuilder->addLexem(std::string(yytext));}
 if        { LOG_LEXEM("found lexem: if\n"); layoutBuilder->addLexem(std::string(yytext));}
 else      { LOG_LEXEM("found lexem: else\n"); layoutBuilder->addLexem(std::string(yytext));}
-where     { LOG_LEXEM("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext)); return WHEREKW; }
+where     { LOG_LEXEM("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext)); }
 let       { LOG_LEXEM("found lexem: let\n"); layoutBuilder->addLexem(std::string(yytext));}
 foreign   { LOG_LEXEM("found lexem: foreign\n"); layoutBuilder->addLexem(std::string(yytext));}
 infix     { LOG_LEXEM("found lexem: infix\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -116,7 +115,7 @@ infixl    { LOG_LEXEM("found lexem: infixl\n"); layoutBuilder->addLexem(std::str
 infixr    { LOG_LEXEM("found lexem: infixr\n"); layoutBuilder->addLexem(std::string(yytext));}
 instance  { LOG_LEXEM("found lexem: instance\n"); layoutBuilder->addLexem(std::string(yytext));}
 import    { LOG_LEXEM("found lexem: import\n"); layoutBuilder->addLexem(std::string(yytext));}
-module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::string(yytext)); return MODULEKW; }
+module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::string(yytext)); }
 	
 \(      { LOG_LEXEM("found opening parenthesis\n"); layoutBuilder->addLexem(std::string(yytext));}
 \)      { LOG_LEXEM("found closing parenthesis\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -169,10 +168,9 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	} 
 	else {
 		LOG_LEXEM("found function identifier: %s\n", yytext); 
-		return FUNC_ID;
 	}
 }
-{LARGE}({WORD}|')*  { LOG_LEXEM("found constructor identifier: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return CONSTRUCT_ID; }
+{LARGE}({WORD}|')*  { LOG_LEXEM("found constructor identifier: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext));}
 
 {INT_8}  { 
   	std::string cleaned;
