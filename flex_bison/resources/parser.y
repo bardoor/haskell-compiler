@@ -15,22 +15,41 @@ void yyerror(const char* s);
 %union {
     long long intVal;
     const char* str;
-    struct Expression* expr;
+    struct Expr* expr;
     struct Module* module;
+    struct FuncDecl* funcDecl;
+    struct Param* param;
+    struct ParamList* paramList;
 }
 
 %start module
 
 %type <expr> expr;
 %type <module> module;
+%type <param> param;
 
-%token FUNC_ID INTC MODULEKW CONSTRUCT_ID WHEREKW
+%token <intVal> INTC
+%token <str> FUNC_ID
 
 %%
-module : expr { $$ = root = new Module($1); }
+module : funcDecl { $$ = root = new Module($1); }
        ;
 
-expr : INTC { $$ = new NumericLiteral(intc); }
+funcDecl : FUNC_ID paramListE '=' expr { $$ = new FuncDecl($1, $2, $4); }
+         ;
+
+param : FUNC_ID { $$ = new Param($1); }
+      ;
+
+paramList : param            { $$ = new ParamList(); }
+          | paramList param  { $1->add($2); $$ = $1; }
+          ;
+
+paramListE : /* nothing */   { $$ = new ParamList(); }
+           | paramList       { $$ = $1; }
+           ;
+
+expr : INTC { $$ = new IntLiteral(intc); }
      | expr '+' expr { $$ = new BinaryExpr($1, $3);  }
      ;
 
