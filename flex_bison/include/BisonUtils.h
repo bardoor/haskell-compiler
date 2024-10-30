@@ -88,6 +88,24 @@ protected:
     std::unique_ptr<Expr> body;
 };
 
+struct FuncApply : public Expr {
+public:
+    FuncApply(std::string functionName, ParamList* parametersList)
+        : name(functionName), paramList(parametersList) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"Function: " << name << "\", shape=box];\n";
+        ss << paramList->generateDot();
+        ss << "    node" << getId() << " -> node" << paramList->getId() << ";\n";
+        return ss.str();
+    }
+
+protected:
+    std::string name;
+    std::unique_ptr<ParamList> paramList;
+};
+
 struct Module : public Node {
 public:
     Module(FuncDecl* fDecl) {
@@ -391,20 +409,27 @@ protected:
 
 struct NotExpr : public UnaryExpr {
 public:
+    NotExpr(Expr* exp) : UnaryExpr(exp) {}
+
     std::string generateDot() override {
         std::stringstream ss;
+
         ss << expr->generateDot();
         ss << "    node" << getId() << " [label=\"NotExpr\", shape=ellipse];\n";
         ss << "    node" << getId() << " -> node" << expr->getId() << " ;\n";
 
         return ss.str();
     }
+
 };
 
 struct NegateExpr : public UnaryExpr {
 public:
+    NegateExpr(Expr* exp) : UnaryExpr(exp) { }
+
     std::string generateDot() override {
         std::stringstream ss;
+
         ss << expr->generateDot();
         ss << "    node" << getId() << " [label=\"NegateExpr\", shape=ellipse];\n";
         ss << "    node" << getId() << " -> node" << expr->getId() << " ;\n";

@@ -55,8 +55,10 @@ void yyerror(const char* s);
 %token <intVal> INTC
 %token <floatVal> FLOATC
 %token <str> FUNC_ID CONSTRUCTOR_ID
-%token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ NEQ LE GE AND OR CONCAT RANGE FUNCTYPE MONADBINDING GUARDS INDEXING ASPATTERN TYPEANNOTATION TYPECONSTRAINT
-%token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW
+%token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ 
+%token NEQ LE GE AND OR CONCAT RANGE FUNCTYPE MONADBINDING GUARDS INDEXING ASPATTERN TYPEANNOTATION TYPECONSTRAINT
+%token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
+%token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW
 
 %%
 module : funcDecl { $$ = root = new Module($1); LOG_PARSER("## PARSER ## made Module\n"); }
@@ -81,13 +83,13 @@ expr : INTC               { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## ma
      | FUNC_ID paramListE { $$ = new FuncApply($1, $2); LOG_PARSER("## PARSER ## made FuncCall\n"); }
      | expr '+' expr      { $$ = new AddExpr($1, $3); LOG_PARSER("## PARSER ## made AddExpr\n"); }
      | expr '-' expr      { $$ = new SubExpr($1, $3); LOG_PARSER("## PARSER ## made SubExpr\n"); }
-     | expr '*' expr      { $$ = new MulExor($1, $3); LOG_PARSER("## PARSER ## made MulExor\n"); }
+     | expr '*' expr      { $$ = new MulExpr($1, $3); LOG_PARSER("## PARSER ## made MulExor\n"); }
      | expr '/' expr      { $$ = new DivExpr($1, $3); LOG_PARSER("## PARSER ## made DivExpr\n"); }
      | '(' expr ')'       { $$ = $2; LOG_PARSER("## PARSER ## made expr in parentheses\n"); }
      | expr AND expr      { $$ = new AndExpr($1, $3); LOG_PARSER("## PARSER ## made &&\n"); }
      | expr OR expr       { $$ = new OrExpr($1, $3); LOG_PARSER("## PARSER ## made ||\n"); }
      | expr EQ expr       { $$ = new EqualExpr($1, $3); LOG_PARSER("## PARSER ## made ==\n"); }
-     | expr NEQ expr      { $$ = new NotEqualExpr($1, $3); LOG_PARSER("## PARSER ## made  !=\n"); }
+     | expr NEQ expr      { $$ = new NotEqualExpr($1, $3); LOG_PARSER("## PARSER ## made !=\n"); }
      | expr LE expr       { $$ = new LessThanExpr($1, $3); LOG_PARSER("## PARSER ## made <=\n"); }
      | expr GE expr       { $$ = new GreaterThanExpr($1, $3); LOG_PARSER("## PARSER ## made  >=\n"); }
      | expr '<' expr      { $$ = new LessExpr($1, $3); LOG_PARSER("## PARSER ## made <\n"); }
