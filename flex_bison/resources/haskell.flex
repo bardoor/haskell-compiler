@@ -168,7 +168,9 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 		EMIT_LEXEM
 	} 
 	else {
-		LOG_LEXEM("found function identifier: %s\n", yytext); 
+		LOG_LEXEM("found function identifier: %s\n", yytext);
+		yylval.str = yytext;
+		return FUNC_ID;
 	}
 }
 {LARGE}({WORD}|')*  { LOG_LEXEM("found constructor identifier: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext));}
