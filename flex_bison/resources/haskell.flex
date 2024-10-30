@@ -5,6 +5,7 @@
 	#include <cstring>
 	#include <memory>
 	#include <algorithm>
+	#include <charconv>
 
 	#include "FlexUtils.h"
 	#include "BisonUtils.h"
@@ -238,6 +239,7 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
+		cleaned = replaceComma(cleaned);
 		yylval.intVal = strtoll(cleaned.c_str(), NULL, 16); 
 		LOG_LEXEM("found hexadecimal integer literal: %ld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
@@ -260,14 +262,16 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 	std::string after_literal;
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
 	LOOKAHEAD(after_literal);
-  
+	
     if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
                            [](char c) {return std::isalpha(c); })) {
-		yylval.floatVal = std::stold(replaceComma(cleaned));
-		LOG_LEXEM("found float literal: %Lf\n", yylval.floatVal);
+		// cleaned = replaceComma(cleaned);
+		yylval.floatVal = std::stold(cleaned);
+
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
-		}
+		}		
+		LOG_LEXEM("found float literal: %Lf\n", yylval.floatVal);	
 		return FLOATC;
 	}  
     std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;
@@ -435,24 +439,6 @@ static int clean_float(const std::string& input_string, std::string& cleaned) {
 }
 
 std::string replaceComma(const std::string& str) {
-	// TODO: разобраться почему возникает проблема с определением локали
-	/* 
-	#if defined(_WIN32) || defined(_WIN64)
-		std::locale currentLocale("en-US");  // Windows
-	#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-		std::locale currentLocale("en_US.UTF-8");  // Linux/macOS
-	#else
-		std::locale currentLocale("");  // Используем локаль по умолчанию
-	#endif
-    // Получаем разделитель целой и дробной части в текущей локали
-    const std::numpunct<char>& numPunct = std::use_facet<std::numpunct<char>>(currentLocale);
-
-	// Не меняем строку если в текущий локали разделителем уже является . (как в хаскелле)
-	if (numPunct.decimal_point() == '.') {
-		return str;
-	}
-	*/
-
 	std::string result = str;
 	size_t start_pos = 0;
 
