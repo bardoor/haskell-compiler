@@ -148,5 +148,20 @@ protected:
     long long val;
 };
 
+struct FloatLiteral : public Expr {
+public:
+    FloatLiteral(long double v) : val(v) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"FloatLiteral: " << val << "\", shape=ellipse];\n";
+        return ss.str();
+    }
+
+protected:
+    long double val;
+};
+
+
 
 std::string generateDot(Module* root);

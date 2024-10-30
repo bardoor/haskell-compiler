@@ -193,11 +193,11 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
+		return INTC;
 	}
-	else {
-		std::cerr << "Error! Incorrect octal integer literal: " << cleaned + after_literal << std::endl;
-		return -1;
-	}
+
+	std::cerr << "Error! Incorrect octal integer literal: " << cleaned + after_literal << std::endl;
+	return -1;
 }
 
 {INT_10} {
@@ -243,11 +243,11 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
+		return INTC;
 	}
-	else {
-		std::cerr << "Error! Incorrect hexadecimal integer literal: " << cleaned + after_literal << std::endl;
-		return -1;
-	}	
+
+	std::cerr << "Error! Incorrect hexadecimal integer literal: " << cleaned + after_literal << std::endl;
+	return -1;
 }
 
 {FLOAT}  {
@@ -263,16 +263,15 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
   
     if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
                            [](char c) {return std::isalpha(c); })) {
-		var_float = std::stold(replaceComma(cleaned));
-		LOG_LEXEM("found float literal: %Lf\n", var_float);
+		yylval.floatVal = std::stold(replaceComma(cleaned));
+		LOG_LEXEM("found float literal: %Lf\n", yylval.floatVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
+		return FLOATC;
 	}  
-  	else {
     std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;
     return -1;
-  	}  
 }
 
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }

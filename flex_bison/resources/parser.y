@@ -23,6 +23,7 @@ void yyerror(const char* s);
 
 %union {
     long long intVal;
+    long double floatVal;
     const char* str;
     struct Expr* expr;
     struct Module* module;
@@ -42,6 +43,7 @@ void yyerror(const char* s);
 %type <paramList> paramList paramListE;
 
 %token <intVal> INTC
+%token <floatVal> FLOATC
 %token <str> FUNC_ID
 
 %%
@@ -63,6 +65,7 @@ paramListE : /* nothing */   { $$ = new ParamList(); LOG_PARSER("## PARSER ## ma
            ;
 
 expr : INTC          { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## made IntLiteral\n"); }
+     | FLOATC        { $$ = new FloatLiteral($1); LOG_PARSER("## PARSER ## made FloatLiteral\n"); }
      | expr '+' expr { $$ = new BinaryExpr($1, $3); LOG_PARSER("## PARSER ## made BinaryExpr\n"); }
      ;
 
