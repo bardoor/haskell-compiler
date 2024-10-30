@@ -120,11 +120,11 @@ public:
         ss << "    node" << getId() << " [label=\"BinaryExpr\", shape=diamond];\n";
         if (left) {
             ss << left->generateDot();
-            ss << "    node" << getId() << " -> node" << left->getId() << ";\n";
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
         }
         if (right) {
             ss << right->generateDot();
-            ss << "    node" << getId() << " -> node" << right->getId() << ";\n";
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
         }
         return ss.str();
     }
