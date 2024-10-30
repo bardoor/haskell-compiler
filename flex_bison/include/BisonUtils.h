@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stdio.h>
 #include "Parser.hpp"
 
 struct Node {
@@ -49,25 +50,36 @@ protected:
     std::unique_ptr<Expr> body;
 };
 
-struct Module {
+struct Module : public Node {
 public:
-    Module(FuncDecl* fDecl) : decl(fDecl) {} 
+    Module(FuncDecl* fDecl) {
+        decl = std::unique_ptr<FuncDecl>(fDecl);
+    }
 
 protected:
-    FuncDecl* decl;
+    std::unique_ptr<FuncDecl> decl;
 };
 
-struct Expr {
+struct Expr : public Node {
     virtual ~Expr() = default;
 };
 
 struct BinaryExpr : public Expr {
-    BinaryExpr(Expr* l, Expr* r) : left(l), right(r) {} 
-    Expr* left;
-    Expr* right;
+public:    
+    BinaryExpr(Expr* l, Expr* r) {
+        left = std::unique_ptr<Expr>(l);
+        right = std::unique_ptr<Expr>(r);
+    }
+
+protected:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
 };
 
 struct IntLiteral : public Expr {
+public:
     IntLiteral(long long v) : val(v) {} 
+
+protected:
     long long val;
 };
