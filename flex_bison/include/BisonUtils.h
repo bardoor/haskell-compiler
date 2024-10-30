@@ -134,6 +134,78 @@ protected:
     std::unique_ptr<Expr> right;
 };
 
+struct AddExpr : public BinaryExpr {
+    AddExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"AddExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct SubExpr : public BinaryExpr {
+    SubExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"Substract\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct MulExpr : public BinaryExpr {
+    MulExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"Multiply\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct DivExpr : public BinaryExpr {
+    DivExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"Division\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
 struct IntLiteral : public Expr {
 public:
     IntLiteral(long long v) : val(v) {}

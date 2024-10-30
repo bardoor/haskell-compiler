@@ -76,9 +76,24 @@ paramListE : /* nothing */   { $$ = new ParamList(); LOG_PARSER("## PARSER ## ma
            | paramList       { $$ = $1; LOG_PARSER("## PARSER ## made not empty paramListE\n"); }
            ;
 
-expr : INTC          { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## made IntLiteral\n"); }
-     | FLOATC        { $$ = new FloatLiteral($1); LOG_PARSER("## PARSER ## made FloatLiteral\n"); }
-     | expr '+' expr { $$ = new BinaryExpr($1, $3); LOG_PARSER("## PARSER ## made BinaryExpr\n"); }
+expr : INTC               { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## made IntLiteral\n"); }
+     | FLOATC             { $$ = new FloatLiteral($1); LOG_PARSER("## PARSER ## made FloatLiteral\n"); }
+     | FUNC_ID paramListE { $$ = new FuncApply($1, $2); LOG_PARSER("## PARSER ## made FuncCall\n"); }
+     | expr '+' expr      { $$ = new AddExpr($1, $3); LOG_PARSER("## PARSER ## made AddExpr\n"); }
+     | expr '-' expr      { $$ = new SubExpr($1, $3); LOG_PARSER("## PARSER ## made SubExpr\n"); }
+     | expr '*' expr      { $$ = new MulExor($1, $3); LOG_PARSER("## PARSER ## made MulExor\n"); }
+     | expr '/' expr      { $$ = new DivExpr($1, $3); LOG_PARSER("## PARSER ## made DivExpr\n"); }
+     | '(' expr ')'       { $$ = $2; LOG_PARSER("## PARSER ## made expr in parentheses\n"); }
+     | expr AND expr      { $$ = new BinaryExpr($1, $3, AND); LOG_PARSER("## PARSER ## made BinaryExpr for &&\n"); }
+     | expr OR expr       { $$ = new BinaryExpr($1, $3, OR); LOG_PARSER("## PARSER ## made BinaryExpr for ||\n"); }
+     | expr EQ expr       { $$ = new BinaryExpr($1, $3, EQ); LOG_PARSER("## PARSER ## made BinaryExpr for ==\n"); }
+     | expr NEQ expr      { $$ = new BinaryExpr($1, $3, NEQ); LOG_PARSER("## PARSER ## made BinaryExpr for !=\n"); }
+     | expr LE expr       { $$ = new BinaryExpr($1, $3, LE); LOG_PARSER("## PARSER ## made BinaryExpr for <=\n"); }
+     | expr GE expr       { $$ = new BinaryExpr($1, $3, GE); LOG_PARSER("## PARSER ## made BinaryExpr for >=\n"); }
+     | expr CONCAT expr   { $$ = new BinaryExpr($1, $3, CONCAT); LOG_PARSER("## PARSER ## made BinaryExpr for ++\n"); }
+     | expr RANGE expr    { $$ = new BinaryExpr($1, $3, RANGE); LOG_PARSER("## PARSER ## made BinaryExpr for range (..)\n"); }
+     | NOT expr           { $$ = new UnaryExpr(NOT, $2); LOG_PARSER("## PARSER ## made UnaryExpr for not\n"); }
+     | NEGATE expr        { $$ = new UnaryExpr(NEGATE, $2); LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
      ;
 
 %%
