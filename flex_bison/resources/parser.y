@@ -3,11 +3,20 @@
 
 %{
 #include <BisonUtils.h>
+long long Node::nextId = 0;
 
 Module* root;
 
 extern int yylex();
 extern int yylineno;
+
+#define DEBUG_PARSER
+
+#ifdef DEBUG_PARSER
+    #define LOG_PARSER(msg, ...) printf(msg, ##__VA_ARGS__);
+#else
+    #define LOG_PARSER(msg, ...)
+#endif
 
 void yyerror(const char* s);
 %}
@@ -22,35 +31,39 @@ void yyerror(const char* s);
     struct ParamList* paramList;
 }
 
+%left '+' '-'
+
 %start module
 
 %type <expr> expr;
 %type <module> module;
 %type <param> param;
+%type <funcDecl> funcDecl;
+%type <paramList> paramList paramListE;
 
 %token <intVal> INTC
 %token <str> FUNC_ID
 
 %%
-module : funcDecl { $$ = root = new Module($1); }
+module : funcDecl { $$ = root = new Module($1); LOG_PARSER("## PARSER ## made Module\n"); }
        ;
 
-funcDecl : FUNC_ID paramListE '=' expr { $$ = new FuncDecl($1, $2, $4); }
+funcDecl : FUNC_ID paramListE '=' expr { $$ = new FuncDecl($1, $2, $4); LOG_PARSER("## PARSER ## made funcDecl\n"); }
          ;
 
-param : FUNC_ID { $$ = new Param($1); }
+param : FUNC_ID { $$ = new Param(std::string($1)); LOG_PARSER("## PARSER ## made param\n"); }
       ;
 
-paramList : param            { $$ = new ParamList(); }
-          | paramList param  { $1->add($2); $$ = $1; }
+paramList : param            { $$ = new ParamList(); LOG_PARSER("## PARSER ## made paramList\n"); }
+          | paramList param  { $1->add($2); $$ = $1; LOG_PARSER("## PARSER ## add to paramList\n"); }
           ;
 
-paramListE : /* nothing */   { $$ = new ParamList(); }
-           | paramList       { $$ = $1; }
+paramListE : /* nothing */   { $$ = new ParamList(); LOG_PARSER("## PARSER ## made empty paramListE\n"); }
+           | paramList       { $$ = $1; LOG_PARSER("## PARSER ## made not empty paramListE\n"); }
            ;
 
-expr : INTC { $$ = new IntLiteral(intc); }
-     | expr '+' expr { $$ = new BinaryExpr($1, $3);  }
+expr : INTC          { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## made IntLiteral\n"); }
+     | expr '+' expr { $$ = new BinaryExpr($1, $3); LOG_PARSER("## PARSER ## made empty BinaryExpr\n"); }
      ;
 
 %%
