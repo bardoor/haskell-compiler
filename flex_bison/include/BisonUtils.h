@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "Parser.hpp"
 
-
+// TODO: class, type, typeclass, newtype, where, let, string, char, guards, pattern matching, data constructors, op create, 
 struct Node {
 public:
     Node() : id(nextId++) {}
@@ -242,6 +242,115 @@ struct OrExpr : public BinaryExpr {
     }
 };
 
+struct EqualExpr : public BinaryExpr {
+    EqualExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"EqualExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct NotEqualExpr : public BinaryExpr {
+    NotEqualExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"NotEqualExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct LessThanExpr : public BinaryExpr {
+    LessThanExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"LessThanExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct GreaterThanExpr : public BinaryExpr {
+    GreaterThanExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"GreaterThanExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct LessExpr : public BinaryExpr {
+    LessExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"LessExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct GreaterExpr : public BinaryExpr {
+    GreaterExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"GreaterExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+
 struct IntLiteral : public Expr {
 public:
     IntLiteral(long long v) : val(v) {}
@@ -270,6 +379,39 @@ protected:
     long double val;
 };
 
+struct UnaryExpr : public Expr {
+public:
+    UnaryExpr(Expr* exp) {
+        expr = std::unique_ptr<Expr>(exp);
+    }
+
+protected:
+    std::unique_ptr<Expr> expr;
+};
+
+struct NotExpr : public UnaryExpr {
+public:
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << expr->generateDot();
+        ss << "    node" << getId() << " [label=\"NotExpr\", shape=ellipse];\n";
+        ss << "    node" << getId() << " -> node" << expr->getId() << " ;\n";
+
+        return ss.str();
+    }
+};
+
+struct NegateExpr : public UnaryExpr {
+public:
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << expr->generateDot();
+        ss << "    node" << getId() << " [label=\"NegateExpr\", shape=ellipse];\n";
+        ss << "    node" << getId() << " -> node" << expr->getId() << " ;\n";
+
+        return ss.str();
+    }
+};
 
 
 std::string generateDot(Module* root);

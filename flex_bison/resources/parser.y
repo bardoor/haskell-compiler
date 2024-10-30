@@ -84,16 +84,16 @@ expr : INTC               { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## ma
      | expr '*' expr      { $$ = new MulExor($1, $3); LOG_PARSER("## PARSER ## made MulExor\n"); }
      | expr '/' expr      { $$ = new DivExpr($1, $3); LOG_PARSER("## PARSER ## made DivExpr\n"); }
      | '(' expr ')'       { $$ = $2; LOG_PARSER("## PARSER ## made expr in parentheses\n"); }
-     | expr AND expr      { $$ = new AndExpr($1, $3); LOG_PARSER("## PARSER ## made AndExpr\n"); }
-     | expr OR expr       { $$ = new OrExpr($1, $3); LOG_PARSER("## PARSER ## made OrExpr\n"); }
-     | expr EQ expr       { $$ = new BinaryExpr($1, $3, EQ); LOG_PARSER("## PARSER ## made BinaryExpr for ==\n"); }
-     | expr NEQ expr      { $$ = new BinaryExpr($1, $3, NEQ); LOG_PARSER("## PARSER ## made BinaryExpr for !=\n"); }
-     | expr LE expr       { $$ = new BinaryExpr($1, $3, LE); LOG_PARSER("## PARSER ## made BinaryExpr for <=\n"); }
-     | expr GE expr       { $$ = new BinaryExpr($1, $3, GE); LOG_PARSER("## PARSER ## made BinaryExpr for >=\n"); }
-     | expr CONCAT expr   { $$ = new BinaryExpr($1, $3, CONCAT); LOG_PARSER("## PARSER ## made BinaryExpr for ++\n"); }
-     | expr RANGE expr    { $$ = new BinaryExpr($1, $3, RANGE); LOG_PARSER("## PARSER ## made BinaryExpr for range (..)\n"); }
-     | NOT expr           { $$ = new UnaryExpr(NOT, $2); LOG_PARSER("## PARSER ## made UnaryExpr for not\n"); }
-     | NEGATE expr        { $$ = new UnaryExpr(NEGATE, $2); LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
+     | expr AND expr      { $$ = new AndExpr($1, $3); LOG_PARSER("## PARSER ## made &&\n"); }
+     | expr OR expr       { $$ = new OrExpr($1, $3); LOG_PARSER("## PARSER ## made ||\n"); }
+     | expr EQ expr       { $$ = new EqualExpr($1, $3); LOG_PARSER("## PARSER ## made ==\n"); }
+     | expr NEQ expr      { $$ = new NotEqualExpr($1, $3); LOG_PARSER("## PARSER ## made  !=\n"); }
+     | expr LE expr       { $$ = new LessThanExpr($1, $3); LOG_PARSER("## PARSER ## made <=\n"); }
+     | expr GE expr       { $$ = new GreaterThanExpr($1, $3); LOG_PARSER("## PARSER ## made  >=\n"); }
+     | expr '<' expr      { $$ = new LessExpr($1, $3); LOG_PARSER("## PARSER ## made <\n"); }
+     | expr '>' expr      { $$ = new GreaterExpr($1, $3); LOG_PARSER("## PARSER ## made >\n"); }
+     | NOT expr           { $$ = new NotExpr($2); LOG_PARSER("## PARSER ## made UnaryExpr for not\n"); }
+     | NEGATE expr        { $$ = new NegateExpr($2); LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
      ;
 
 %%
