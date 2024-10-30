@@ -1,5 +1,13 @@
 #include "FlexUtils.h"
 
+// #define DEBUG_STATES
+
+#ifdef DEBUG_STATES
+    #define LOG_STATE(msg) std::cout << msg << std::endl;
+#else
+    #define LOG_STATE(msg)
+#endif
+
 const char* staticMap(char c) {
     switch (c) {
         case '\a': return "\\a";

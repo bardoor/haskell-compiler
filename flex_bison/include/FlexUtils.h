@@ -11,13 +11,6 @@
 #include <iomanip>
 
 #define DEBUG_LEXEMS
-#define DEBUG_STATES
-
-#ifdef DEBUG_STATES
-    #define LOG_STATE(msg) std::cout << msg << std::endl;
-#else
-    #define LOG_STATE(msg)
-#endif
 
 enum class Lexem {
     OPEN_BRACE, 
