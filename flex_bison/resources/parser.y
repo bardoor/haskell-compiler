@@ -32,7 +32,17 @@ void yyerror(const char* s);
     struct ParamList* paramList;
 }
 
+%right '$' SEQOP STRICTAPPLY
+%right OR
+%right AND
+%left FMAPOP APPLYFUNCTOR
+%nonassoc '<' '>' EQ NEQ GE LE
+%right ':' CONCAT
 %left '+' '-'
+%left '/' '*' DIVOP MODOP QUOTOP REMOP
+%right '^'
+%left INDEXING
+%right '.'
 
 %start module
 
@@ -44,7 +54,9 @@ void yyerror(const char* s);
 
 %token <intVal> INTC
 %token <floatVal> FLOATC
-%token <str> FUNC_ID
+%token <str> FUNC_ID CONSTRUCTOR_ID
+%token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ NEQ LE GE AND OR CONCAT RANGE FUNCTYPE MONADBINDING GUARDS INDEXING ASPATTERN TYPEANNOTATION TYPECONSTRAINT
+%token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW
 
 %%
 module : funcDecl { $$ = root = new Module($1); LOG_PARSER("## PARSER ## made Module\n"); }
