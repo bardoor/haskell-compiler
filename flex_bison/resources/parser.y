@@ -63,10 +63,21 @@ paramListE : /* nothing */   { $$ = new ParamList(); LOG_PARSER("## PARSER ## ma
            ;
 
 expr : INTC          { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## made IntLiteral\n"); }
-     | expr '+' expr { $$ = new BinaryExpr($1, $3); LOG_PARSER("## PARSER ## made empty BinaryExpr\n"); }
+     | expr '+' expr { $$ = new BinaryExpr($1, $3); LOG_PARSER("## PARSER ## made BinaryExpr\n"); }
      ;
 
 %%
+
 void yyerror(const char* s) {
     std::cerr << "Error: " << s << " on line " << yylineno << std::endl;
+}
+
+std::string generateDot(Module* root) {
+    std::stringstream ss;
+    ss << "digraph AST {\n";
+    if (root) {
+        ss << root->generateDot();
+    }
+    ss << "}\n";
+    return ss.str();
 }

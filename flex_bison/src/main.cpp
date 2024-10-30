@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 #include <BisonUtils.h>
 #include <Parser.hpp>
 
@@ -20,7 +21,9 @@ int main(int argc, char *argv[]) {
 
 	yyparse();
 
-	std::cout << root << std::endl;
+	std::ofstream outfile("graph.dot");
+	outfile << generateDot(root);
+	outfile.close();
 
 	return EXIT_SUCCESS;
 }
