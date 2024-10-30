@@ -127,10 +127,20 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 \]      { LOG_LEXEM("found closing square bracket\n"); layoutBuilder->addLexem(std::string(yytext));}
 \;		{ LOG_LEXEM("found semicolon\n"); layoutBuilder->addLexem(std::string(yytext));}
 
-\+      { LOG_LEXEM("found operator: +\n"); layoutBuilder->addLexem(std::string(yytext)); return '+';}
-\-      { LOG_LEXEM("found operator: -\n"); layoutBuilder->addLexem(std::string(yytext));}
-\*      { LOG_LEXEM("found operator: *\n"); layoutBuilder->addLexem(std::string(yytext));}
-\/      { LOG_LEXEM("found operator: /\n"); layoutBuilder->addLexem(std::string(yytext));}
+\+      |
+\-      |
+\*      |
+\/      |
+~       |
+\\      |
+%		|
+"^"     |
+"$"     |
+"<"		|
+">"		|
+"="		|
+:		| 
+"."     { LOG_LEXEM("found operator: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
 div     { LOG_LEXEM("found operation: div\n"); layoutBuilder->addLexem(std::string(yytext));}
 mod     { LOG_LEXEM("found operation: mod\n"); layoutBuilder->addLexem(std::string(yytext));}
 negate  { LOG_LEXEM("found operation: negate\n"); layoutBuilder->addLexem(std::string(yytext));}
@@ -138,28 +148,18 @@ not     { LOG_LEXEM("found operation: not\n"); layoutBuilder->addLexem(std::stri
 xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::string(yytext));}
 ==      { LOG_LEXEM("found operator: ==\n"); layoutBuilder->addLexem(std::string(yytext));}
 "/="    { LOG_LEXEM("found operator: /=\n"); layoutBuilder->addLexem(std::string(yytext));}
-"<"		{ LOG_LEXEM("found operator: <\n"); layoutBuilder->addLexem(std::string(yytext));}
-">"		{ LOG_LEXEM("found operator: >\n");layoutBuilder->addLexem(std::string(yytext));}
 "<="	{ LOG_LEXEM("found operator: <=\n"); layoutBuilder->addLexem(std::string(yytext));}
 ">="	{ LOG_LEXEM("found operator: >=\n"); layoutBuilder->addLexem(std::string(yytext));}
 &&		{ LOG_LEXEM("found operator: &&\n"); layoutBuilder->addLexem(std::string(yytext));}
 "||"    { LOG_LEXEM("found operator: ||\n"); layoutBuilder->addLexem(std::string(yytext));}
-"="		{ LOG_LEXEM("found operator: = (assignment or pattern matching)\n"); layoutBuilder->addLexem(std::string(yytext)); return '=';}
-:		{ LOG_LEXEM("found operator: : (cons)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "++"    { LOG_LEXEM("found operator: ++ (list concatenation)\n"); layoutBuilder->addLexem(std::string(yytext));}
 ".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext));}
-"."     { LOG_LEXEM("found operator: . (function composition)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "->"	{ LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "<-"	{ LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext));}
 "|"     { LOG_LEXEM("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext));}
 !!		{ LOG_LEXEM("found operator: !! (list indexing)\n"); layoutBuilder->addLexem(std::string(yytext));}
-\\      { LOG_LEXEM("found operator: \\ (lambda)\n"); layoutBuilder->addLexem(std::string(yytext));}
-%		{ LOG_LEXEM("found operator: % (modulus)\n"); layoutBuilder->addLexem(std::string(yytext));}
-"^"     { LOG_LEXEM("found operator: ^ (exponentiation)\n"); layoutBuilder->addLexem(std::string(yytext));}
-"$"     { LOG_LEXEM("found operator: $ (function application)\n"); layoutBuilder->addLexem(std::string(yytext));}
-::		{ LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext));}
 @       { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext));}
-~       { LOG_LEXEM("found operator: lazy pattern matching (~)\n"); layoutBuilder->addLexem(std::string(yytext));}
+::		{ LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext));}
 =>      { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext));}
 	
 {SMALL}({WORD}|')*  { 
