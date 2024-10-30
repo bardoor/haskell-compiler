@@ -43,6 +43,7 @@ void yyerror(const char* s);
 %right '^'
 %left INDEXING
 %right '.'
+%right NOT NEGATE
 
 %start module
 
