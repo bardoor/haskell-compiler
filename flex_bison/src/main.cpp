@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <BisonUtils.h>
 #include <Parser.hpp>
 
 extern int yylex();
 extern FILE* yyin;
+extern Module* root;
 
 int main(int argc, char *argv[]) {
 	const char* file = "flex_bison/resources/code_examples/sample.hs";
@@ -16,9 +18,9 @@ int main(int argc, char *argv[]) {
 
     yyin = input_file;
 
-	while (yylex() != 0) {
-		yyparse();
-	}
+	yyparse();
+
+	std::cout << root << std::endl;
 
 	return EXIT_SUCCESS;
 }
