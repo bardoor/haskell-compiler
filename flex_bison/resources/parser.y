@@ -84,8 +84,8 @@ expr : INTC               { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## ma
      | expr '*' expr      { $$ = new MulExor($1, $3); LOG_PARSER("## PARSER ## made MulExor\n"); }
      | expr '/' expr      { $$ = new DivExpr($1, $3); LOG_PARSER("## PARSER ## made DivExpr\n"); }
      | '(' expr ')'       { $$ = $2; LOG_PARSER("## PARSER ## made expr in parentheses\n"); }
-     | expr AND expr      { $$ = new BinaryExpr($1, $3, AND); LOG_PARSER("## PARSER ## made BinaryExpr for &&\n"); }
-     | expr OR expr       { $$ = new BinaryExpr($1, $3, OR); LOG_PARSER("## PARSER ## made BinaryExpr for ||\n"); }
+     | expr AND expr      { $$ = new AndExpr($1, $3); LOG_PARSER("## PARSER ## made AndExpr\n"); }
+     | expr OR expr       { $$ = new OrExpr($1, $3); LOG_PARSER("## PARSER ## made OrExpr\n"); }
      | expr EQ expr       { $$ = new BinaryExpr($1, $3, EQ); LOG_PARSER("## PARSER ## made BinaryExpr for ==\n"); }
      | expr NEQ expr      { $$ = new BinaryExpr($1, $3, NEQ); LOG_PARSER("## PARSER ## made BinaryExpr for !=\n"); }
      | expr LE expr       { $$ = new BinaryExpr($1, $3, LE); LOG_PARSER("## PARSER ## made BinaryExpr for <=\n"); }

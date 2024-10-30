@@ -206,6 +206,42 @@ struct DivExpr : public BinaryExpr {
     }
 };
 
+struct AndExpr : public BinaryExpr {
+    AndExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"AndExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
+struct OrExpr : public BinaryExpr {
+    OrExpr(Expr* l, Expr* r) : BinaryExpr(l, r) {}
+
+    std::string generateDot() override {
+        std::stringstream ss;
+        ss << "    node" << getId() << " [label=\"OrExpr\", shape=diamond];\n";
+        if (left) {
+            ss << left->generateDot();
+            ss << "    node" << getId() << " -> node" << left->getId() << " [label=\"left\"];\n";
+        }
+        if (right) {
+            ss << right->generateDot();
+            ss << "    node" << getId() << " -> node" << right->getId() << " [label=\"right\"];\n";
+        }
+        return ss.str();
+    }
+};
+
 struct IntLiteral : public Expr {
 public:
     IntLiteral(long long v) : val(v) {}
