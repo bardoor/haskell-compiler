@@ -44,8 +44,7 @@ void yyerror(const char* s);
 %left INDEXING
 %right '.'
 %right NOT NEGATE
-
-%start module
+%left FUNC_APPLY
 
 %type <expr> expr;
 %type <module> module;
@@ -55,6 +54,7 @@ void yyerror(const char* s);
 
 %token <intVal> INTC
 %token <floatVal> FLOATC
+%token <str> STRINGC
 %token <str> FUNC_ID CONSTRUCTOR_ID
 %token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ 
 %token NEQ LE GE AND OR CONCAT RANGE FUNCTYPE MONADBINDING GUARDS INDEXING ASPATTERN TYPEANNOTATION TYPECONSTRAINT
@@ -62,42 +62,83 @@ void yyerror(const char* s);
 %token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW
 
 %%
-module : funcDecl { $$ = root = new Module($1); LOG_PARSER("## PARSER ## made Module\n"); }
-       ;
 
-funcDecl : FUNC_ID paramListE '=' expr { $$ = new FuncDecl($1, $2, $4); LOG_PARSER("## PARSER ## made funcDecl\n"); }
+/* ------------------------------- *
+ *            Выражения            *
+ * ------------------------------- */
+
+literal : INTC
+        | FLOATC
+        | STRINGC
+        ;
+
+exprList : expr
+         | expr exprList 
          ;
 
-param : FUNC_ID { $$ = new Param(std::string($1)); LOG_PARSER("## PARSER ## made param\n"); }
+expr : literal
+     | FUNC_ID exprList  { LOG_PARSER("## PARSER ## made FuncCall named %s\n"); }
+     | FUNC_ID
+     | '-' expr %prec FUNC_APPLY
+     | '(' expr ')'       
+     | '(' expr ',' commaSepExprs ')'
+     | '[' commaSepExprs ']'
+     | '[' commaSepExprs ']'
+     | enumeration
+     | '[' expr '|' commaSepExprs ']'
+     | expr '+' expr      { LOG_PARSER("## PARSER ## made AddExpr\n"); }
+     | expr '-' expr      { LOG_PARSER("## PARSER ## made SubExpr\n"); }
+     | expr '*' expr      { LOG_PARSER("## PARSER ## made MulExor\n"); }
+     | expr '/' expr      { LOG_PARSER("## PARSER ## made DivExpr\n"); }
+     | expr AND expr      { LOG_PARSER("## PARSER ## made &&\n"); }
+     | expr OR expr       { LOG_PARSER("## PARSER ## made ||\n"); }
+     | expr EQ expr       { LOG_PARSER("## PARSER ## made ==\n"); }
+     | expr NEQ expr      { LOG_PARSER("## PARSER ## made !=\n"); }
+     | expr LE expr       { LOG_PARSER("## PARSER ## made <=\n"); }
+     | expr GE expr       { LOG_PARSER("## PARSER ## made  >=\n"); }
+     | expr '<' expr      { LOG_PARSER("## PARSER ## made <\n"); }
+     | expr '>' expr      { LOG_PARSER("## PARSER ## made >\n"); }
+     | NOT expr           { LOG_PARSER("## PARSER ## made UnaryExpr for not\n"); }
+     | NEGATE expr        { LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
+     ;
+
+
+/* ------------------------------- *
+ *         Кортежи, списки         *
+ * ------------------------------- */
+
+tuple : '(' expr ',' texprs ')'     // (1,2,3)
+      | '(' ',' commas ')'          // (,,,) 1 2 3
+      | '(' ')'                     // ()
       ;
 
-paramList : param            { $$ = new ParamList(); LOG_PARSER("## PARSER ## made paramList\n"); }
-          | paramList param  { $1->add($2); $$ = $1; LOG_PARSER("## PARSER ## add to paramList\n"); }
-          ;
+texprs : expr
+       | expr ',' texprs
+       ;
 
-paramListE : /* nothing */   { $$ = new ParamList(); LOG_PARSER("## PARSER ## made empty paramListE\n"); }
-           | paramList       { $$ = $1; LOG_PARSER("## PARSER ## made not empty paramListE\n"); }
-           ;
+commas : ','
+       | commas ','
+       ;
 
-expr : INTC               { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## made IntLiteral\n"); }
-     | FLOATC             { $$ = new FloatLiteral($1); LOG_PARSER("## PARSER ## made FloatLiteral\n"); }
-     | FUNC_ID paramListE { $$ = new FuncApply($1, $2); LOG_PARSER("## PARSER ## made FuncCall\n"); }
-     | expr '+' expr      { $$ = new AddExpr($1, $3); LOG_PARSER("## PARSER ## made AddExpr\n"); }
-     | expr '-' expr      { $$ = new SubExpr($1, $3); LOG_PARSER("## PARSER ## made SubExpr\n"); }
-     | expr '*' expr      { $$ = new MulExpr($1, $3); LOG_PARSER("## PARSER ## made MulExor\n"); }
-     | expr '/' expr      { $$ = new DivExpr($1, $3); LOG_PARSER("## PARSER ## made DivExpr\n"); }
-     | '(' expr ')'       { $$ = $2; LOG_PARSER("## PARSER ## made expr in parentheses\n"); }
-     | expr AND expr      { $$ = new AndExpr($1, $3); LOG_PARSER("## PARSER ## made &&\n"); }
-     | expr OR expr       { $$ = new OrExpr($1, $3); LOG_PARSER("## PARSER ## made ||\n"); }
-     | expr EQ expr       { $$ = new EqualExpr($1, $3); LOG_PARSER("## PARSER ## made ==\n"); }
-     | expr NEQ expr      { $$ = new NotEqualExpr($1, $3); LOG_PARSER("## PARSER ## made !=\n"); }
-     | expr LE expr       { $$ = new LessThanExpr($1, $3); LOG_PARSER("## PARSER ## made <=\n"); }
-     | expr GE expr       { $$ = new GreaterThanExpr($1, $3); LOG_PARSER("## PARSER ## made  >=\n"); }
-     | expr '<' expr      { $$ = new LessExpr($1, $3); LOG_PARSER("## PARSER ## made <\n"); }
-     | expr '>' expr      { $$ = new GreaterExpr($1, $3); LOG_PARSER("## PARSER ## made >\n"); }
-     | NOT expr           { $$ = new NotExpr($2); LOG_PARSER("## PARSER ## made UnaryExpr for not\n"); }
-     | NEGATE expr        { $$ = new NegateExpr($2); LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
+list : '[' ']'
+     | '[' commaSepExprs ']'
      ;
+
+commaSepExprs : expr
+              | expr ',' commaSepExprs 
+              /*
+                    Правая рекурсия используется чтоб избежать конфликта:
+                    [1, 3 ..]  - range типа 1, 3, 6, 9 и до бесконечности
+                    [1, 2, 3]  - конструктор списка
+              */  
+              ;
+
+enumeration : '[' expr RANGE ']'
+            | '[' expr RANGE expr ']'
+            | '[' expr ',' expr RANGE expr ']'
+            | '[' expr ',' expr RANGE ']'
+            ;
+
 
 %%
 

@@ -1,0 +1,58 @@
+class Fraction {
+private:
+    int numerator;
+    int denominator;
+
+public:
+    int getNum();
+    int getDenom();
+    float value();
+    int setNum(int);
+    int setDenom(int);
+
+    Fraction add(Fraction& op);
+    Fraction sub(Fraction& op);
+    int compare(Fraction& op);
+    
+    Fraction(int num, int denom);
+};
+
+class FractionStack {
+private:
+    Fraction mass[200];
+    int count;
+
+public:
+    Fraction top() {
+        return mass[count];
+    }
+    
+    void push(Fraction& op) {
+        mass[count] = op;
+        count++;
+    }
+
+    Fraction pop() {
+        count--;
+        return mass[count];
+    }
+
+    void add();
+    int compare();
+};
+
+void FractionStack::add() {
+    if (count > 2) {
+        mass[count-2].add(mass[count-1]);
+        count--;
+    }
+}
+
+int FractionStack::compare() {
+    Fraction op1, op2;
+    op1 = pop();
+    op2 = pop();
+
+    if (!op1.compare(op2)) return 1;
+    else return 0;
+}
