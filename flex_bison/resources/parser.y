@@ -107,7 +107,7 @@ expr : literal
  *         Кортежи, списки         *
  * ------------------------------- */
 
-tuple : '(' expr ',' texprs ')'     // (1,2,3)
+tuple : '(' expr ',' texprs ')'     // (1, 2, 3)
       | '(' ',' commas ')'          // (,,,) 1 2 3
       | '(' ')'                     // ()
       ;
@@ -120,6 +120,7 @@ commas : ','
        | commas ','
        ;
 
+
 list : '[' ']'
      | '[' commaSepExprs ']'
      ;
@@ -128,15 +129,15 @@ commaSepExprs : expr
               | expr ',' commaSepExprs 
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
-                    [1, 3 ..]  - range типа 1, 3, 6, 9 и до бесконечности
+                    [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
                     [1, 2, 3]  - конструктор списка
               */  
               ;
 
-enumeration : '[' expr RANGE ']'
-            | '[' expr RANGE expr ']'
-            | '[' expr ',' expr RANGE expr ']'
-            | '[' expr ',' expr RANGE ']'
+enumeration : '[' expr RANGE ']'                    // [1 .. ]
+            | '[' expr RANGE expr ']'               // [1 .. 5]
+            | '[' expr ',' expr RANGE expr ']'      // [1, 3 .. 9]
+            | '[' expr ',' expr RANGE ']'           // [1, 3 .. ]
             ;
 
 
