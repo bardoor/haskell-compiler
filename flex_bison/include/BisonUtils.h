@@ -72,7 +72,7 @@ public:
 
     std::string generateDot() override {
         std::stringstream ss;
-        ss << "    node" << getId() << " [label=\"Function: " << name << "\", shape=box];\n";
+        ss << "    node" << getId() << " [label=\"Function Decl: " << name << "\", shape=box];\n";
         ss << paramList->generateDot();
         ss << "    node" << getId() << " -> node" << paramList->getId() << ";\n";
         if (body) {
@@ -95,7 +95,7 @@ public:
 
     std::string generateDot() override {
         std::stringstream ss;
-        ss << "    node" << getId() << " [label=\"Function: " << name << "\", shape=box];\n";
+        ss << "    node" << getId() << " [label=\"Function apply: " << name << "\", shape=box];\n";
         ss << paramList->generateDot();
         ss << "    node" << getId() << " -> node" << paramList->getId() << ";\n";
         return ss.str();
