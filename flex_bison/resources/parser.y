@@ -32,6 +32,11 @@ void yyerror(const char* s);
     struct ParamList* paramList;
 }
 
+
+/* ------------------------------- *
+ *           Приоритеты            *
+ * ------------------------------- */
+
 %right '$' SEQOP STRICTAPPLY
 %right OR
 %right AND
@@ -46,12 +51,21 @@ void yyerror(const char* s);
 %right NOT NEGATE
 %left FUNC_APPLY
 
+
+/* ------------------------------- *
+ *        Объявления типов         *
+ * ------------------------------- */
+
 %type <expr> expr;
 %type <module> module;
 %type <param> param;
 %type <funcDecl> funcDecl;
 %type <paramList> paramList paramListE;
 
+
+/* ------------------------------- *
+ *      Терминальные символы       *
+ * ------------------------------- */
 %token <intVal> INTC
 %token <floatVal> FLOATC
 %token <str> STRINGC
@@ -59,7 +73,7 @@ void yyerror(const char* s);
 %token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ 
 %token NEQ LE GE AND OR CONCAT RANGE FUNCTYPE MONADBINDING GUARDS INDEXING ASPATTERN TYPEANNOTATION TYPECONSTRAINT
 %token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW
+%token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
 
 %%
 
@@ -70,6 +84,8 @@ void yyerror(const char* s);
 literal : INTC
         | FLOATC
         | STRINGC
+        | CHARC
+        |
         ;
 
 exprList : expr
@@ -79,28 +95,34 @@ exprList : expr
 expr : literal
      | FUNC_ID exprList  { LOG_PARSER("## PARSER ## made FuncCall named %s\n"); }
      | FUNC_ID
-     | '-' expr %prec FUNC_APPLY
      | '(' expr ')'       
      | '(' expr ',' commaSepExprs ')'
      | '[' commaSepExprs ']'
      | '[' commaSepExprs ']'
      | enumeration
-     | '[' expr '|' commaSepExprs ']'
-     | expr '+' expr      { LOG_PARSER("## PARSER ## made AddExpr\n"); }
-     | expr '-' expr      { LOG_PARSER("## PARSER ## made SubExpr\n"); }
-     | expr '*' expr      { LOG_PARSER("## PARSER ## made MulExor\n"); }
-     | expr '/' expr      { LOG_PARSER("## PARSER ## made DivExpr\n"); }
-     | expr AND expr      { LOG_PARSER("## PARSER ## made &&\n"); }
-     | expr OR expr       { LOG_PARSER("## PARSER ## made ||\n"); }
-     | expr EQ expr       { LOG_PARSER("## PARSER ## made ==\n"); }
-     | expr NEQ expr      { LOG_PARSER("## PARSER ## made !=\n"); }
-     | expr LE expr       { LOG_PARSER("## PARSER ## made <=\n"); }
-     | expr GE expr       { LOG_PARSER("## PARSER ## made  >=\n"); }
-     | expr '<' expr      { LOG_PARSER("## PARSER ## made <\n"); }
-     | expr '>' expr      { LOG_PARSER("## PARSER ## made >\n"); }
-     | NOT expr           { LOG_PARSER("## PARSER ## made UnaryExpr for not\n"); }
-     | NEGATE expr        { LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
+     | '[' expr '|' commaSepExprs ']'    
+     | unExpr
+     | binExpr     
      ;
+
+unExpr : NOT expr           
+       | NEGATE expr 
+       | '-' expr %prec FUNC_APPLY
+       ;
+
+binExpr : expr '+' expr      
+        | expr '-' expr      
+        | expr '*' expr      
+        | expr '/' expr      
+        | expr AND expr      
+        | expr OR expr       
+        | expr EQ expr       
+        | expr NEQ expr      
+        | expr LE expr       
+        | expr GE expr       
+        | expr '<' expr      
+        | expr '>' expr 
+        ;
 
 
 /* ------------------------------- *
