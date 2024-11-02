@@ -30,6 +30,7 @@ void yyerror(const char* s);
     struct FuncDecl* funcDecl;
     struct Param* param;
     struct ParamList* paramList;
+    struct TypeDecl* typeDecl;
 }
 
 %right '$' SEQOP STRICTAPPLY
@@ -52,6 +53,7 @@ void yyerror(const char* s);
 %type <param> param;
 %type <funcDecl> funcDecl;
 %type <paramList> paramList paramListE;
+%type <typeDecl> typeDecl;
 
 %token <intVal> INTC
 %token <floatVal> FLOATC
@@ -66,6 +68,9 @@ module : funcDecl { $$ = root = new Module($1); LOG_PARSER("## PARSER ## made Mo
        ;
 
 funcDecl : FUNC_ID paramListE '=' expr { $$ = new FuncDecl($1, $2, $4); LOG_PARSER("## PARSER ## made funcDecl\n"); }
+         ;
+
+typeDecl : TYPEKW CONSTRUCTOR_ID '=' type 
          ;
 
 param : FUNC_ID { $$ = new Param(std::string($1)); LOG_PARSER("## PARSER ## made param\n"); }
@@ -99,6 +104,35 @@ expr : INTC               { $$ = new IntLiteral($1); LOG_PARSER("## PARSER ## ma
      | NEGATE expr        { $$ = new NegateExpr($2); LOG_PARSER("## PARSER ## made UnaryExpr for negate\n"); }
      ;
 
+type : btype                
+     | btype FUNCTYPE type        
+     ;
+
+btype : '[' btype ']' atype     
+      | atype              
+      ;
+
+atype : gtycon             
+      | tyvar              
+      | '(' type_list ')' 
+      | '[' type ']'
+      | '(' type ')'
+      ;
+
+type_list: type          
+          | type ',' type_list 
+          ;
+
+gtycon : gtycon   
+       | '('')'                
+       | '['']'                
+       | '('FUNCTYPE')'              
+       | '(' '{' ',' '}' ')' 
+       | CONSTRUCTOR_ID   
+       ;
+
+tyvar : FUNC_ID          
+      ;
 %%
 
 void yyerror(const char* s) {
