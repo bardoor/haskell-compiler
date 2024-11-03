@@ -30,6 +30,7 @@ void yyerror(const char* s);
     struct FuncDecl* funcDecl;
     struct Param* param;
     struct ParamList* paramList;
+    struct TypeDecl* typeDecl;
 }
 
 
@@ -61,6 +62,7 @@ void yyerror(const char* s);
 %type <param> param;
 %type <funcDecl> funcDecl;
 %type <paramList> paramList paramListE;
+%type <typeDecl> typeDecl;
 
 
 /* ------------------------------- *
@@ -162,7 +164,38 @@ enumeration : '[' expr RANGE ']'                    // [1 .. ]
             | '[' expr ',' expr RANGE ']'           // [1, 3 .. ]
             ;
 
+typeDecl : TYPEKW CONSTRUCTOR_ID '=' type 
+         ;
 
+type : btype                
+     | btype FUNCTYPE type        
+     ;
+
+btype : '[' btype ']' atype     
+      | atype              
+      ;
+
+atype : gtycon             
+      | tyvar              
+      | '(' type_list ')' 
+      | '[' type ']'
+      | '(' type ')'
+      ;
+
+type_list: type          
+          | type ',' type_list 
+          ;
+
+gtycon : gtycon   
+       | '('')'                
+       | '['']'                
+       | '('FUNCTYPE')'              
+       | '(' '{' ',' '}' ')' 
+       | CONSTRUCTOR_ID   
+       ;
+
+tyvar : FUNC_ID          
+      ;
 %%
 
 void yyerror(const char* s) {
