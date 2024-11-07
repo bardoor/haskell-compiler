@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -Iflex_bison/include -Wall -g
+CXXFLAGS = -std=c++20 -Iflex_bison/include -g
 
 OBJ_DIR = build
 BIN_DIR = bin
@@ -15,6 +15,10 @@ generate_flexer:
 	flex --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/haskell.flex
 
 generate_bison:
+	bison -d -o flex_bison/src/Parser.cpp flex_bison/resources/parser.y
+	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
+
+generate_bison_debug:
 	bison -Wcounterexamples -d -o flex_bison/src/Parser.cpp flex_bison/resources/parser.y
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
