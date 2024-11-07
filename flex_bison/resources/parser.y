@@ -57,12 +57,12 @@ void yyerror(const char* s);
  *        Объявления типов         *
  * ------------------------------- */
 
-%type <expr> expr;
-%type <module> module;
-%type <param> param;
-%type <funcDecl> funcDecl;
-%type <paramList> paramList paramListE;
-%type <typeDecl> typeDecl;
+//%type <expr> expr;
+//%type <module> module;
+//%type <param> param;
+//%type <funcDecl> funcDecl;
+//%type <paramList> paramList paramListE;
+//%type <typeDecl> typeDecl;
 
 
 /* ------------------------------- *
@@ -77,53 +77,58 @@ void yyerror(const char* s);
 %token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
 
+%start expr
+
 %%
 
 /* ------------------------------- *
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC
-        | FLOATC
-        | STRINGC
-        | CHARC
-        |
+literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
+        | FLOATC    { LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
+        | STRINGC   { LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
+        | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
-exprList : expr
-         | expr exprList 
+exprListE : exprList        { LOG_PARSER("## PARSER ## make ExprListE - ExprList\n"); }
+          | /* nothing */   { LOG_PARSER("## PARSER ## make ExprListE - nothing\n"); }
+          ;
+
+exprList : expr             { LOG_PARSER("## PARSER ## make ExprList - expr\n"); }
+         | expr exprList    { LOG_PARSER("## PARSER ## make ExprList - exprList\n"); }
          ;
 
-expr : literal
-     | FUNC_ID exprList  { LOG_PARSER("## PARSER ## made FuncCall named %s\n"); }
-     | FUNC_ID
-     | '(' expr ')'       
-     | '(' expr ',' commaSepExprs ')'
-     | '[' commaSepExprs ']'
-     | '[' commaSepExprs ']'
-     | enumeration
-     | '[' expr '|' commaSepExprs ']'    
-     | unExpr
-     | binExpr     
+expr : literal                          { LOG_PARSER("## PARSER ## make expr - literal\n"); }
+     | FUNC_ID exprListE    %prec FUNC_APPLY            { LOG_PARSER("## PARSER ## made expr - func apply\n"); }
+     | '(' expr ')'                     
+     | tuple                            { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+     | list                             { LOG_PARSER("## PARSER ## make expr - list\n"); }
+     | enumeration                      { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
+     | '[' expr '|' commaSepExprs ']'   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
+     | unExpr                           { LOG_PARSER("## PARSER ## make expr - unary expr\n"); }
+     | binExpr                          { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
      ;
 
-unExpr : NOT expr           
-       | NEGATE expr 
-       | '-' expr %prec FUNC_APPLY
+unExpr : NOT expr                       { LOG_PARSER("## PARSER ## make unaryExpr - NOT expr\n"); }
+       | NEGATE expr                    { LOG_PARSER("## PARSER ## make unaryExpr - NEGATE expr\n"); }
+       | '-' '(' expr ')' %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus ( expr )\n"); } 
+       | '-' literal      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus literal\n"); } 
+       | '-' FUNC_ID      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus func_id\n"); } 
        ;
 
-binExpr : expr '+' expr      
-        | expr '-' expr      
-        | expr '*' expr      
-        | expr '/' expr      
-        | expr AND expr      
-        | expr OR expr       
-        | expr EQ expr       
-        | expr NEQ expr      
-        | expr LE expr       
-        | expr GE expr       
-        | expr '<' expr      
-        | expr '>' expr 
+binExpr : expr '+' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr + expr\n"); }
+        | expr '-' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr - expr\n"); }
+        | expr '*' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr * expr\n"); }
+        | expr '/' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr / expr\n"); }
+        | expr AND expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr AND expr\n"); }
+        | expr OR expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr OR expr\n"); }
+        | expr EQ expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr EQ expr\n"); }
+        | expr NEQ expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr NEQ expr\n"); }
+        | expr LE expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr LE expr\n"); }
+        | expr GE expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr GE expr\n"); }
+        | expr '<' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr < expr\n"); }
+        | expr '>' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr > expr\n"); }
         ;
 
 
@@ -131,26 +136,21 @@ binExpr : expr '+' expr
  *         Кортежи, списки         *
  * ------------------------------- */
 
-tuple : '(' expr ',' texprs ')'     // (1, 2, 3)
-      | '(' ',' commas ')'          // (,,,) 1 2 3
-      | '(' ')'                     // ()
+tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
+      | '(' ',' commas ')' exprList     { LOG_PARSER("## PARSER ## make tuple - (,,,) expr expr expr\n"); } 
+      | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
 
-texprs : expr
-       | expr ',' texprs
+commas : ','                            { LOG_PARSER("## PARSER ## make commas - ,\n"); }
+       | commas ','                     { LOG_PARSER("## PARSER ## make commas - commas ,\n"); }
        ;
 
-commas : ','
-       | commas ','
-       ;
-
-
-list : '[' ']'
-     | '[' commaSepExprs ']'
+list : '[' ']'                          { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
+     | '[' commaSepExprs ']'            { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
      ;
 
-commaSepExprs : expr
-              | expr ',' commaSepExprs 
+commaSepExprs : expr                    { LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
+              | expr ',' commaSepExprs  { LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
@@ -158,13 +158,17 @@ commaSepExprs : expr
               */  
               ;
 
-enumeration : '[' expr RANGE ']'                    // [1 .. ]
-            | '[' expr RANGE expr ']'               // [1 .. 5]
-            | '[' expr ',' expr RANGE expr ']'      // [1, 3 .. 9]
-            | '[' expr ',' expr RANGE ']'           // [1, 3 .. ]
+enumeration : '[' expr RANGE ']'               { LOG_PARSER("## PARSER ## make enumeration - [ expr .. ]\n"); }
+            | '[' expr RANGE expr ']'          { LOG_PARSER("## PARSER ## make enumeration - [ expr .. expr ]\n"); }
+            | '[' expr ',' expr RANGE expr ']' { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); }
+            | '[' expr ',' expr RANGE ']'      { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); }  
             ;
 
-typeDecl : TYPEKW CONSTRUCTOR_ID '=' type 
+/* ------------------------------- *
+ *              Типы               *
+ * ------------------------------- */
+
+typeDecl : TYPEKW CONSTRUCTOR_ID '=' type      
          ;
 
 type : btype                
