@@ -111,6 +111,7 @@ if        { LOG_LEXEM("found lexem: if\n"); layoutBuilder->addLexem(std::string(
 else      { LOG_LEXEM("found lexem: else\n"); layoutBuilder->addLexem(std::string(yytext)); return ELSEKW; }
 where     { LOG_LEXEM("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext)); return WHEREKW; }
 let       { LOG_LEXEM("found lexem: let\n"); layoutBuilder->addLexem(std::string(yytext)); return LETKW; }
+in 		  { LOG_LEXEM("found lexem: in\n"); layoutBuilder->addLexem(std::string(yytext)); return INKW; }
 foreign   { LOG_LEXEM("found lexem: foreign\n"); layoutBuilder->addLexem(std::string(yytext)); return FOREIGNKW; }
 infix     { LOG_LEXEM("found lexem: infix\n"); layoutBuilder->addLexem(std::string(yytext)); return INFIXKW; }
 infixl    { LOG_LEXEM("found lexem: infixl\n"); layoutBuilder->addLexem(std::string(yytext)); return INFIXLKW; }
