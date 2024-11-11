@@ -91,6 +91,7 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
+/* Любое выражение с аннотацией типа или без */
 expr : oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); }
      | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
      ;
@@ -126,22 +127,7 @@ aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
       | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
       | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
       | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
-      | binExpr         { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
       ;
-
-binExpr : expr '+' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr + expr\n"); }
-        | expr '-' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr - expr\n"); }
-        | expr '*' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr * expr\n"); }
-        | expr '/' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr / expr\n"); }
-        | expr AND expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr AND expr\n"); }
-        | expr OR expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr OR expr\n"); }
-        | expr EQ expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr EQ expr\n"); }
-        | expr NEQ expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr NEQ expr\n"); }
-        | expr LE expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr LE expr\n"); }
-        | expr GE expr                  { LOG_PARSER("## PARSER ## make binaryExpr - expr GE expr\n"); }
-        | expr '<' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr < expr\n"); }
-        | expr '>' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr > expr\n"); }
-        ;
 
 /* ------------------------------- *
  *         Кортежи, списки         *
