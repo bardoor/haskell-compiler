@@ -77,7 +77,7 @@ void yyerror(const char* s);
 %token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
 
-%start expr
+%start fapply
 
 %%
 
@@ -99,15 +99,19 @@ exprList : expr             { LOG_PARSER("## PARSER ## make ExprList - expr\n");
          | expr exprList    { LOG_PARSER("## PARSER ## make ExprList - exprList\n"); }
          ;
 
-expr : literal                          { LOG_PARSER("## PARSER ## make expr - literal\n"); }
-     | FUNC_ID exprListE    %prec FUNC_APPLY            { LOG_PARSER("## PARSER ## made expr - func apply\n"); }
-     | '(' expr ')'                     
-     | tuple                            { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
-     | list                             { LOG_PARSER("## PARSER ## make expr - list\n"); }
-     | enumeration                      { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
-     | '[' expr '|' commaSepExprs ']'   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
-     | unExpr                           { LOG_PARSER("## PARSER ## make expr - unary expr\n"); }
-     | binExpr                          { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
+fapply : fapply expr        { LOG_PARSER("## PARSER ## made func apply\n"); }
+       | expr
+       ;
+
+expr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
+     | FUNC_ID
+     | '(' expr ')'    
+     | tuple           { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+     | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
+     | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
+     | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
+     | unExpr          { LOG_PARSER("## PARSER ## make expr - unary expr\n"); }
+     | binExpr         { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
      ;
 
 unExpr : NOT expr                       { LOG_PARSER("## PARSER ## make unaryExpr - NOT expr\n"); }
@@ -115,6 +119,9 @@ unExpr : NOT expr                       { LOG_PARSER("## PARSER ## make unaryExp
        | '-' '(' expr ')' %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus ( expr )\n"); } 
        | '-' literal      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus literal\n"); } 
        | '-' FUNC_ID      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus func_id\n"); } 
+       | '+' '(' expr ')' %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus ( expr )\n"); } 
+       | '+' literal      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus literal\n"); } 
+       | '+' FUNC_ID      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus func_id\n"); } 
        ;
 
 binExpr : expr '+' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr + expr\n"); }
@@ -131,19 +138,20 @@ binExpr : expr '+' expr                 { LOG_PARSER("## PARSER ## make binaryEx
         | expr '>' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr > expr\n"); }
         ;
 
-
 /* ------------------------------- *
  *         Кортежи, списки         *
  * ------------------------------- */
 
 tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
-      | '(' ',' commas ')' exprList     { LOG_PARSER("## PARSER ## make tuple - (,,,) expr expr expr\n"); } 
       | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
 
 commas : ','                            { LOG_PARSER("## PARSER ## make commas - ,\n"); }
        | commas ','                     { LOG_PARSER("## PARSER ## make commas - commas ,\n"); }
        ;
+
+comprehension : '[' expr '|' commaSepExprs ']'
+              ;
 
 list : '[' ']'                          { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
      | '[' commaSepExprs ']'            { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
