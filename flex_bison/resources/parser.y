@@ -91,27 +91,21 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
-exprListE : exprList        { LOG_PARSER("## PARSER ## make ExprListE - ExprList\n"); }
-          | /* nothing */   { LOG_PARSER("## PARSER ## make ExprListE - nothing\n"); }
-          ;
 
-exprList : expr             { LOG_PARSER("## PARSER ## make ExprList - expr\n"); }
-         | expr exprList    { LOG_PARSER("## PARSER ## make ExprList - exprList\n"); }
-         ;
 
 fapply : fapply expr        { LOG_PARSER("## PARSER ## made func apply\n"); }
        | expr
        ;
 
-expr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
-     | FUNC_ID
-     | '(' expr ')'    
-     | tuple           { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
-     | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
-     | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
-     | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
-     | binExpr         { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
-     ;
+aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
+      | FUNC_ID
+      | '(' expr ')'    
+      | tuple           { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+      | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
+      | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
+      | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
+      | binExpr         { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
+      ;
 
 binExpr : expr '+' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr + expr\n"); }
         | expr '-' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr - expr\n"); }
