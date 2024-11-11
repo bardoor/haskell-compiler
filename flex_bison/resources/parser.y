@@ -73,9 +73,9 @@ void yyerror(const char* s);
 %token <str> STRINGC
 %token <str> FUNC_ID CONSTRUCTOR_ID
 %token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ 
-%token NEQ LE GE AND OR CONCAT RANGE FUNCTYPE MONADBINDING GUARDS INDEXING ASPATTERN TYPEANNOTATION TYPECONSTRAINT
+%token NEQ LE GE AND OR CONCAT RANGE RARROW LARROW GUARDS INDEXING ASPATTERN DCOLON TYPECONSTRAINT
 %token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
+%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
 
 %start fapply
 
@@ -91,12 +91,34 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
+expr : oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); }
+     | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
+     ;
 
+/* Применение инфиксного оператора */
+oexpr : oexpr op oexpr   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+      | dexpr            { LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
+      ;
 
-fapply : fapply expr        { LOG_PARSER("## PARSER ## made func apply\n"); }
-       | expr
+/* Денотированное выражение */
+dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
+      | kexpr            { LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
+      ;
+
+/* Выражение с ключевым словом */
+kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
+      | LETKW '{' decls '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
+      | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
+      | CASEKW expr OFKW '{' alts '}'       { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
+      | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
+      ;
+
+/* Применение функции */
+fapply : fapply expr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
+       | expr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
+/* Простое выражение */
 aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
       | FUNC_ID
       | '(' expr ')'    
@@ -163,7 +185,7 @@ typeDecl : TYPEKW CONSTRUCTOR_ID '=' type
          ;
 
 type : btype                
-     | btype FUNCTYPE type        
+     | btype RARROW type        
      ;
 
 btype : '[' btype ']' atype     
@@ -184,7 +206,7 @@ type_list: type
 gtycon : gtycon   
        | '('')'                
        | '['']'                
-       | '('FUNCTYPE')'              
+       | '('RARROW')'              
        | '(' '{' ',' '}' ')' 
        | CONSTRUCTOR_ID   
        ;
