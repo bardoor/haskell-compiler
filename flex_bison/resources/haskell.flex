@@ -160,12 +160,12 @@ xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::stri
 "||"    { LOG_LEXEM("found operator: ||\n"); layoutBuilder->addLexem(std::string(yytext)); return OR; }
 "++"    { LOG_LEXEM("found operator: ++ (list concatenation)\n"); layoutBuilder->addLexem(std::string(yytext)); return CONCAT; }
 ".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext)); return RANGE; }
-"->"    { LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext)); return FUNCTYPE; }
-"<-"    { LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext)); return MONADBINDING; }
+"->"    { LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext)); return RARROW; }
+"<-"    { LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext)); return LARROW; }
 "!!"    { LOG_LEXEM("found operator: !! (list indexing)\n"); layoutBuilder->addLexem(std::string(yytext)); return INDEXING; }
 "@"     { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext)); return ASPATTERN; }
-"::"    { LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext)); return TYPEANNOTATION; }
-"=>"    { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext)); return TYPECONSTRAINT; }
+"::"    { LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext)); return DCOLON; }
+"=>"    { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext)); return DARROW; }
 "<*>"   { LOG_LEXEM("found operator: <*>\n"); layoutBuilder->addLexem(std::string(yytext)); return APPLYFUNCTOR; }
 "<$>"   { LOG_LEXEM("found operator: <$>\n"); layoutBuilder->addLexem(std::string(yytext)); return FMAPOP; }
 "$!"    { LOG_LEXEM("found operator: $!\n"); layoutBuilder->addLexem(std::string(yytext)); return STRICTAPPLY; }
