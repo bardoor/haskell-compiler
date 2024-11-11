@@ -73,11 +73,11 @@ void yyerror(const char* s);
 %token <str> STRINGC
 %token <str> FUNC_ID CONSTRUCTOR_ID
 %token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ 
-%token NEQ LE GE AND OR CONCAT RANGE RARROW LARROW GUARDS INDEXING ASPATTERN DCOLON TYPECONSTRAINT
-%token UNDERSCORE CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
+%token NEQ LE GE AND OR CONCAT DOTDOT RARROW LARROW GUARDS INDEXING ASPATTERN DCOLON TYPECONSTRAINT BQUOTE SYMS
+%token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
 
-%start fapply
+%start expr
 
 %%
 
@@ -157,10 +157,10 @@ commaSepExprs : expr                    { LOG_PARSER("## PARSER ## make commaSep
               */  
               ;
 
-enumeration : '[' expr RANGE ']'               { LOG_PARSER("## PARSER ## make enumeration - [ expr .. ]\n"); }
-            | '[' expr RANGE expr ']'          { LOG_PARSER("## PARSER ## make enumeration - [ expr .. expr ]\n"); }
-            | '[' expr ',' expr RANGE expr ']' { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); }
-            | '[' expr ',' expr RANGE ']'      { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); }  
+enumeration : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make enumeration - [ expr .. ]\n"); }
+            | '[' expr DOTDOT expr ']'          { LOG_PARSER("## PARSER ## make enumeration - [ expr .. expr ]\n"); }
+            | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); }
+            | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); }  
             ;
 
 /* ------------------------------- *

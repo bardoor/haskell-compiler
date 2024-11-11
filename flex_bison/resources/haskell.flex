@@ -70,6 +70,8 @@
 	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
 %}
 
+SYMBOL 		[!#$%&*+./<=>?@\\^|~:]
+
 SMALL		[a-z]
 LARGE		[A-Z]
 WORD		[a-zA-Z0-9_]
@@ -96,7 +98,7 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 	// Поэтому вынес отсюда всё что можно во избежание потери значений переменных между вызовами yylex
 %}
 
-_         { LOG_LEXEM("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext)); return UNDERSCORE; }
+_         { LOG_LEXEM("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext)); return WILDCARD; }
 case      { LOG_LEXEM("found lexem: case\n"); layoutBuilder->addLexem(std::string(yytext)); return CASEKW; }
 class     { LOG_LEXEM("found lexem: class\n"); layoutBuilder->addLexem(std::string(yytext)); return CLASSKW; }
 data      { LOG_LEXEM("found lexem: data\n"); layoutBuilder->addLexem(std::string(yytext)); return DATAKW; }
@@ -126,53 +128,24 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 "}"     |
 "["     |
 "]"     |
-";"		{ LOG_LEXEM("found %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
-
+";"		|
 "+"     |
 "-"     |
-"*"     |
-"/"     |
 "~"     |
 \\      |
-"%"		|
-"^"     |
-"$"     |
-"<"		|
-">"		|
-"="		|
 ":"		| 
-"."     { LOG_LEXEM("found operator: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
-","		{ LOG_LEXEM("found tuple values separator: ,\n"); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
-`rem`   { LOG_LEXEM("found operation: rem\n"); layoutBuilder->addLexem(std::string(yytext)); return REMOP; }
-`div`   { LOG_LEXEM("found operation: div\n"); layoutBuilder->addLexem(std::string(yytext)); return DIVOP; }
-`mod`   { LOG_LEXEM("found operation: mod\n"); layoutBuilder->addLexem(std::string(yytext)); return MODOP; }
-`quot`  { LOG_LEXEM("found operation: quot\n"); layoutBuilder->addLexem(std::string(yytext)); return QUOTOP; }
-`seq`   { LOG_LEXEM("found operation: seq\n"); layoutBuilder->addLexem(std::string(yytext)); return SEQOP; }
-negate  { LOG_LEXEM("found operation: negate\n"); layoutBuilder->addLexem(std::string(yytext)); return NEGATE; }
-not     { LOG_LEXEM("found operation: not\n"); layoutBuilder->addLexem(std::string(yytext)); return NOT; }
-xor     { LOG_LEXEM("found operation: xor\n"); layoutBuilder->addLexem(std::string(yytext)); return XOR; }
-"^^"    { LOG_LEXEM("found operator: ^^\n"); layoutBuilder->addLexem(std::string(yytext)); return INTPOW; }
-"**"    { LOG_LEXEM("found operator: **\n"); layoutBuilder->addLexem(std::string(yytext)); return FRACPOW; }
-"=="    { LOG_LEXEM("found operator: ==\n"); layoutBuilder->addLexem(std::string(yytext)); return EQ; }
-"/="    { LOG_LEXEM("found operator: /=\n"); layoutBuilder->addLexem(std::string(yytext)); return NEQ; }
-"<="    { LOG_LEXEM("found operator: <=\n"); layoutBuilder->addLexem(std::string(yytext)); return LE; }
-">="    { LOG_LEXEM("found operator: >=\n"); layoutBuilder->addLexem(std::string(yytext)); return GE; }
-"&&"    { LOG_LEXEM("found operator: &&\n"); layoutBuilder->addLexem(std::string(yytext)); return AND; }
-"||"    { LOG_LEXEM("found operator: ||\n"); layoutBuilder->addLexem(std::string(yytext)); return OR; }
-"++"    { LOG_LEXEM("found operator: ++ (list concatenation)\n"); layoutBuilder->addLexem(std::string(yytext)); return CONCAT; }
-".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext)); return RANGE; }
+","		{ LOG_LEXEM("found: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
+"`"     { LOG_LEXEM("found BQUOTE\n"); layoutBuilder->addLexem(std::string(yytext)); return BQUOTE; }
+".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext)); return DOTDOT; }
 "->"    { LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext)); return RARROW; }
 "<-"    { LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext)); return LARROW; }
-"!!"    { LOG_LEXEM("found operator: !! (list indexing)\n"); layoutBuilder->addLexem(std::string(yytext)); return INDEXING; }
 "@"     { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext)); return ASPATTERN; }
 "::"    { LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext)); return DCOLON; }
 "=>"    { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext)); return DARROW; }
-"<*>"   { LOG_LEXEM("found operator: <*>\n"); layoutBuilder->addLexem(std::string(yytext)); return APPLYFUNCTOR; }
-"<$>"   { LOG_LEXEM("found operator: <$>\n"); layoutBuilder->addLexem(std::string(yytext)); return FMAPOP; }
-"$!"    { LOG_LEXEM("found operator: $!\n"); layoutBuilder->addLexem(std::string(yytext)); return STRICTAPPLY; }
-"|"     { LOG_LEXEM("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext)); return GUARDS; }
+"|"     { LOG_LEXEM("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext)); return VBAR; }
 
-	
+{SYMBOL}+ { layoutBuilder->addLexem(std::string(yytext)); return SYMS; }
+
 {SMALL}({WORD}|')*  { 
 	layoutBuilder->addLexem(std::string(yytext)); 
 	if (layoutBuilder->canEmit()) {
