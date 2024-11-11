@@ -110,19 +110,8 @@ expr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
      | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
      | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
      | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
-     | unExpr          { LOG_PARSER("## PARSER ## make expr - unary expr\n"); }
      | binExpr         { LOG_PARSER("## PARSER ## make expr - binary expr\n"); }
      ;
-
-unExpr : NOT expr                       { LOG_PARSER("## PARSER ## make unaryExpr - NOT expr\n"); }
-       | NEGATE expr                    { LOG_PARSER("## PARSER ## make unaryExpr - NEGATE expr\n"); }
-       | '-' '(' expr ')' %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus ( expr )\n"); } 
-       | '-' literal      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus literal\n"); } 
-       | '-' FUNC_ID      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus func_id\n"); } 
-       | '+' '(' expr ')' %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus ( expr )\n"); } 
-       | '+' literal      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus literal\n"); } 
-       | '+' FUNC_ID      %prec NEGATE  { LOG_PARSER("## PARSER ## make unaryExpr - minus func_id\n"); } 
-       ;
 
 binExpr : expr '+' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr + expr\n"); }
         | expr '-' expr                 { LOG_PARSER("## PARSER ## make binaryExpr - expr - expr\n"); }
