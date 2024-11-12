@@ -129,6 +129,13 @@ aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
       | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
       ;
 
+/* Оператор */
+op : SYMS                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
+   | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
+   | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
+   | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
+   ;
+
 /* ------------------------------- *
  *         Кортежи, списки         *
  * ------------------------------- */
