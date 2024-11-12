@@ -93,10 +93,6 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 %x MULTI_LINE_COMMENT
 
 %%
-%{
-	// Если вставить сюда локальные переменные, то они будут пересоздаваться каждый раз при вызове yylex
-	// Поэтому вынес отсюда всё что можно во избежание потери значений переменных между вызовами yylex
-%}
 
 _         { LOG_LEXEM("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext)); return WILDCARD; }
 case      { LOG_LEXEM("found lexem: case\n"); layoutBuilder->addLexem(std::string(yytext)); return CASEKW; }
