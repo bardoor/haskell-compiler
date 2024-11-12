@@ -108,15 +108,15 @@ dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"
 
 /* Выражение с ключевым словом */
 kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
-      | LETKW '{' decls '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
+      | LETKW '{' declList '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
       | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
-      | CASEKW expr OFKW '{' alts '}'       { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
+      | CASEKW expr OFKW '{' altList '}'       { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
       | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
       ;
 
 /* Применение функции */
 fapply : fapply expr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | expr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
+       | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
 /* Простое выражение */
@@ -130,11 +130,14 @@ aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
       ;
 
 /* Оператор */
-op : SYMS                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
+op : symbols                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
    | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
    | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
    | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
+
+symbols : SYMS
+        ;
 
 /* ------------------------------- *
  *         Кортежи, списки         *
@@ -180,7 +183,19 @@ lampats	:  apat lampats
 	    ;
 
 /* Список паттернов */
-pats : apat ',' pats
+pats : pats ',' opat
+     | opat
+     ;
+
+opat : dpat
+     | opat op opat %prec '+'
+     ;
+
+dpat : '-' fpat
+     | fpat
+     ;
+
+fpat : fpat apat
      | apat
      ;
 
@@ -198,11 +213,11 @@ apat : FUNC_ID
      ;
 
 /* Альтернативы в case */
-alts : alts ';' altE
+altList : altList ';' altE
      | altE
      ;
 
-altE : pat altRest
+altE : opat altRest
      | /* nothing */
      ;
 
@@ -222,12 +237,12 @@ guard : VBAR oexpr
  * ------------------------------- */
 
 /* Список объявлений */
-declList : decl
-         | decl ';' decls
+declList : declE
+         | declList ';' declE
          ;
 
 /* Список var */
-varList : var ',' var
+varList : varList ',' var
         | var
         ;
 
@@ -242,7 +257,7 @@ declE : varList DCOLON type DARROW type
       | /* nothing */
       ;
 
-whereOpt : WHEREKW '{' decls '}'
+whereOpt : WHEREKW '{' declList '}'
          | /* nothing */
          ;
 
