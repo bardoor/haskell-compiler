@@ -38,19 +38,21 @@ void yyerror(const char* s);
  *           Приоритеты            *
  * ------------------------------- */
 
-%right '$' SEQOP STRICTAPPLY
-%right OR
-%right AND
-%left FMAPOP APPLYFUNCTOR
-%nonassoc '<' '>' EQ NEQ GE LE
-%right ':' CONCAT
-%left '+' '-'
-%left '/' '*' DIVOP MODOP QUOTOP REMOP
-%right '^'
-%left INDEXING
-%right '.'
-%right NOT NEGATE
-%left FUNC_APPLY
+%left	CASE		LET	IN		LAMBDA
+  	IF		ELSE
+
+%left SYMS '+' '-' BQUOTE
+
+%left DCOLON
+
+%left ';' ','
+
+%left '(' '[' '{'
+
+%left '='
+
+%right DARROW
+%right RARROW
 
 
 /* ------------------------------- *
@@ -92,12 +94,13 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         ;
 
 /* Любое выражение с аннотацией типа или без */
-expr : oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); }
+expr : oexpr DCOLON type DARROW type 
+     | oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
      | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
      ;
 
 /* Применение инфиксного оператора */
-oexpr : oexpr op oexpr   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+oexpr : oexpr op oexpr %prec '+'   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
       | dexpr            { LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
@@ -115,7 +118,7 @@ kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexp
       ;
 
 /* Применение функции */
-fapply : fapply expr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
+fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
        | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
@@ -188,7 +191,7 @@ pats : pats ',' opat
      ;
 
 opat : dpat
-     | opat op opat %prec '+'
+     | opat op opat %prec '+' 
      ;
 
 dpat : '-' fpat
