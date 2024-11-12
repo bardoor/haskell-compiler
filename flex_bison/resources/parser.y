@@ -73,7 +73,7 @@ void yyerror(const char* s);
 %token <str> STRINGC
 %token <str> FUNC_ID CONSTRUCTOR_ID
 %token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ DARROW
-%token NEQ LE GE AND OR CONCAT DOTDOT RARROW LARROW GUARDS INDEXING ASPATTERN DCOLON TYPECONSTRAINT BQUOTE SYMS
+%token NEQ LE GE AND OR CONCAT DOTDOT RARROW LARROW GUARDS INDEXING ASPATTERN DCOLON TYPECONSTRAINT BQUOTE SYMS VBAR
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
 
@@ -106,9 +106,7 @@ dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"
       | kexpr            { LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
       ;
 
-/* Выражение с ключевым словом 
-TODO: decls, alts
-*/
+/* Выражение с ключевым словом */
 kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
       | LETKW '{' decls '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
       | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
@@ -197,7 +195,27 @@ apat : FUNC_ID
      | '[' opat ']'
      | '[' ']'
      | '~' apat
+     ;
 
+/* Альтернативы в case */
+alts : alts ';' altE
+     | altE
+     ;
+
+altE : pat altRest
+     | /* nothing */
+     ;
+
+altRest : guardPat whereOpt
+        | RARROW expr whereOpt
+        ;
+
+guardPat : guard RARROW expr guardPat
+         | guard RARROW expr
+         ;
+
+guard : VBAR oexpr
+      ;
 
 /* ------------------------------- *
  *           Объявления            *
@@ -219,8 +237,14 @@ var : FUNC_ID
     ;
 
 /* Объявление */
-declE : FUNC_ID DCOLON type DARROW type 
-      | 
+declE : varList DCOLON type DARROW type 
+      | varList DCOLON type
+      | /* nothing */
+      ;
+
+whereOpt : WHEREKW '{' decls '}'
+         | /* nothing */
+         ;
 
 /* ------------------------------- *
  *              Типы               *
