@@ -174,8 +174,22 @@ enumeration : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make 
  *              Типы               *
  * ------------------------------- */
 
-typeDecl : TYPEKW CONSTRUCTOR_ID '=' type      
+typeDecl : TYPEKW simpleType '=' type      
          ;
+
+simpleType : tycon
+           | tycon tyvars
+           ;
+
+tycon : CONSTRUCTOR_ID
+      ;
+
+tyvars : tyvar
+       | tyvars tyvar
+       ;
+
+tyvar : FUNC_ID
+      ;
 
 type : btype                
      | btype RARROW type        
@@ -187,13 +201,13 @@ btype : '[' btype ']' atype
 
 atype : gtycon             
       | tyvar              
-      | '(' type_list ')' 
+      | '(' typeList ')' 
       | '[' type ']'
       | '(' type ')'
       ;
 
-type_list: type          
-          | type ',' type_list 
+typeList: type          
+          | type ',' typeList 
           ;
 
 gtycon : gtycon   
@@ -203,9 +217,6 @@ gtycon : gtycon
        | '(' '{' ',' '}' ')' 
        | CONSTRUCTOR_ID   
        ;
-
-tyvar : FUNC_ID          
-      ;
 %%
 
 void yyerror(const char* s) {
