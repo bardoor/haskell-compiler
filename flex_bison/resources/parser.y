@@ -106,7 +106,9 @@ dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"
       | kexpr            { LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
       ;
 
-/* Выражение с ключевым словом */
+/* Выражение с ключевым словом 
+TODO: lampats, decls, expr
+*/
 kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
       | LETKW '{' decls '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
       | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
@@ -169,6 +171,32 @@ enumeration : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make 
             | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); }
             | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); }  
             ;
+
+/* ------------------------------- *
+ *            Паттерны             *
+ * ------------------------------- */
+
+/* Паттерн в параметрах лямбда функции */
+lampats	:  apat lampats			
+	    |  apat				
+	    ;
+
+/* Список паттернов */
+pats : apat ',' pats
+     | apat
+     ;
+
+/* Примитивные паттерны */
+apat : FUNC_ID
+     | CONSTRUCTOR_ID
+     | FUNC_ID ASPATTERN apat
+     | literal
+     | WILDCARD
+     | '(' ')'
+     | '(' opat ',' pats ')'
+     | '[' opat ']'
+     | '[' ']'
+     | '~' apat
 
 /* ------------------------------- *
  *              Типы               *
