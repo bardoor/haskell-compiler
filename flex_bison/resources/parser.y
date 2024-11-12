@@ -72,10 +72,10 @@ void yyerror(const char* s);
 %token <floatVal> FLOATC
 %token <str> STRINGC
 %token <str> FUNC_ID CONSTRUCTOR_ID
-%token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ 
+%token DIVOP MODOP QUOTOP NEGATE STRICTAPPLY SEQOP NOT FMAPOP APPLYFUNCTOR REMOP INTPOW FRACPOW XOR EQ DARROW
 %token NEQ LE GE AND OR CONCAT DOTDOT RARROW LARROW GUARDS INDEXING ASPATTERN DCOLON TYPECONSTRAINT BQUOTE SYMS
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC
+%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
 
 %start expr
 
@@ -107,7 +107,7 @@ dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"
       ;
 
 /* Выражение с ключевым словом 
-TODO: lampats, decls, expr
+TODO: decls, alts
 */
 kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
       | LETKW '{' decls '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
@@ -197,6 +197,30 @@ apat : FUNC_ID
      | '[' opat ']'
      | '[' ']'
      | '~' apat
+
+
+/* ------------------------------- *
+ *           Объявления            *
+ * ------------------------------- */
+
+/* Список объявлений */
+declList : decl
+         | decl ';' decls
+         ;
+
+/* Список var */
+varList : var ',' var
+        | var
+        ;
+
+/* Оператор в префиксной форме или идентификатор функции */
+var : FUNC_ID
+    | '(' symbols ')'
+    ;
+
+/* Объявление */
+declE : FUNC_ID DCOLON type DARROW type 
+      | 
 
 /* ------------------------------- *
  *              Типы               *
