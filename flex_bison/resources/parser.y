@@ -303,9 +303,9 @@ topDeclList : topDecl
             ;
 
 topDecl : typeDecl
-//        | dataDecl
+        | dataDecl
         | classDecl
-//        | instDecl
+        | instDecl
 //        | defaultDecl
         | declE
         ;
@@ -381,6 +381,35 @@ class : tycon tyvar
 /* ------------------------------- *
  *              Типы               *
  * ------------------------------- */
+
+dataDecl : DATAKW context DARROW simpleType '=' constrList
+         | DATAKW simpleType '=' constrList
+         | DATAKW context DARROW simpleType '=' constrList DERIVINGKW tyClassList
+         | DATAKW simpleType '=' constrList DERIVINGKW tyClassList
+         ;
+
+constrList : tycon atypeList
+        | '(' SYMS ')' atypeList
+        | '(' SYMS ')'
+        | tycon
+        | btype conop btype
+        ;
+
+conop : SYMS
+      | BQUOTE CONSTRUCTOR_ID BQUOTE
+      ;
+
+tyClassList : '(' tyClassListComma ')'
+            | '(' ')'
+            | tyClass
+            ;
+
+tyClassListComma : tyClass
+                 | tyClassListComma ',' tyClass
+                 ;
+
+tyClass : tycon
+        ;
 
 typeDecl : TYPEKW simpleType '=' type      
          ;
