@@ -78,7 +78,7 @@ void yyerror(const char* s);
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
 
-%start expr
+%start module
 
 %%
 
@@ -110,9 +110,9 @@ dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"
 
 /* Выражение с ключевым словом */
 kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
-      | LETKW '{' declList '}' INKW expr       { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
+      | LETKW '{' declList '}' INKW expr    { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
       | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
-      | CASEKW expr OFKW '{' altList '}'       { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
+      | CASEKW expr OFKW '{' altList '}'    { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
       | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
       ;
 
@@ -132,7 +132,7 @@ aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
       ;
 
 /* Оператор */
-op : symbols                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
+op : symbols                { LOG_PARSER("## PARSER ## make op - symbols\n"); }
    | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
    | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
    | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
@@ -303,12 +303,80 @@ topDeclList : topDecl
             ;
 
 topDecl : typeDecl
-        | dataDecl
+//        | dataDecl
         | classDecl
-        | instDecl
-        | defaultDecl
+//        | instDecl
+//        | defaultDecl
         | declE
         ;
+
+
+/* ------------------------------- *
+ *       Классы, instance          *
+ * ------------------------------- */
+
+classDecl : CLASSKW context DARROW class classBody
+          | CLASSKW class classBody
+          ;
+
+classBody : /* nothing */
+          | WHEREKW '{' declList '}'
+          ;
+
+instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
+         | INSTANCEKW tycon generalInst rinstOpt
+         ;
+
+rinstOpt : /* nothing */
+      | WHEREKW '{' valDefList '}'
+      ;
+
+valDefList : /* nothing */
+            | valDef
+            | valDef ';' valDef
+            ;
+
+valDef : opat valrhs
+       ;
+
+/* Правосторонее значение */
+valrhs : valrhs1 whereOpt
+       ;
+
+valrhs1 : guardrhs
+        | '=' expr
+        ;
+
+guardrhs : guard '=' expr
+         | guard '=' expr guardrhs
+         ;
+
+restrictInst : tycon
+             | '(' tycon tyvarList ')'
+             | '(' tyvar ',' tyvarListComma ')'
+             | '(' ')'
+             | '[' tyvar ']'
+             | '(' tyvar RARROW tyvar ')'
+             ;
+
+generalInst : tycon
+            | '(' tycon atypeList ')'
+            | '(' type ',' typeListComma ')'
+            | '(' ')'
+            | '[' type ']'
+            | '(' btype RARROW type ')'
+            ;
+
+context : '(' contextList ')'
+        | class
+        ;
+
+contextList : class
+            | contextList ',' class
+            ;
+
+class : tycon tyvar
+      ;
 
 /* ------------------------------- *
  *              Типы               *
@@ -318,15 +386,19 @@ typeDecl : TYPEKW simpleType '=' type
          ;
 
 simpleType : tycon
-           | tycon tyvars
+           | tycon tyvarList
            ;
 
 tycon : CONSTRUCTOR_ID
       ;
 
-tyvars : tyvar
-       | tyvars tyvar
+tyvarList : tyvar
+       | tyvarList tyvar
        ;
+
+tyvarListComma : tyvar
+               | tyvarList ',' tyvar
+               ;
 
 tyvar : FUNC_ID
       ;
@@ -341,17 +413,20 @@ btype : '[' btype ']' atype
 
 atype : gtycon             
       | tyvar              
-      | '(' typeList ')' 
+      | '(' typeListComma ')' 
       | '[' type ']'
       | '(' type ')'
       ;
 
-typeList: type          
-          | type ',' typeList 
+typeListComma : type          
+              | type ',' typeListComma 
+              ;
+
+atypeList : atypeList atype
+          | atype
           ;
 
-gtycon : gtycon   
-       | '('')'                
+gtycon : '('')'                
        | '['']'                
        | '('RARROW')'              
        | '(' '{' ',' '}' ')' 
