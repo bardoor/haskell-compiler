@@ -238,12 +238,18 @@ guard : VBAR oexpr
  *           Объявления            *
  * ------------------------------- */
 
-/* Список объявлений */
 declList : declE
          | declList ';' declE
          ;
 
-/* Список var */
+con : tycon
+    | '(' symbols ')'
+    ;
+
+conList : con
+        | conList ',' con
+        ;
+
 varList : varList ',' var
         | var
         ;
@@ -262,6 +268,47 @@ declE : varList DCOLON type DARROW type
 whereOpt : WHEREKW '{' declList '}'
          | /* nothing */
          ;
+
+
+/* ------------------------------- *
+ *             Модуль              *
+ * ------------------------------- */
+
+module : MODULEKW CONSTRUCTOR_ID exportListE WHEREKW body
+       | body
+       ;
+
+exportListE : /* nothing */
+            | '(' exportList ')'
+            ;
+
+exportList : export
+           | export ',' export
+           ;
+
+export : FUNC_ID
+       | tycon
+       | tycon '(' DOTDOT ')'
+       | tycon DOTDOT
+       | tycon '(' ')'
+       | tycon '(' varList ')'
+       | tycon '(' conList ')'
+       ;
+
+body : '{' topDeclList '}'
+     ;
+
+topDeclList : topDecl
+            | topDeclList ';' topDecl
+            ;
+
+topDecl : typeDecl
+        | dataDecl
+        | classDecl
+        | instDecl
+        | defaultDecl
+        | declE
+        ;
 
 /* ------------------------------- *
  *              Типы               *
