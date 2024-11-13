@@ -74,7 +74,7 @@ void yyerror(const char* s);
 %token <floatVal> FLOATC
 %token <str> STRINGC
 %token <str> FUNC_ID CONSTRUCTOR_ID
-%token DARROW DOTDOT RARROW LARROW DCOLON VBAR ASPATTERN BQUOTE SYMS
+%token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE SYMS
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
 
@@ -86,10 +86,10 @@ void yyerror(const char* s);
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
-        | FLOATC    { LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
-        | STRINGC   { LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
-        | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
+literal : INTC     
+        | FLOATC   
+        | STRINGC  
+        | CHARC    
         ;
 
 expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make expr - expr op expr\n"); }
@@ -106,15 +106,16 @@ expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make 
      | list                                     { LOG_PARSER("## PARSER ## make expr - list\n"); }
      | tuple                                    { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
      | comprehension                            { LOG_PARSER("## PARSER ## make expr - comprehension\n"); }
-     | cut                                      { LOG_PARSER("## PARSER ## make expr - cut\n"); }
-     ;
+     | cut expr                                 { LOG_PARSER("## PARSER ## make expr - cut\n"); }
+     | conid '{' fbindList '}'                  { LOG_PARSER("## PARSER ## make expr - create data\n"); }
+     ;  
 
-fapply : funid exprList        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | funid                 { LOG_PARSER("## PARSER ## make func apply - identifier\n"); }
+fapply : funid exprList        
+       | funid                 
        ;
 
 exprList : expr
-         | exprList expr       { LOG_PARSER("## PARSER ## make exprList\n"); }
+         | exprList expr      
          ;
 
 funid : '(' SYMS ')'
@@ -122,6 +123,13 @@ funid : '(' SYMS ')'
       | '(' '-' ')'
       | FUNC_ID
       ;
+
+fbind : funid '=' expr
+      ;
+
+fbindList : fbind
+          | fbindList ',' fbind
+          ;
 
 /* Оператор */
 op : SYMS                   
@@ -196,6 +204,27 @@ range : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make range 
       | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make range - [ expr, expr .. expr ]\n"); }
       | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make range - [ expr, expr .. ]\n"); }  
       ;
+
+/* ------------------------------- *
+ *        Паттерн матчинг          *
+ * ------------------------------- */
+
+pattern : '-' FLOATC
+        | '-' INTC
+        | funid 
+        | funid AS pattern
+        | literal
+        | WILDCARD
+        | '(' pattern ')'
+        | '(' pattern ',' patternList ')'
+        | '[' patternList ']'
+        | '~' pattern
+        ;
+
+patternList : pattern
+            | patternList ',' pattern
+            ;
+
 %%
 
 void yyerror(const char* s) {

@@ -39,15 +39,15 @@
 			case Lexem::OPEN_BRACE: \
 				layoutBuilder->addLexem("{"); \
 				printf("{\n"); \
-				return '{'; \
+				break; \
 			case Lexem::CLOSING_BRACE: \
 				layoutBuilder->addLexem("}"); \
 				printf("}\n"); \
-				return '}'; \
+				break; \
 			case Lexem::SEMICOLON: \
 				layoutBuilder->addLexem(";"); \
 				printf(";\n"); \
-				return ';'; \
+				break; \
 			case Lexem::NONE: \
 				break; \
 		} \
@@ -136,7 +136,7 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 ".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext)); return DOTDOT; }
 "->"    { LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext)); return RARROW; }
 "<-"    { LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext)); return LARROW; }
-"@"     { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext)); return ASPATTERN; }
+"@"     { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext)); return AS; }
 "::"    { LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext)); return DCOLON; }
 "=>"    { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext)); return DARROW; }
 "|"     { LOG_LEXEM("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext)); return VBAR; }
