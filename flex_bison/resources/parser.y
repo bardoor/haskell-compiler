@@ -306,7 +306,7 @@ topDecl : typeDecl
         | dataDecl
         | classDecl
         | instDecl
-//        | defaultDecl
+        | defaultDecl
         | declE
         ;
 
@@ -379,7 +379,7 @@ class : tycon tyvar
       ;
 
 /* ------------------------------- *
- *              Типы               *
+ *              data               *
  * ------------------------------- */
 
 dataDecl : DATAKW context DARROW simpleType '=' constrList
@@ -432,35 +432,50 @@ tyvarListComma : tyvar
 tyvar : FUNC_ID
       ;
 
+defaultDecl : DEFAULTKW defaultTypes
+            ;
+
+defaultTypes : '(' type ',' typeListComma ')'
+             | ttype
+             ;
+
+
+/* ------------------------------- *
+ *              Типы               *
+ * ------------------------------- */
+
 type : btype                
      | btype RARROW type        
      ;
 
-btype : '[' btype ']' atype     
-      | atype              
+btype : atype    
+      | tycon atypeList              
       ;
 
-atype : gtycon             
-      | tyvar              
-      | '(' typeListComma ')' 
-      | '[' type ']'
-      | '(' type ')'
+atype : ntatype          
+      | '(' type ',' typeListComma ')'           
       ;
-
-typeListComma : type          
-              | type ',' typeListComma 
-              ;
 
 atypeList : atypeList atype
           | atype
           ;
 
-gtycon : '('')'                
-       | '['']'                
-       | '('RARROW')'              
-       | '(' '{' ',' '}' ')' 
-       | CONSTRUCTOR_ID   
-       ;
+ttype : ntatype
+      | btype RARROW type
+      | tycon atypeList
+      ;
+
+ntatype : tyvar
+        | tycon
+        | '(' ')'
+        | '(' type ')'
+        | '[' type ']'
+        ;
+
+typeListComma : type          
+              | type ',' typeListComma 
+              ;
+              
 %%
 
 void yyerror(const char* s) {
