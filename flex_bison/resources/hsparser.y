@@ -96,6 +96,8 @@ expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make 
      | '-' expr                                 { LOG_PARSER("## PARSER ## make expr - minus expr\n"); }
      | LETKW '{' declList '}' INKW expr         { LOG_PARSER("## PARSER ## make expr - let .. in ..\n") }
      | IFKW expr THENKW expr ELSEKW expr        { LOG_PARSER("## PARSER ## make expr - if then else\n"); }
+//     | '\\' patternList RARROW expr           
+//     | DOKW '{' stmtList '}'
 //     | CASEKW expr OFKW '{' /* alts */ '}'   
      | fapply                                   { LOG_PARSER("## PARSER ## make expr - function application\n"); }
      | literal                                  { LOG_PARSER("## PARSER ## make expr - literal\n"); }
@@ -104,6 +106,7 @@ expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make 
      | list                                     { LOG_PARSER("## PARSER ## make expr - list\n"); }
      | tuple                                    { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
      | comprehension                            { LOG_PARSER("## PARSER ## make expr - comprehension\n"); }
+     | cut                                      { LOG_PARSER("## PARSER ## make expr - cut\n"); }
      ;
 
 fapply : funid exprList        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
@@ -121,15 +124,23 @@ funid : '(' SYMS ')'
       ;
 
 /* Оператор */
-op : SYMS                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
-   | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
-   | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
-   | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
+op : SYMS                   
+   | BQUOTE funid BQUOTE    
+   | '+'                    
+   | '-'                    
    ;
-   
+
 operatorList : op
              | operatorList ',' op
              ;
+
+cut : '(' '+' expr  ')'
+    | '(' BQUOTE funid BQUOTE expr ')'
+    | '(' SYMS expr ')'
+    | '(' expr '+' ')'
+    | '(' expr BQUOTE funid BQUOTE ')'
+    | '(' expr SYMS ')'
+    ;
 
 /* ------------------------------- *
  *             Модуль              *
