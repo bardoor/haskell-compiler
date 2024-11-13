@@ -9,37 +9,29 @@ OBJ = $(patsubst flex_bison/src/%.cpp, $(OBJ_DIR)/%.o, $(SRC))
 
 TARGET = $(BIN_DIR)/haskellc.exe
 
-# Главная цель
 all: generate_bison generate_flexer $(TARGET)
 
-# Генерация исходников для flex
 generate_flexer:
 	flex --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/hslexer.flex
 
-# Генерация исходников для bison
 generate_bison:
 	bison -d -o flex_bison/src/Parser.cpp flex_bison/resources/hsparser.y
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
-# Генерация с отладочной информацией для bison
 generate_bison_debug:
 	bison -Wcounterexamples -d -o flex_bison/src/Parser.cpp flex_bison/resources/hsparser.y
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
-# Задача для тестирования парсера
 test_parser: 
 	pytest flex_bison/tests/test_all.py
 
-# Правило для компиляции основного приложения
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $^
 
-# Правило для компиляции объектных файлов
 $(OBJ_DIR)/%.o: flex_bison/src/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Очистка файлов сборки
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
