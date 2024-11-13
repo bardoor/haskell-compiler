@@ -130,6 +130,7 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 "~"     |
 \\      |
 ":"		| 
+"="		|
 ","		{ LOG_LEXEM("found: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
 "`"     { LOG_LEXEM("found BQUOTE\n"); layoutBuilder->addLexem(std::string(yytext)); return BQUOTE; }
 ".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext)); return DOTDOT; }

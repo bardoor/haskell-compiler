@@ -263,10 +263,10 @@ var : FUNC_ID                { LOG_PARSER("## PARSER ## make variable - FUNC_ID\
     ;
 
 /* Объявление */
-declE : varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
-      | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
+declE : var '=' expr                    { LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
       | funlhs '=' expr                 { LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
-      | var '=' expr                    { LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
+      | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
+      | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
       | /* nothing */                   { LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
       ;
 
@@ -281,7 +281,7 @@ funlhs : var apatList               { LOG_PARSER("## PARSER ## make funlhs - var
  *             Модуль              *
  * ------------------------------- */
 
-module : MODULEKW CONSTRUCTOR_ID exportListE WHEREKW body
+module : MODULEKW tycon WHEREKW body
        { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID exportListE WHERE body\n"); }
        | body
        { LOG_PARSER("## PARSER ## make module - body\n"); }
