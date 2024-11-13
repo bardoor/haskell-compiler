@@ -39,15 +39,15 @@
 			case Lexem::OPEN_BRACE: \
 				layoutBuilder->addLexem("{"); \
 				printf("{\n"); \
-				break; \
+				return '{'; \
 			case Lexem::CLOSING_BRACE: \
 				layoutBuilder->addLexem("}"); \
 				printf("}\n"); \
-				break; \
+				return '}'; \
 			case Lexem::SEMICOLON: \
 				layoutBuilder->addLexem(";"); \
 				printf(";\n"); \
-				break; \
+				return ';'; \
 			case Lexem::NONE: \
 				break; \
 		} \
