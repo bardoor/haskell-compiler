@@ -141,7 +141,7 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 "=>"    { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext)); return DARROW; }
 "|"     { LOG_LEXEM("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext)); return VBAR; }
 
-{SYMBOL}+ { layoutBuilder->addLexem(std::string(yytext)); return SYMS; }
+{SYMBOL}+ { LOG_LEXEM("found symbol: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return SYMS; }
 
 {SMALL}({WORD}|')*  { 
 	layoutBuilder->addLexem(std::string(yytext)); 

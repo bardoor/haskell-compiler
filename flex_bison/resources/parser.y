@@ -439,6 +439,7 @@ contextList : class
 class : tycon tyvar
       { LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); }
       ;
+
 /* ------------------------------- *
  *              data               *
  * ------------------------------- */
