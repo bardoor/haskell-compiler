@@ -8,23 +8,22 @@ SRC = $(wildcard flex_bison/src/*.cpp) $(wildcard flex_bison/resources/*.cpp)
 OBJ = $(patsubst flex_bison/src/%.cpp, $(OBJ_DIR)/%.o, $(SRC))
 
 TARGET = $(BIN_DIR)/haskellc.exe
-TEST_TARGET = $(BIN_DIR)/parser_tests.exe
 
 # Главная цель
 all: generate_bison generate_flexer $(TARGET)
 
 # Генерация исходников для flex
 generate_flexer:
-	flex --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/haskell.flex
+	flex --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/hslexer.flex
 
 # Генерация исходников для bison
 generate_bison:
-	bison -d -o flex_bison/src/Parser.cpp flex_bison/resources/parser.y
+	bison -d -o flex_bison/src/Parser.cpp flex_bison/resources/hsparser.y
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
 # Генерация с отладочной информацией для bison
 generate_bison_debug:
-	bison -Wcounterexamples -d -o flex_bison/src/Parser.cpp flex_bison/resources/parser.y
+	bison -Wcounterexamples -d -o flex_bison/src/Parser.cpp flex_bison/resources/hsparser.y
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
 # Задача для тестирования парсера
