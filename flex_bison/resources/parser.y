@@ -179,303 +179,410 @@ enumeration : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make 
  *            Паттерны             *
  * ------------------------------- */
 
-/* Паттерн в параметрах лямбда функции */
-lampats	:  apat lampats			
-	    |  apat				
+lampats	:  apat lampats	{ LOG_PARSER("## PARSER ## make lambda pattern - apat lampats\n"); }
+	    |  apat          { LOG_PARSER("## PARSER ## make lambda pattern - apat\n"); }
 	    ;
 
 /* Список паттернов */
-pats : pats ',' opat
-     | opat
+pats : pats ',' opat      { LOG_PARSER("## PARSER ## make pattern list - pats, opat\n"); }
+     | opat               { LOG_PARSER("## PARSER ## make pattern list - opat\n"); }
      ;
 
-opat : dpat
-     | opat op opat %prec '+' 
+opat : dpat               { LOG_PARSER("## PARSER ## make optional pattern - dpat\n"); }
+     | opat op opat %prec '+' { LOG_PARSER("## PARSER ## make optional pattern - opat op opat\n"); }
      ;
 
-dpat : '-' fpat
-     | fpat
+dpat : '-' fpat           { LOG_PARSER("## PARSER ## make dpat - '-' fpat\n"); }
+     | fpat               { LOG_PARSER("## PARSER ## make dpat - fpat\n"); }
      ;
 
-fpat : fpat apat
-     | apat
+fpat : fpat apat          { LOG_PARSER("## PARSER ## make fpat - fpat apat\n"); }
+     | apat               { LOG_PARSER("## PARSER ## make fpat - apat\n"); }
      ;
 
 /* Примитивные паттерны */
-apat : FUNC_ID
-     | CONSTRUCTOR_ID
-     | FUNC_ID ASPATTERN apat
-     | literal
-     | WILDCARD
-     | '(' ')'
-     | '(' opat ',' pats ')'
-     | '[' opat ']'
-     | '[' ']'
-     | '~' apat
+apat : FUNC_ID            { LOG_PARSER("## PARSER ## make apat - FUNC_ID\n"); }
+     | CONSTRUCTOR_ID     { LOG_PARSER("## PARSER ## make apat - CONSTRUCTOR_ID\n"); }
+     | FUNC_ID ASPATTERN apat { LOG_PARSER("## PARSER ## make apat - FUNC_ID ASPATTERN apat\n"); }
+     | literal            { LOG_PARSER("## PARSER ## make apat - literal\n"); }
+     | WILDCARD           { LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); }
+     | '(' ')'            { LOG_PARSER("## PARSER ## make apat - ()\n"); }
+     | '(' opat ',' pats ')' { LOG_PARSER("## PARSER ## make apat - (opat, pats)\n"); }
+     | '[' opat ']'       { LOG_PARSER("## PARSER ## make apat - [opat]\n"); }
+     | '[' ']'            { LOG_PARSER("## PARSER ## make apat - []\n"); }
+     | '~' apat           { LOG_PARSER("## PARSER ## make apat - ~apat\n"); }
      ;
 
-/* Альтернативы в case */
-altList : altList ';' altE
-     | altE
-     ;
-
-altE : opat altRest
-     | /* nothing */
-     ;
-
-altRest : guardPat whereOpt
-        | RARROW expr whereOpt
-        ;
-
-guardPat : guard RARROW expr guardPat
-         | guard RARROW expr
+apatList : apat
+         | apatList apat
          ;
 
-guard : VBAR oexpr
+/* Альтернативы в case */
+altList : altList ';' altE  { LOG_PARSER("## PARSER ## make alternative list - altList ; altE\n"); }
+     | altE                  { LOG_PARSER("## PARSER ## make alternative list - altE\n"); }
+     ;
+
+altE : opat altRest         { LOG_PARSER("## PARSER ## make alternative - opat altRest\n"); }
+     | /* nothing */        { LOG_PARSER("## PARSER ## make alternative - nothing\n"); }
+     ;
+
+altRest : guardPat whereOpt { LOG_PARSER("## PARSER ## make alternative rest - guardPat whereOpt\n"); }
+        | RARROW expr whereOpt { LOG_PARSER("## PARSER ## make alternative rest - RARROW expr whereOpt\n"); }
+        ;
+
+guardPat : guard RARROW expr guardPat { LOG_PARSER("## PARSER ## make guard pattern - guard RARROW expr guardPat\n"); }
+         | guard RARROW expr { LOG_PARSER("## PARSER ## make guard pattern - guard RARROW expr\n"); }
+         ;
+
+guard : VBAR oexpr          { LOG_PARSER("## PARSER ## make guard - VBAR oexpr\n"); }
       ;
 
 /* ------------------------------- *
  *           Объявления            *
  * ------------------------------- */
 
-declList : declE
-         | declList ';' declE
+declList : declE             { LOG_PARSER("## PARSER ## make declaration list - declE\n"); }
+         | declList ';' declE { LOG_PARSER("## PARSER ## make declaration list - declList ; declE\n"); }
          ;
 
-con : tycon
-    | '(' symbols ')'
+con : tycon                  { LOG_PARSER("## PARSER ## make constructor - tycon\n"); }
+    | '(' symbols ')'        { LOG_PARSER("## PARSER ## make constructor - (symbols)\n"); }
     ;
 
-conList : con
-        | conList ',' con
+conList : con                { LOG_PARSER("## PARSER ## make constructor list - con\n"); }
+        | conList ',' con    { LOG_PARSER("## PARSER ## make constructor list - conList , con\n"); }
         ;
 
-varList : varList ',' var
-        | var
+varList : varList ',' var    { LOG_PARSER("## PARSER ## make variable list - varList , var\n"); }
+        | var                { LOG_PARSER("## PARSER ## make variable list - var\n"); }
         ;
 
 /* Оператор в префиксной форме или идентификатор функции */
-var : FUNC_ID
-    | '(' symbols ')'
+var : FUNC_ID                { LOG_PARSER("## PARSER ## make variable - FUNC_ID\n"); }
+    | '(' symbols ')'        { LOG_PARSER("## PARSER ## make variable - (symbols)\n"); }
     ;
 
 /* Объявление */
-declE : varList DCOLON type DARROW type 
-      | varList DCOLON type
-      | /* nothing */
+declE : varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
+      | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
+      | funlhs '=' expr                 { LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
+      | var '=' expr                    { LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
+      | /* nothing */                   { LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
       ;
 
-whereOpt : WHEREKW '{' declList '}'
-         | /* nothing */
+whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option - WHERE declList\n"); }
+         | /* nothing */            { LOG_PARSER("## PARSER ## make where option - nothing\n"); }
          ;
 
+funlhs : var apatList               { LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
+       ;
 
 /* ------------------------------- *
  *             Модуль              *
  * ------------------------------- */
 
 module : MODULEKW CONSTRUCTOR_ID exportListE WHEREKW body
+       { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID exportListE WHERE body\n"); }
        | body
+       { LOG_PARSER("## PARSER ## make module - body\n"); }
        ;
 
 exportListE : /* nothing */
+            { LOG_PARSER("## PARSER ## make exportListE - nothing\n"); }
             | '(' exportList ')'
+            { LOG_PARSER("## PARSER ## make exportListE - (exportList)\n"); }
             ;
 
 exportList : export
+           { LOG_PARSER("## PARSER ## make exportList - export\n"); }
            | export ',' export
+           { LOG_PARSER("## PARSER ## make exportList - export, export\n"); }
            ;
 
 export : FUNC_ID
+       { LOG_PARSER("## PARSER ## make export - FUNC_ID\n"); }
        | tycon
+       { LOG_PARSER("## PARSER ## make export - tycon\n"); }
        | tycon '(' DOTDOT ')'
+       { LOG_PARSER("## PARSER ## make export - tycon (..)\n"); }
        | tycon DOTDOT
+       { LOG_PARSER("## PARSER ## make export - tycon ..\n"); }
        | tycon '(' ')'
+       { LOG_PARSER("## PARSER ## make export - tycon ()\n"); }
        | tycon '(' varList ')'
+       { LOG_PARSER("## PARSER ## make export - tycon (varList)\n"); }
        | tycon '(' conList ')'
+       { LOG_PARSER("## PARSER ## make export - tycon (conList)\n"); }
        ;
 
 body : '{' topDeclList '}'
+     { LOG_PARSER("## PARSER ## make body - { topDeclList }\n"); }
      ;
 
 topDeclList : topDecl
+            { LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
             | topDeclList ';' topDecl
+            { LOG_PARSER("## PARSER ## make topDeclList - topDeclList ; topDecl\n"); }
             ;
 
 topDecl : typeDecl
+        { LOG_PARSER("## PARSER ## make topDecl - typeDecl\n"); }
         | dataDecl
+        { LOG_PARSER("## PARSER ## make topDecl - dataDecl\n"); }
         | classDecl
+        { LOG_PARSER("## PARSER ## make topDecl - classDecl\n"); }
         | instDecl
+        { LOG_PARSER("## PARSER ## make topDecl - instDecl\n"); }
         | defaultDecl
-        | declE
+        { LOG_PARSER("## PARSER ## make topDecl - defaultDecl\n"); }
+        | { LOG_PARSER("Seems to be decl...\n") } declE
+        { LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
         ;
-
 
 /* ------------------------------- *
  *       Классы, instance          *
  * ------------------------------- */
 
 classDecl : CLASSKW context DARROW class classBody
+          { LOG_PARSER("## PARSER ## make classDecl - CLASS context => class classBody\n"); }
           | CLASSKW class classBody
+          { LOG_PARSER("## PARSER ## make classDecl - CLASS class classBody\n"); }
           ;
 
 classBody : /* nothing */
+          { LOG_PARSER("## PARSER ## make classBody - nothing\n"); }
           | WHEREKW '{' declList '}'
+          { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); }
           ;
 
 instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
+         { LOG_PARSER("## PARSER ## make instDecl - INSTANCE context => tycon restrictInst rinstOpt\n"); }
          | INSTANCEKW tycon generalInst rinstOpt
+         { LOG_PARSER("## PARSER ## make instDecl - INSTANCE tycon generalInst rinstOpt\n"); }
          ;
 
 rinstOpt : /* nothing */
+      { LOG_PARSER("## PARSER ## make rinstOpt - nothing\n"); }
       | WHEREKW '{' valDefList '}'
+      { LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); }
       ;
 
 valDefList : /* nothing */
+            { LOG_PARSER("## PARSER ## make valDefList - nothing\n"); }
             | valDef
+            { LOG_PARSER("## PARSER ## make valDefList - valDef\n"); }
             | valDef ';' valDef
+            { LOG_PARSER("## PARSER ## make valDefList - valDef ; valDef\n"); }
             ;
 
 valDef : opat valrhs
+       { LOG_PARSER("## PARSER ## make valDef - opat valrhs\n"); }
        ;
 
 /* Правосторонее значение */
 valrhs : valrhs1 whereOpt
+       { LOG_PARSER("## PARSER ## make valrhs - valrhs1 whereOpt\n"); }
        ;
 
 valrhs1 : guardrhs
+        { LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n"); }
         | '=' expr
+        { LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); }
         ;
 
 guardrhs : guard '=' expr
+         { LOG_PARSER("## PARSER ## make guardrhs - guard = expr\n"); }
          | guard '=' expr guardrhs
+         { LOG_PARSER("## PARSER ## make guardrhs - guard = expr guardrhs\n"); }
          ;
 
 restrictInst : tycon
+             { LOG_PARSER("## PARSER ## make restrictInst - tycon\n"); }
              | '(' tycon tyvarList ')'
+             { LOG_PARSER("## PARSER ## make restrictInst - (tycon tyvarList)\n"); }
              | '(' tyvar ',' tyvarListComma ')'
+             { LOG_PARSER("## PARSER ## make restrictInst - (tyvar, tyvarListComma)\n"); }
              | '(' ')'
+             { LOG_PARSER("## PARSER ## make restrictInst - ()\n"); }
              | '[' tyvar ']'
+             { LOG_PARSER("## PARSER ## make restrictInst - [tyvar]\n"); }
              | '(' tyvar RARROW tyvar ')'
+             { LOG_PARSER("## PARSER ## make restrictInst - (tyvar => tyvar)\n"); }
              ;
 
 generalInst : tycon
+            { LOG_PARSER("## PARSER ## make generalInst - tycon\n"); }
             | '(' tycon atypeList ')'
+            { LOG_PARSER("## PARSER ## make generalInst - (tycon atypeList)\n"); }
             | '(' type ',' typeListComma ')'
+            { LOG_PARSER("## PARSER ## make generalInst - (type, typeListComma)\n"); }
             | '(' ')'
+            { LOG_PARSER("## PARSER ## make generalInst - ()\n"); }
             | '[' type ']'
+            { LOG_PARSER("## PARSER ## make generalInst - [type]\n"); }
             | '(' btype RARROW type ')'
+            { LOG_PARSER("## PARSER ## make generalInst - (btype => type)\n"); }
             ;
 
 context : '(' contextList ')'
+        { LOG_PARSER("## PARSER ## make context - (contextList)\n"); }
         | class
+        { LOG_PARSER("## PARSER ## make context - class\n"); }
         ;
 
 contextList : class
+            { LOG_PARSER("## PARSER ## make contextList - class\n"); }
             | contextList ',' class
+            { LOG_PARSER("## PARSER ## make contextList - contextList, class\n"); }
             ;
 
 class : tycon tyvar
+      { LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); }
       ;
-
 /* ------------------------------- *
  *              data               *
  * ------------------------------- */
 
 dataDecl : DATAKW context DARROW simpleType '=' constrList
+         { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList\n"); }
          | DATAKW simpleType '=' constrList
+         { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList\n"); }
          | DATAKW context DARROW simpleType '=' constrList DERIVINGKW tyClassList
+         { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList DERIVING tyClassList\n"); }
          | DATAKW simpleType '=' constrList DERIVINGKW tyClassList
+         { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList DERIVING tyClassList\n"); }
          ;
 
 constrList : tycon atypeList
+         { LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); }
         | '(' SYMS ')' atypeList
+         { LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); }
         | '(' SYMS ')'
+         { LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); }
         | tycon
+         { LOG_PARSER("## PARSER ## make constrList - tycon\n"); }
         | btype conop btype
+         { LOG_PARSER("## PARSER ## make constrList - btype conop btype\n"); }
         ;
 
 conop : SYMS
+      { LOG_PARSER("## PARSER ## make conop - SYMS\n"); }
       | BQUOTE CONSTRUCTOR_ID BQUOTE
+      { LOG_PARSER("## PARSER ## make conop - `CONSTRUCTOR_ID`\n"); }
       ;
 
 tyClassList : '(' tyClassListComma ')'
+            { LOG_PARSER("## PARSER ## make tyClassList - (tyClassListComma)\n"); }
             | '(' ')'
+            { LOG_PARSER("## PARSER ## make tyClassList - ()\n"); }
             | tyClass
+            { LOG_PARSER("## PARSER ## make tyClassList - tyClass\n"); }
             ;
 
 tyClassListComma : tyClass
+                 { LOG_PARSER("## PARSER ## make tyClassListComma - tyClass\n"); }
                  | tyClassListComma ',' tyClass
+                 { LOG_PARSER("## PARSER ## make tyClassListComma - tyClassListComma, tyClass\n"); }
                  ;
 
 tyClass : tycon
+        { LOG_PARSER("## PARSER ## make tyClass - tycon\n"); }
         ;
 
-typeDecl : TYPEKW simpleType '=' type      
+typeDecl : TYPEKW simpleType '=' type
+         { LOG_PARSER("## PARSER ## make typeDecl - TYPE simpleType = type\n"); }
          ;
 
 simpleType : tycon
+           { LOG_PARSER("## PARSER ## make simpleType - tycon\n"); }
            | tycon tyvarList
+           { LOG_PARSER("## PARSER ## make simpleType - tycon tyvarList\n"); }
            ;
 
 tycon : CONSTRUCTOR_ID
+      { LOG_PARSER("## PARSER ## make tycon - CONSTRUCTOR_ID\n"); }
       ;
 
 tyvarList : tyvar
-       | tyvarList tyvar
-       ;
+           { LOG_PARSER("## PARSER ## make tyvarList - tyvar\n"); }
+         | tyvarList tyvar
+           { LOG_PARSER("## PARSER ## make tyvarList - tyvarList tyvar\n"); }
+         ;
 
 tyvarListComma : tyvar
+               { LOG_PARSER("## PARSER ## make tyvarListComma - tyvar\n"); }
                | tyvarList ',' tyvar
+               { LOG_PARSER("## PARSER ## make tyvarListComma - tyvarList, tyvar\n"); }
                ;
 
 tyvar : FUNC_ID
+      { LOG_PARSER("## PARSER ## make tyvar - FUNC_ID\n"); }
       ;
 
 defaultDecl : DEFAULTKW defaultTypes
+            { LOG_PARSER("## PARSER ## make defaultDecl - DEFAULT defaultTypes\n"); }
             ;
 
 defaultTypes : '(' type ',' typeListComma ')'
+             { LOG_PARSER("## PARSER ## make defaultTypes - (type, typeListComma)\n"); }
              | ttype
+             { LOG_PARSER("## PARSER ## make defaultTypes - ttype\n"); }
              ;
-
 
 /* ------------------------------- *
  *              Типы               *
  * ------------------------------- */
 
-type : btype                
-     | btype RARROW type        
+type : btype
+     { LOG_PARSER("## PARSER ## make type - btype\n"); }
+     | btype RARROW type
+     { LOG_PARSER("## PARSER ## make type - btype => type\n"); }
      ;
 
-btype : atype    
-      | tycon atypeList              
+btype : atype
+      { LOG_PARSER("## PARSER ## make btype - atype\n"); }
+      | tycon atypeList
+      { LOG_PARSER("## PARSER ## make btype - tycon atypeList\n"); }
       ;
 
-atype : ntatype          
-      | '(' type ',' typeListComma ')'           
+atype : ntatype
+      { LOG_PARSER("## PARSER ## make atype - ntatype\n"); }
+      | '(' type ',' typeListComma ')'
+      { LOG_PARSER("## PARSER ## make atype - (type, typeListComma)\n"); }
       ;
 
 atypeList : atypeList atype
+          { LOG_PARSER("## PARSER ## make atypeList - atypeList atype\n"); }
           | atype
+          { LOG_PARSER("## PARSER ## make atypeList - atype\n"); }
           ;
 
 ttype : ntatype
+      { LOG_PARSER("## PARSER ## make ttype - ntatype\n"); }
       | btype RARROW type
+      { LOG_PARSER("## PARSER ## make ttype - btype => type\n"); }
       | tycon atypeList
+      { LOG_PARSER("## PARSER ## make ttype - tycon atypeList\n"); }
       ;
 
 ntatype : tyvar
+        { LOG_PARSER("## PARSER ## make ntatype - tyvar\n"); }
         | tycon
+        { LOG_PARSER("## PARSER ## make ntatype - tycon\n"); }
         | '(' ')'
+        { LOG_PARSER("## PARSER ## make ntatype - ()\n"); }
         | '(' type ')'
+        { LOG_PARSER("## PARSER ## make ntatype - (type)\n"); }
         | '[' type ']'
+        { LOG_PARSER("## PARSER ## make ntatype - [type]\n"); }
         ;
 
-typeListComma : type          
-              | type ',' typeListComma 
+typeListComma : type
+              { LOG_PARSER("## PARSER ## make typeListComma - type\n"); }
+              | type ',' typeListComma
+              { LOG_PARSER("## PARSER ## make typeListComma - type, typeListComma\n"); }
               ;
-              
+
 %%
 
 void yyerror(const char* s) {
