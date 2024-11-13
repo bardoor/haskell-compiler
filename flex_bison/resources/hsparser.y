@@ -78,7 +78,7 @@ void yyerror(const char* s);
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
 
-%start expr
+%start module
 
 %%
 
@@ -92,23 +92,26 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
-expr : expr op expr %prec '+'
-//     | '-' expr
-//     | LETKW '{' /* decls */ '}' INKW expr   
-//     | IFKW expr THENKW expr ELSEKW expr  
+expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make expr - expr op expr\n"); }
+     | '-' expr                                 { LOG_PARSER("## PARSER ## make expr - minus expr\n"); }
+     | LETKW '{' declList '}' INKW expr         { LOG_PARSER("## PARSER ## make expr - let .. in ..\n") }
+     | IFKW expr THENKW expr ELSEKW expr        { LOG_PARSER("## PARSER ## make expr - if then else\n"); }
 //     | CASEKW expr OFKW '{' /* alts */ '}'   
-     | fapply
-     | literal
-     | '(' expr ')'                                                  
+     | fapply                                   { LOG_PARSER("## PARSER ## make expr - function application\n"); }
+     | literal                                  { LOG_PARSER("## PARSER ## make expr - literal\n"); }
+     | '(' expr ')'                             { LOG_PARSER("## PARSER ## make expr - (expr)\n"); }
+     | range                                    { LOG_PARSER("## PARSER ## make expr - range\n"); }
+     | list                                     { LOG_PARSER("## PARSER ## make expr - list\n"); }
+     | tuple                                    { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+     | comprehension                            { LOG_PARSER("## PARSER ## make expr - comprehension\n"); }
      ;
 
-/* Применение функции */
 fapply : funid exprList        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | funid                
+       | funid                 { LOG_PARSER("## PARSER ## make func apply - identifier\n"); }
        ;
 
 exprList : expr
-         | exprList expr
+         | exprList expr       { LOG_PARSER("## PARSER ## make exprList\n"); }
          ;
 
 funid : '(' SYMS ')'
@@ -117,14 +120,71 @@ funid : '(' SYMS ')'
       | FUNC_ID
       ;
 
-
 /* Оператор */
 op : SYMS                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
    | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
    | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
    | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
+   
+operatorList : op
+             | operatorList ',' op
+             ;
 
+/* ------------------------------- *
+ *             Модуль              *
+ * ------------------------------- */
+
+module : MODULEKW conid WHEREKW '{' declList '}'  { LOG_PARSER("## PARSER ## make explicit module\n"); }
+       | '{' declList '}'                         { LOG_PARSER("## PARSER ## make module - body only\n"); }
+       ;
+
+declList : declE
+         | declList ';' declE   { LOG_PARSER("## PARSER ## make declList\n"); }
+         ;
+
+declE : /* nothing */
+      | decl
+      ;
+
+decl : funList DCOLON conid         { LOG_PARSER("## PARSER ## make decl - funList :: type\n"); }
+     | INFIXKW INTC operatorList    { LOG_PARSER("## PARSER ## make decl - infix INTC operators\n"); }
+     | INFIXLKW INTC operatorList   { LOG_PARSER("## PARSER ## make decl - infixl INTC operators\n"); }
+     | INFIXRKW INTC operatorList   { LOG_PARSER("## PARSER ## make decl - infixr INTC operators\n"); }
+     | funid '=' expr               { LOG_PARSER("## PARSER ## make decl - funid = expr\n"); }
+     ;
+
+funList : funid
+        | funList ',' funid
+        ;
+
+conid : CONSTRUCTOR_ID
+     ;
+
+/* ------------------------------- *
+ *         Кортежи, списки         *
+ * ------------------------------- */
+
+tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
+      | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
+      ;
+
+comprehension : '[' expr '|' commaSepExprs ']'  { LOG_PARSER("## PARSER ## make comprehension\n"); }
+              ;
+
+list : '[' ']'                            { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
+     | '[' commaSepExprs ']'              { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
+     ;
+
+commaSepExprs : expr                      { LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
+              | commaSepExprs ',' expr    { LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
+              ;
+
+range : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make range - [ expr .. ]\n"); }
+      | '[' expr DOTDOT expr ']'          { LOG_PARSER("## PARSER ## make range - [ expr .. expr ]\n"); }
+      | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make range - [ expr, expr .. expr ]\n"); }
+      | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make range - [ expr, expr .. ]\n"); }  
+      ;
 %%
 
 void yyerror(const char* s) {
