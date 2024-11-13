@@ -92,31 +92,34 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
-expr : expr DCOLON type DARROW type 
-     | expr DCOLON type
-     | expr op expr %prec '+'
-     | '-' expr
-     | '\\' lampats RARROW expr           
-     | LETKW '{' /* decls */ '}' INKW expr   
-     | IFKW expr THENKW expr ELSEKW expr  
-     | CASEKW expr OFKW '{' /* alts */ '}'   
+expr : expr op expr %prec '+'
+//     | '-' expr
+//     | LETKW '{' /* decls */ '}' INKW expr   
+//     | IFKW expr THENKW expr ELSEKW expr  
+//     | CASEKW expr OFKW '{' /* alts */ '}'   
      | fapply
      | literal
-     | FUNC_ID
-     | '(' expr ')'
-     | tuple
-     | list
-     | range
-     | comprehension                                                     
+     | '(' expr ')'                                                  
      ;
 
 /* Применение функции */
-fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
+fapply : funid exprList        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
+       | funid                
        ;
 
+exprList : expr
+         | exprList expr
+         ;
+
+funid : '(' SYMS ')'
+      | '(' '+' ')'
+      | '(' '-' ')'
+      | FUNC_ID
+      ;
+
+
 /* Оператор */
-op : symbols                { LOG_PARSER("## PARSER ## make op - symbols\n"); }
+op : SYMS                   { LOG_PARSER("## PARSER ## make op - symbols\n"); }
    | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
    | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
    | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
@@ -137,3 +140,4 @@ std::string generateDot(Module* root) {
     ss << "}\n";
     return ss.str();
 }
+
