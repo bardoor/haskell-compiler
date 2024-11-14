@@ -96,10 +96,10 @@ expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make 
      | '-' expr                                 { LOG_PARSER("## PARSER ## make expr - minus expr\n"); }
      | LETKW '{' declList '}' INKW expr         { LOG_PARSER("## PARSER ## make expr - let .. in ..\n") }
      | IFKW expr THENKW expr ELSEKW expr        { LOG_PARSER("## PARSER ## make expr - if then else\n"); }
-//     | '\\' patternList RARROW expr           
+     | '\\' patterns RARROW expr                { LOG_PARSER("## PARSER ## make expr - lambda\n"); }
 //     | DOKW '{' stmtList '}'
-//     | CASEKW expr OFKW '{' /* alts */ '}'   
-     | fapply                                   { LOG_PARSER("## PARSER ## make expr - function application\n"); }
+     | CASEKW expr OFKW '{' alternativeList '}' { LOG_PARSER("## PARSER ## make expr - case\n"); }
+     | fapply                                   { LOG_PARSER("## PARSER ## make expr - application\n"); }
      | literal                                  { LOG_PARSER("## PARSER ## make expr - literal\n"); }
      | '(' expr ')'                             { LOG_PARSER("## PARSER ## make expr - (expr)\n"); }
      | range                                    { LOG_PARSER("## PARSER ## make expr - range\n"); }
@@ -149,6 +149,21 @@ cut : '(' '+' expr  ')'
     | '(' expr BQUOTE funid BQUOTE ')'
     | '(' expr SYMS ')'
     ;
+
+alternativeList : alternative
+                | alternativeList ';' alternative
+                ;
+
+alternative : pattern RARROW expr
+            | pattern RARROW expr WHEREKW declList
+            | pattern guardPattern 
+            | pattern guardPattern WHEREKW declList
+            | /* nothing */
+            ;
+
+guardPattern : '|' expr RARROW expr
+             | '|' expr RARROW expr guardPattern
+             ;
 
 /* ------------------------------- *
  *             Модуль              *
@@ -219,11 +234,27 @@ pattern : '-' FLOATC
         | '(' pattern ',' patternList ')'
         | '[' patternList ']'
         | '~' pattern
+        | conid '{' funPatternListE '}'
         ;
+
+funPattern : funid '=' pattern
+           ;
+
+funPatternList : funPattern
+               | funPatternList ',' funPattern
+               ;
+
+funPatternListE : /* nothing */
+                | funPatternList
+                ;
 
 patternList : pattern
             | patternList ',' pattern
             ;
+
+patterns : pattern
+         | patterns ',' pattern
+         ;
 
 %%
 
