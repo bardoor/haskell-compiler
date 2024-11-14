@@ -38,8 +38,8 @@ void yyerror(const char* s);
  *           Приоритеты            *
  * ------------------------------- */
 
-%left	CASE		LET	IN		LAMBDA
-  	IF		ELSE
+%left	CASEKW		LETKW	 INKW	'\\'
+  	    IFKW		ELSEKW
 
 %left SYMS '+' '-' BQUOTE
 
@@ -90,6 +90,10 @@ literal : INTC
         | FLOATC   
         | STRINGC  
         | CHARC    
+        | range                                    
+        | list                                     
+        | tuple                                    
+        | comprehension                            
         ;
 
 expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make expr - expr op expr\n"); }
@@ -99,24 +103,25 @@ expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make 
      | '\\' patterns RARROW expr                { LOG_PARSER("## PARSER ## make expr - lambda\n"); }
      | DOKW '{' stmtList expr '}'               { LOG_PARSER("## PARSER ## make expr - do\n"); }
      | CASEKW expr OFKW '{' alternativeList '}' { LOG_PARSER("## PARSER ## make expr - case\n"); }
-     | fapply                                   { LOG_PARSER("## PARSER ## make expr - application\n"); }
-     | literal                                  { LOG_PARSER("## PARSER ## make expr - literal\n"); }
-     | '(' expr ')'                             { LOG_PARSER("## PARSER ## make expr - (expr)\n"); }
-     | range                                    { LOG_PARSER("## PARSER ## make expr - range\n"); }
-     | list                                     { LOG_PARSER("## PARSER ## make expr - list\n"); }
-     | tuple                                    { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
-     | comprehension                            { LOG_PARSER("## PARSER ## make expr - comprehension\n"); }
-     | cut expr                                 { LOG_PARSER("## PARSER ## make expr - cut\n"); }
      | conid '{' fbindList '}'                  { LOG_PARSER("## PARSER ## make expr - create data\n"); }
-     ;  
+     | cut param                                { LOG_PARSER("## PARSER ## make expr - cut\n"); }
+     | '(' expr ')'                             { LOG_PARSER("## PARSER ## make expr - (expr)\n"); }
+     | literal                                  { LOG_PARSER("## PARSER ## make expr - literal\n"); }
+     | fapply                                   { LOG_PARSER("## PARSER ## make expr - application\n"); }
+     ; 
 
-fapply : funid exprList        
-       | funid                 
+fapply : funid paramList     
+       | funid               
        ;
 
-exprList : expr
-         | exprList expr      
-         ;
+param : literal
+      | funid
+      | '(' expr ')'
+      ;
+
+paramList : param
+          | paramList param
+          ;
 
 funid : '(' SYMS ')'
       | '(' '+' ')'
@@ -213,6 +218,7 @@ tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - 
       | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
 
+// TODO: разобраться в comprehension, это неверно..
 comprehension : '[' expr '|' commaSepExprs ']'  { LOG_PARSER("## PARSER ## make comprehension\n"); }
               ;
 
@@ -242,7 +248,7 @@ pattern : '-' FLOATC
         | WILDCARD
         | '(' pattern ')'
         | '(' pattern ',' patternList ')'
-        | '[' patternList ']'
+        | '[' patternList ']'   
         | '~' pattern
         | conid '{' funPatternListE '}'
         ;
