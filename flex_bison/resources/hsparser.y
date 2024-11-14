@@ -97,7 +97,7 @@ expr : expr op expr %prec '+'                   { LOG_PARSER("## PARSER ## make 
      | LETKW '{' declList '}' INKW expr         { LOG_PARSER("## PARSER ## make expr - let .. in ..\n") }
      | IFKW expr THENKW expr ELSEKW expr        { LOG_PARSER("## PARSER ## make expr - if then else\n"); }
      | '\\' patterns RARROW expr                { LOG_PARSER("## PARSER ## make expr - lambda\n"); }
-//     | DOKW '{' stmtList '}'
+     | DOKW '{' stmtList expr '}'               { LOG_PARSER("## PARSER ## make expr - do\n"); }
      | CASEKW expr OFKW '{' alternativeList '}' { LOG_PARSER("## PARSER ## make expr - case\n"); }
      | fapply                                   { LOG_PARSER("## PARSER ## make expr - application\n"); }
      | literal                                  { LOG_PARSER("## PARSER ## make expr - literal\n"); }
@@ -165,6 +165,16 @@ guardPattern : '|' expr RARROW expr
              | '|' expr RARROW expr guardPattern
              ;
 
+stmtList : stmt
+         | stmtList stmt
+         ;
+
+stmt : expr ';'
+     | pattern LARROW expr ';'
+     | LETKW '{' declList '}' ';'
+     | ';'
+     ;
+
 /* ------------------------------- *
  *             Модуль              *
  * ------------------------------- */
@@ -193,7 +203,7 @@ funList : funid
         ;
 
 conid : CONSTRUCTOR_ID
-     ;
+      ;
 
 /* ------------------------------- *
  *         Кортежи, списки         *
@@ -206,17 +216,17 @@ tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - 
 comprehension : '[' expr '|' commaSepExprs ']'  { LOG_PARSER("## PARSER ## make comprehension\n"); }
               ;
 
-list : '[' ']'                            { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
-     | '[' commaSepExprs ']'              { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
+list : '[' ']'                { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
+     | '[' commaSepExprs ']'  { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
      ;
 
-commaSepExprs : expr                      { LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
-              | commaSepExprs ',' expr    { LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
+commaSepExprs : expr                      
+              | expr ',' commaSepExprs    
               ;
 
 range : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make range - [ expr .. ]\n"); }
       | '[' expr DOTDOT expr ']'          { LOG_PARSER("## PARSER ## make range - [ expr .. expr ]\n"); }
-      | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make range - [ expr, expr .. expr ]\n"); }
+      | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make range - [ expr, expr .. expr \n"); }
       | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make range - [ expr, expr .. ]\n"); }  
       ;
 
