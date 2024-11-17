@@ -19,7 +19,7 @@ generate_bison:
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
 generate_bison_debug:
-	bison -Wcounterexamples -d -o flex_bison/src/Parser.cpp flex_bison/resources/hsparser.y
+	bison -Wcounterexamples -graph -d -o flex_bison/src/Parser.cpp flex_bison/resources/hsparser.y
 	@mv flex_bison/src/Parser.hpp flex_bison/include/Parser.hpp
 
 test_parser: 
