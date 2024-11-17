@@ -16,3 +16,5 @@ stack.hh
 *.dot
 *.png
 *.output
+
+__pycache__
