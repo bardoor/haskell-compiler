@@ -45,6 +45,8 @@ void yyerror(const char* s);
 
 %left DCOLON
 
+%nonassoc LOWER_THAN_COMMA
+
 %left ';' ','
 
 %left '(' '[' '{'
@@ -78,7 +80,7 @@ void yyerror(const char* s);
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
 
-%start module
+%start stmt
 
 %%
 
@@ -86,13 +88,16 @@ void yyerror(const char* s);
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC     
-        | FLOATC   
-        | STRINGC  
-        | CHARC    
+simpleLiteral : INTC
+              | FLOATC   
+              | STRINGC  
+              | CHARC 
+              | list
+              | tuple
+              ;
+
+literal : simpleLiteral
         | range                                    
-        | list                                     
-        | tuple                                    
         | comprehension                            
         ;
 
@@ -156,14 +161,10 @@ cut : '(' '+' expr  ')'
     ;
 
 alternativeList : alternative
-                | alternativeList ';' alternative
+                | alternative ';' alternativeList
                 ;
 
 alternative : pattern RARROW expr
-            | pattern RARROW expr WHEREKW declList
-            | pattern guardPattern 
-            | pattern guardPattern WHEREKW declList
-            | /* nothing */
             ;
 
 guardPattern : '|' expr RARROW expr
@@ -174,7 +175,7 @@ stmtList : stmt
          | stmtList stmt
          ;
 
-stmt : expr ';'
+stmt : expr ';' 
      | pattern LARROW expr ';'
      | LETKW '{' declList '}' ';'
      | ';'
@@ -214,21 +215,26 @@ conid : CONSTRUCTOR_ID
  *         Кортежи, списки         *
  * ------------------------------- */
 
-tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
+tuple : '(' expr ',' exprList ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
       | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
 
 // TODO: разобраться в comprehension, это неверно..
-comprehension : '[' expr '|' commaSepExprs ']'  { LOG_PARSER("## PARSER ## make comprehension\n"); }
+comprehension : '[' expr '|' exprList ']'  { LOG_PARSER("## PARSER ## make comprehension\n"); }
               ;
 
 list : '[' ']'                { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
-     | '[' commaSepExprs ']'  { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
+     | '[' exprList ']'  { LOG_PARSER("## PARSER ## make list - [ exprList ]\n"); }
      ;
 
-commaSepExprs : expr                      
-              | expr ',' commaSepExprs    
-              ;
+patternList : exclusivePattern %prec LOWER_THAN_COMMA
+            | patternList ',' pattern
+            | exclusivePattern ',' exprList 
+            ;
+
+exprList : expr %prec LOWER_THAN_COMMA                 
+         | expr ',' exprList 
+         ;
 
 range : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make range - [ expr .. ]\n"); }
       | '[' expr DOTDOT expr ']'          { LOG_PARSER("## PARSER ## make range - [ expr .. expr ]\n"); }
@@ -240,17 +246,23 @@ range : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make range 
  *        Паттерн матчинг          *
  * ------------------------------- */
 
-pattern : '-' FLOATC
-        | '-' INTC
-        | funid 
-        | funid AS pattern
-        | literal
-        | WILDCARD
+exclusivePattern : WILDCARD
+                 | funid AS pattern
+                 ;
+
+pattern : INTC
+//        | FLOATC
+//        | STRINGC
+//        | CHARC
+//       | '-' FLOATC
+//        | '-' INTC
+//        | funid 
         | '(' pattern ')'
-        | '(' pattern ',' patternList ')'
-        | '[' patternList ']'   
-        | '~' pattern
-        | conid '{' funPatternListE '}'
+//        | '(' pattern ',' patternList ')'
+        | '[' patternList ']'  
+        | exclusivePattern 
+//        | '~' pattern
+//        | conid '{' funPatternListE '}'
         ;
 
 funPattern : funid '=' pattern
@@ -263,10 +275,6 @@ funPatternList : funPattern
 funPatternListE : /* nothing */
                 | funPatternList
                 ;
-
-patternList : pattern
-            | patternList ',' pattern
-            ;
 
 patterns : pattern
          | patterns ',' pattern
