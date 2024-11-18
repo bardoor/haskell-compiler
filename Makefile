@@ -33,5 +33,8 @@ $(OBJ_DIR)/%.o: flex_bison/src/%.cpp
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+run: all
+	$(TARGET)
+
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
