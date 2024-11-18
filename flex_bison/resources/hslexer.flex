@@ -8,7 +8,7 @@
 	#include <charconv>
 
 	#include "FlexUtils.h"
-	#include "BisonUtils.h"
+	#include "Parser.hpp"
 
 	#ifdef DEBUG_LEXEMS
 		 #define LOG_LEXEM(msg, ...) printf(msg, ##__VA_ARGS__);
@@ -144,20 +144,23 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 {SYMBOL}+ { LOG_LEXEM("found symbol: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return SYMS; }
 
 {SMALL}({WORD}|')*  { 
-	layoutBuilder->addLexem(std::string(yytext)); 
+	std::string name = std::string(yytext);
+	layoutBuilder->addLexem(name); 
 	if (layoutBuilder->canEmit()) {
 		yyless(0);
-		EMIT_LEXEM
+		EMIT_LEXEM;
 	} 
 	else {
 		LOG_LEXEM("found function identifier: %s\n", yytext);
-		yylval.str = yytext;
+		yylval.str = &name;
 		return FUNC_ID;
 	}
 }
 {LARGE}({WORD}|')*  { 
+	std::string name = std::string(yytext);
 	LOG_LEXEM("found constructor identifier: %s\n", yytext); 
-	layoutBuilder->addLexem(std::string(yytext));
+	layoutBuilder->addLexem(name);
+	yylval.str = &name;
 	return CONSTRUCTOR_ID;
 }
 
@@ -174,8 +177,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
-		yylval.intVal = strtoll(cleaned.c_str(), NULL, 8);
-		LOG_LEXEM("found octal integer literal: %ld\n", yylval.intVal);
+		yylval.str = &cleaned;
+		LOG_LEXEM("found octal integer literal: %s\n", yylval.str);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -199,8 +202,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		yylval.intVal = strtoll(cleaned.c_str(), NULL, 0); 
-		LOG_LEXEM("found decimal integer literal: %ld\n", yylval.intVal);
+		yylval.str = &cleaned; 
+		LOG_LEXEM("found decimal integer literal: %s\n", yylval.str);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -225,8 +228,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
 		cleaned = replaceComma(cleaned);
-		yylval.intVal = strtoll(cleaned.c_str(), NULL, 16); 
-		LOG_LEXEM("found hexadecimal integer literal: %ld\n", yylval.intVal);
+		yylval.str = &cleaned;
+		LOG_LEXEM("found hexadecimal integer literal: %s\n", yylval.str);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -251,12 +254,12 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
     if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
                            [](char c) {return std::isalpha(c); })) {
 		// cleaned = replaceComma(cleaned);
-		yylval.floatVal = std::stold(cleaned);
+		yylval.str = &cleaned;
 
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}		
-		LOG_LEXEM("found float literal: %Lf\n", yylval.floatVal);	
+		LOG_LEXEM("found float literal: %s\n", yylval.str);	
 		return FLOATC;
 	}  
     std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;
