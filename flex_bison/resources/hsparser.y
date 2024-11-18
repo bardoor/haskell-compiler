@@ -2,10 +2,17 @@
 %locations
 
 %{
-#include <BisonUtils.h>
-long long Node::nextId = 0;
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
 
-Module* root;
+#include <json.hpp>
+
+using json = nlohmann::json;
+
+struct Node {
+    json val; 
+};
 
 extern int yylex();
 extern int yylineno;
@@ -19,18 +26,14 @@ extern int yylineno;
 #endif
 
 void yyerror(const char* s);
+
 %}
 
 %union {
-    long long intVal;
-    long double floatVal;
-    const char* str;
-    struct Expr* expr;
-    struct Module* module;
-    struct FuncDecl* funcDecl;
-    struct Param* param;
-    struct ParamList* paramList;
-    struct TypeDecl* typeDecl;
+      long long intVal;
+      long double floatVal;
+      struct Node* node;
+      std::string* str;
 }
 
 
@@ -55,24 +58,12 @@ void yyerror(const char* s);
 %right RARROW
 
 
-/* ------------------------------- *
- *        Объявления типов         *
- * ------------------------------- */
-
-//%type <expr> expr;
-//%type <module> module;
-//%type <param> param;
-//%type <funcDecl> funcDecl;
-//%type <paramList> paramList paramListE;
-//%type <typeDecl> typeDecl;
-
+%type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList
 
 /* ------------------------------- *
  *      Терминальные символы       *
  * ------------------------------- */
-%token <intVal> INTC
-%token <floatVal> FLOATC
-%token <str> STRINGC
+%token <str> STRINGC INTC FLOATC
 %token <str> FUNC_ID CONSTRUCTOR_ID
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE SYMS
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
@@ -86,7 +77,7 @@ void yyerror(const char* s);
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
+literal : INTC      { $$->val = { {"literal", { {"value", *$1}, {"type", "int"} }} }; LOG_PARSER("## PARSER ## make literal - INTC\n"); }
         | FLOATC    { LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
         | STRINGC   { LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
         | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
@@ -95,17 +86,17 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); }
 /* Любое выражение с аннотацией типа или без */
 expr : oexpr DCOLON type DARROW type 
      | oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
-     | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
+     | oexpr             { $$ = $1; LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
      ;
 
 /* Применение инфиксного оператора */
 oexpr : oexpr op oexpr %prec '+'   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
-      | dexpr            { LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
+      | dexpr                      { $$ = $1; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
 /* Денотированное выражение */
 dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
-      | kexpr            { LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
+      | kexpr            { $$ = $1; LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
       ;
 
 /* Выражение с ключевым словом */
@@ -113,17 +104,17 @@ kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexp
       | LETKW '{' declList '}' INKW expr    { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
       | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
       | CASEKW expr OFKW '{' altList '}'    { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
-      | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
+      | fapply                              { $$ = $1; LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
       ;
 
 /* Применение функции */
 fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
+       | aexpr               { $$ = $1; LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
 /* Простое выражение */
-aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
-      | FUNC_ID
+aexpr : literal         { $$->val = { {"aexpr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
+      | funid           { $$->val = { {"aexpr", $1->val} }; }
       | '(' expr ')'    
       | tuple           { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
       | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
@@ -133,13 +124,16 @@ aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); }
 
 /* Оператор */
 op : symbols                { LOG_PARSER("## PARSER ## make op - symbols\n"); }
-   | BQUOTE FUNC_ID BQUOTE  { LOG_PARSER("## PARSER ## make op - `op`\n"); }
+   | BQUOTE funid BQUOTE    { LOG_PARSER("## PARSER ## make op - `op`\n"); }
    | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
    | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
 
 symbols : SYMS
         ;
+
+funid : FUNC_ID   { $$->val = { {"funid", {"name", *$1}} }; }
+      ;
 
 /* ------------------------------- *
  *         Кортежи, списки         *
@@ -148,10 +142,6 @@ symbols : SYMS
 tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
       | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
-
-commas : ','                            { LOG_PARSER("## PARSER ## make commas - ,\n"); }
-       | commas ','                     { LOG_PARSER("## PARSER ## make commas - commas ,\n"); }
-       ;
 
 comprehension : '[' expr '|' commaSepExprs ']'
               ;
@@ -201,9 +191,9 @@ fpat : fpat apat          { LOG_PARSER("## PARSER ## make fpat - fpat apat\n"); 
      ;
 
 /* Примитивные паттерны */
-apat : FUNC_ID            { LOG_PARSER("## PARSER ## make apat - FUNC_ID\n"); }
+apat : funid              { LOG_PARSER("## PARSER ## make apat - funid\n"); }
      | CONSTRUCTOR_ID     { LOG_PARSER("## PARSER ## make apat - CONSTRUCTOR_ID\n"); }
-     | FUNC_ID AS apat { LOG_PARSER("## PARSER ## make apat - FUNC_ID AS apat\n"); }
+     | funid AS apat      { LOG_PARSER("## PARSER ## make apat - funid AS apat\n"); }
      | literal            { LOG_PARSER("## PARSER ## make apat - literal\n"); }
      | WILDCARD           { LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); }
      | '(' ')'            { LOG_PARSER("## PARSER ## make apat - ()\n"); }
@@ -241,7 +231,7 @@ guard : VBAR oexpr          { LOG_PARSER("## PARSER ## make guard - VBAR oexpr\n
  *           Объявления            *
  * ------------------------------- */
 
-declList : declE             { LOG_PARSER("## PARSER ## make declaration list - declE\n"); }
+declList : declE              { LOG_PARSER("## PARSER ## make declaration list - declE\n"); }
          | declList ';' declE { LOG_PARSER("## PARSER ## make declaration list - declList ; declE\n"); }
          ;
 
@@ -258,13 +248,13 @@ varList : varList ',' var    { LOG_PARSER("## PARSER ## make variable list - var
         ;
 
 /* Оператор в префиксной форме или идентификатор функции */
-var : FUNC_ID                { LOG_PARSER("## PARSER ## make variable - FUNC_ID\n"); }
+var : funid                { LOG_PARSER("## PARSER ## make variable - funid\n"); }
     | '(' symbols ')'        { LOG_PARSER("## PARSER ## make variable - (symbols)\n"); }
     ;
 
 /* Объявление */
-declE : var '=' expr                    { LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
-      | funlhs '=' expr                 { LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
+declE : var '=' expr                    { $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
+      | funlhs '=' expr                 { $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
       | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
       | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
       | %empty                          { LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
@@ -274,7 +264,7 @@ whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option
          | %empty                   { LOG_PARSER("## PARSER ## make where option - nothing\n"); }
          ;
 
-funlhs : var apatList               { LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
+funlhs : var apatList               { $$->val = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
        ;
 
 /* ------------------------------- *
@@ -282,45 +272,17 @@ funlhs : var apatList               { LOG_PARSER("## PARSER ## make funlhs - var
  * ------------------------------- */
 
 module : MODULEKW tycon WHEREKW body
-       { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID exportListE WHERE body\n"); }
+       { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID WHERE body\n"); }
        | body
-       { LOG_PARSER("## PARSER ## make module - body\n"); }
-       ;
-
-exportListE : /* nothing */
-            { LOG_PARSER("## PARSER ## make exportListE - nothing\n"); }
-            | '(' exportList ')'
-            { LOG_PARSER("## PARSER ## make exportListE - (exportList)\n"); }
-            ;
-
-exportList : export
-           { LOG_PARSER("## PARSER ## make exportList - export\n"); }
-           | export ',' export
-           { LOG_PARSER("## PARSER ## make exportList - export, export\n"); }
-           ;
-
-export : FUNC_ID
-       { LOG_PARSER("## PARSER ## make export - FUNC_ID\n"); }
-       | tycon
-       { LOG_PARSER("## PARSER ## make export - tycon\n"); }
-       | tycon '(' DOTDOT ')'
-       { LOG_PARSER("## PARSER ## make export - tycon (..)\n"); }
-       | tycon DOTDOT
-       { LOG_PARSER("## PARSER ## make export - tycon ..\n"); }
-       | tycon '(' ')'
-       { LOG_PARSER("## PARSER ## make export - tycon ()\n"); }
-       | tycon '(' varList ')'
-       { LOG_PARSER("## PARSER ## make export - tycon (varList)\n"); }
-       | tycon '(' conList ')'
-       { LOG_PARSER("## PARSER ## make export - tycon (conList)\n"); }
+       { $$->val = { {"module", {"name", 0}, {"body", $1->val} } }; LOG_PARSER("## PARSER ## make module - body\n"); }
        ;
 
 body : '{' topDeclList '}'
-     { LOG_PARSER("## PARSER ## make body - { topDeclList }\n"); }
+     { $$ = $2; LOG_PARSER("## PARSER ## make body - { topDeclList }\n"); }
      ;
 
 topDeclList : topDecl
-            { LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
+            { $$ = $1; LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
             | topDeclList ';' topDecl
             { LOG_PARSER("## PARSER ## make topDeclList - topDeclList ; topDecl\n"); }
             ;
@@ -335,8 +297,8 @@ topDecl : typeDecl
         { LOG_PARSER("## PARSER ## make topDecl - instDecl\n"); }
         | defaultDecl
         { LOG_PARSER("## PARSER ## make topDecl - defaultDecl\n"); }
-        | { LOG_PARSER("Seems to be decl...\n") } declE
-        { LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
+        | declE
+        { $$ = $1; LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
         ;
 
 /* ------------------------------- *
@@ -455,16 +417,16 @@ dataDecl : DATAKW context DARROW simpleType '=' constrList
          ;
 
 constrList : tycon atypeList
-         { LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); }
-        | '(' SYMS ')' atypeList
-         { LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); }
-        | '(' SYMS ')'
-         { LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); }
-        | tycon
-         { LOG_PARSER("## PARSER ## make constrList - tycon\n"); }
-        | btype conop btype
-         { LOG_PARSER("## PARSER ## make constrList - btype conop btype\n"); }
-        ;
+           { LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); }
+           | '(' SYMS ')' atypeList
+           { LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); }
+           | '(' SYMS ')'
+           { LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); }
+           | tycon
+           { LOG_PARSER("## PARSER ## make constrList - tycon\n"); }
+           | btype conop btype
+           { LOG_PARSER("## PARSER ## make constrList - btype conop btype\n"); }
+           ;
 
 conop : SYMS
       { LOG_PARSER("## PARSER ## make conop - SYMS\n"); }
@@ -508,7 +470,7 @@ tyvarList : tyvar
           { LOG_PARSER("## PARSER ## make tyvarList - tyvar\n"); }
           | tyvarList tyvar
           { LOG_PARSER("## PARSER ## make tyvarList - tyvarList tyvar\n"); }
-         ;
+          ;
 
 tyvarListComma : tyvar
                { LOG_PARSER("## PARSER ## make tyvarListComma - tyvar\n"); }
@@ -516,8 +478,8 @@ tyvarListComma : tyvar
                { LOG_PARSER("## PARSER ## make tyvarListComma - tyvarList, tyvar\n"); }
                ;
 
-tyvar : FUNC_ID
-      { LOG_PARSER("## PARSER ## make tyvar - FUNC_ID\n"); }
+tyvar : funid
+      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); }
       ;
 
 defaultDecl : DEFAULTKW defaultTypes
@@ -588,14 +550,4 @@ typeListComma : type
 
 void yyerror(const char* s) {
     std::cerr << "Error: " << s << " on line " << yylineno << std::endl;
-}
-
-std::string generateDot(Module* root) {
-    std::stringstream ss;
-    ss << "digraph AST {\n";
-    if (root) {
-        ss << root->generateDot();
-    }
-    ss << "}\n";
-    return ss.str();
 }
