@@ -10,8 +10,9 @@
 
 extern int yylex();
 extern FILE* yyin;
-extern Module* root;
 extern void yy_scan_string(const char* str);
+
+extern YYSTYPE yylval; 
 
 int main(int argc, char* argv[]) {
     const char* default_file = "flex_bison/resources/code_examples/sample.hs";
@@ -39,10 +40,8 @@ int main(int argc, char* argv[]) {
     }
 
     yyparse();
+    std::cout << yylval.node->val.dump();
 
-    std::ofstream outfile("graph.dot");
-    outfile << generateDot(root);
-    outfile.close();
 
     if (input_file) {
         fclose(input_file);  
