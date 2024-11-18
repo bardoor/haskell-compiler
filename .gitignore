@@ -8,10 +8,10 @@ Parser.hpp
 Parser.cpp
 haskell.flex.cpp
 
-location.hh
-position.hh
-stack.hh
-
 *.hs
 *.dot
 *.png
+*.output
+*.gv
+
+__pycache__
