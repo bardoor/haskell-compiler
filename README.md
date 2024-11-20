@@ -1,5 +1,6 @@
 # haskell-compiler
 ![](https://github.com/bardoor/haskell-compiler/blob/main/haskell.gif)
+![](https://github.com/bardoor/haskell-compiler/actions/workflows/build.yml/badge.svg?event=push)
 
 ## Как запустить?
 ### Для windows:
