@@ -2,17 +2,7 @@
 %locations
 
 %{
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-
-#include <json.hpp>
-
-using json = nlohmann::json;
-
-struct Node {
-    json val; 
-};
+#include <BisonUtils.hpp>
 
 extern int yylex();
 extern int yylineno;
@@ -58,16 +48,17 @@ void yyerror(const char* s);
 %right RARROW
 
 
-%type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList
+%type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
+             type symbols tuple list op comprehension altList declList enumeration lampats
 
 /* ------------------------------- *
  *      Терминальные символы       *
  * ------------------------------- */
-%token <str> STRINGC INTC FLOATC
+%token <str> STRINGC INTC FLOATC SYMS CHARC
 %token <str> FUNC_ID CONSTRUCTOR_ID
-%token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE SYMS
+%token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW CHARC 
+%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW  
 
 %start module
 
@@ -78,69 +69,69 @@ void yyerror(const char* s);
  * ------------------------------- */
 
 literal : INTC      { $$->val = { {"literal", { {"value", *$1}, {"type", "int"} }} }; LOG_PARSER("## PARSER ## make literal - INTC\n"); }
-        | FLOATC    { LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
-        | STRINGC   { LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
-        | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
+        | FLOATC    { $$->val = { {"literal", { {"value", *$1}, {"type", "float"} }} }; LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
+        | STRINGC   { $$->val = { {"literal", { {"value", *$1}, {"type", "str"} }} }; LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
+        | CHARC     { $$->val = { {"literal", { {"value", *$1}, {"type", "char"} }} }; LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
 /* Любое выражение с аннотацией типа или без */
 expr : oexpr DCOLON type DARROW type 
-     | oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
+     | oexpr DCOLON type { $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
      | oexpr             { $$ = $1; LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
      ;
 
 /* Применение инфиксного оператора */
-oexpr : oexpr op oexpr %prec '+'   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+oexpr : oexpr op oexpr %prec '+'   { $$->val = { {"bin_expr", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
       | dexpr                      { $$ = $1; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
 /* Денотированное выражение */
-dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
+dexpr : '-' kexpr        { $$->val = { {"unary_expr", { {"type", "minus"}, {"expr", $2->val} }} }; LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
       | kexpr            { $$ = $1; LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
       ;
 
 /* Выражение с ключевым словом */
-kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
-      | LETKW '{' declList '}' INKW expr    { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
-      | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
-      | CASEKW expr OFKW '{' altList '}'    { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
+kexpr : '\\' lampats RARROW expr            { $$->val = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
+      | LETKW '{' declList '}' INKW expr    { $$->val = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
+      | IFKW expr THENKW expr ELSEKW expr   { $$->val = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
+      | CASEKW expr OFKW '{' altList '}'    { $$->val = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
       | fapply                              { $$ = $1; LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
       ;
 
 /* Применение функции */
-fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
+fapply : fapply aexpr        { $$->val = { {"fun_apply", {"param", $2->val}} }; LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
        | aexpr               { $$ = $1; LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
 /* Простое выражение */
-aexpr : literal         { $$->val = { {"aexpr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
-      | funid           { $$->val = { {"aexpr", $1->val} }; }
-      | '(' expr ')'    
-      | tuple           { LOG_PARSER("## PARSER ## make expr - tuple\n"); }
-      | list            { LOG_PARSER("## PARSER ## make expr - list\n"); }
-      | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
-      | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
+aexpr : literal         { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
+      | funid           { $$->val = { {"expr", $1->val} }; }
+      | '(' expr ')'    { $$ = $2; }
+      | tuple           { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+      | list            { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list\n"); }
+      | enumeration     { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
+      | comprehension   { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
       ;
 
 /* Оператор */
-op : symbols                { LOG_PARSER("## PARSER ## make op - symbols\n"); }
-   | BQUOTE funid BQUOTE    { LOG_PARSER("## PARSER ## make op - `op`\n"); }
-   | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); }
-   | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); }
+op : symbols                { $$->val = { {"op", $1->val} }; LOG_PARSER("## PARSER ## make op - symbols\n"); }
+   | BQUOTE funid BQUOTE    { $$->val = { {"quoted_op", $2->val} }; LOG_PARSER("## PARSER ## make op - `op`\n"); }
+   | '+'                    { $$->val = { {"op", {"symbols", "+"}} }; LOG_PARSER("## PARSER ## make op - plus\n"); }
+   | '-'                    { $$->val = { {"op", {"symbols", "-"}} }; LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
 
-symbols : SYMS
+symbols : SYMS    { $$->val = { {"symbols", *$1} }; }
         ;
 
-funid : FUNC_ID   { $$->val = { {"funid", {"name", *$1}} }; }
+funid : FUNC_ID   { $$->val = { {"funid",  *$1} }; }
       ;
 
 /* ------------------------------- *
  *         Кортежи, списки         *
  * ------------------------------- */
 
-tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
-      | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
+tuple : '(' expr ',' commaSepExprs ')'  { $$->val["tuple"] = $4->val; $$->val["tuple"].push_back($2->val); LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
+      | '(' ')'                         { $$->val["tuple"] = json::array(); LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
 
 comprehension : '[' expr '|' commaSepExprs ']'
@@ -150,8 +141,8 @@ list : '[' ']'                          { LOG_PARSER("## PARSER ## make list - [
      | '[' commaSepExprs ']'            { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
      ;
 
-commaSepExprs : expr                    { LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
-              | expr ',' commaSepExprs  { LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
+commaSepExprs : expr                    { $$->val = json::array(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
+              | expr ',' commaSepExprs  { $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
