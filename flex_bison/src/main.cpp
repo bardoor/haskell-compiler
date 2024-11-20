@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include <BisonUtils.h>
+#include <BisonUtils.hpp>
 #include <Parser.hpp>
 
 extern int yylex();
