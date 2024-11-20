@@ -1,5 +1,5 @@
 # haskell-compiler
-
+![](https://github.com/bardoor/haskell-compiler/blob/main/haskell.gif)
 
 ## Как запустить?
 ### Для windows:
