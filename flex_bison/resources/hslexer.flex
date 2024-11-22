@@ -177,8 +177,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
-		yylval.str = &cleaned;
-		LOG_LEXEM("found octal integer literal: %s\n", yylval.str);
+		yylval.intVal = std::stoll(cleaned, nullptr, 8); 
+		LOG_LEXEM("found octal integer literal: %lld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -202,8 +202,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		yylval.str = &cleaned; 
-		LOG_LEXEM("found decimal integer literal: %s\n", yylval.str);
+		yylval.intVal = std::stoll(cleaned, nullptr, 10); 
+		LOG_LEXEM("found decimal integer literal: %lld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -228,8 +228,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
 		cleaned = replaceComma(cleaned);
-		yylval.str = &cleaned;
-		LOG_LEXEM("found hexadecimal integer literal: %s\n", yylval.str);
+		yylval.intVal = std::stoll(cleaned, nullptr, 16); 
+		LOG_LEXEM("found hexadecimal integer literal: %lld\n", yylval.intVal);
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -259,7 +259,7 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}		
-		LOG_LEXEM("found float literal: %s\n", yylval.str);	
+		LOG_LEXEM("found float literal: %s\n", yylval.str->c_str());	
 		return FLOATC;
 	}  
     std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;

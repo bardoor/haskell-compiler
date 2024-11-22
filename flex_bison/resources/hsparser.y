@@ -2,7 +2,9 @@
 %locations
 
 %{
+
 #include <BisonUtils.hpp>
+#include <typeinfo>
 
 extern int yylex();
 extern int yylineno;
@@ -16,6 +18,8 @@ extern int yylineno;
 #endif
 
 void yyerror(const char* s);
+
+json root;
 
 %}
 
@@ -54,8 +58,9 @@ void yyerror(const char* s);
 /* ------------------------------- *
  *      Терминальные символы       *
  * ------------------------------- */
-%token <str> STRINGC INTC FLOATC SYMS CHARC
+%token <str> STRINGC FLOATC SYMS CHARC
 %token <str> FUNC_ID CONSTRUCTOR_ID
+%token <intVal> INTC
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW  
@@ -64,66 +69,67 @@ void yyerror(const char* s);
 
 %%
 
+
 /* ------------------------------- *
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { $$->val = { {"literal", { {"value", *$1}, {"type", "int"} }} }; LOG_PARSER("## PARSER ## make literal - INTC\n"); }
-        | FLOATC    { $$->val = { {"literal", { {"value", *$1}, {"type", "float"} }} }; LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
-        | STRINGC   { $$->val = { {"literal", { {"value", *$1}, {"type", "str"} }} }; LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
-        | CHARC     { $$->val = { {"literal", { {"value", *$1}, {"type", "char"} }} }; LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
+literal : INTC      { $$ = new Node(); $$->val = { {"literal", { {"value", std::to_string($1)}, {"type", "int"} }} }; LOG_PARSER("## PARSER ## make literal - INTC\n"); }
+        | FLOATC    { $$ = new Node(); $$->val = { {"literal", { {"value", $1->substr()}, {"type", "float"} }} }; LOG_PARSER("## PARSER ## make literal - FLOATC\n"); }
+        | STRINGC   { $$ = new Node(); $$->val = { {"literal", { {"value", $1->substr()}, {"type", "str"} }} }; LOG_PARSER("## PARSER ## make literal - STRINGC\n"); }
+        | CHARC     { $$ = new Node(); $$->val = { {"literal", { {"value", $1->substr()}, {"type", "char"} }} }; LOG_PARSER("## PARSER ## make literal - CHARC\n"); }
         ;
 
 /* Любое выражение с аннотацией типа или без */
 expr : oexpr DCOLON type DARROW type 
-     | oexpr DCOLON type { $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
-     | oexpr             { $$ = $1; LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
+     | oexpr DCOLON type { $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
+     | oexpr             { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
      ;
 
 /* Применение инфиксного оператора */
-oexpr : oexpr op oexpr %prec '+'   { $$->val = { {"bin_expr", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
-      | dexpr                      { $$ = $1; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
+oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+      | dexpr                      { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
 /* Денотированное выражение */
-dexpr : '-' kexpr        { $$->val = { {"unary_expr", { {"type", "minus"}, {"expr", $2->val} }} }; LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
-      | kexpr            { $$ = $1; LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
+dexpr : '-' kexpr        { $$ = new Node(); $$->val = { {"unary_expr", { {"type", "minus"}, {"expr", $2->val} }} }; LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
+      | kexpr            { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
       ;
 
 /* Выражение с ключевым словом */
-kexpr : '\\' lampats RARROW expr            { $$->val = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
-      | LETKW '{' declList '}' INKW expr    { $$->val = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
-      | IFKW expr THENKW expr ELSEKW expr   { $$->val = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
-      | CASEKW expr OFKW '{' altList '}'    { $$->val = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
-      | fapply                              { $$ = $1; LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
+kexpr : '\\' lampats RARROW expr            { $$ = new Node(); $$->val  = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
+      | LETKW '{' declList '}' INKW expr    { $$ = new Node(); $$->val  = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
+      | IFKW expr THENKW expr ELSEKW expr   { $$ = new Node(); $$->val  = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
+      | CASEKW expr OFKW '{' altList '}'    { $$ = new Node(); $$->val  = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
+      | fapply                              { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
       ;
 
 /* Применение функции */
-fapply : fapply aexpr        { $$->val = { {"fun_apply", {"param", $2->val}} }; LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | aexpr               { $$ = $1; LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
+fapply : fapply aexpr        { $$ = new Node(); $$->val  = { {"fun_apply", {"param", $2->val}} }; LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
+       | aexpr               { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
 /* Простое выражение */
-aexpr : literal         { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
-      | funid           { $$->val = { {"expr", $1->val} }; }
-      | '(' expr ')'    { $$ = $2; }
-      | tuple           { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - tuple\n"); }
-      | list            { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list\n"); }
-      | enumeration     { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
-      | comprehension   { $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
+aexpr : literal         { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
+      | funid           { $$ = new Node(); $$->val  = { {"expr", $1->val} }; }
+      | '(' expr ')'    { $$ = new Node(); $$->val  = $2->val; }
+      | tuple           { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+      | list            { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list\n"); }
+      | enumeration     { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
+      | comprehension   { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
       ;
 
 /* Оператор */
-op : symbols                { $$->val = { {"op", $1->val} }; LOG_PARSER("## PARSER ## make op - symbols\n"); }
-   | BQUOTE funid BQUOTE    { $$->val = { {"quoted_op", $2->val} }; LOG_PARSER("## PARSER ## make op - `op`\n"); }
-   | '+'                    { $$->val = { {"op", {"symbols", "+"}} }; LOG_PARSER("## PARSER ## make op - plus\n"); }
-   | '-'                    { $$->val = { {"op", {"symbols", "-"}} }; LOG_PARSER("## PARSER ## make op - minus\n"); }
+op : symbols                { $$ = new Node(); $$->val  = { {"op", $1->val} }; LOG_PARSER("## PARSER ## make op - symbols\n"); }
+   | BQUOTE funid BQUOTE    { $$ = new Node(); $$->val  = { {"quoted_op", $2->val} }; LOG_PARSER("## PARSER ## make op - `op`\n"); }
+   | '+'                    { $$ = new Node(); $$->val  = { {"op", {"symbols", "+"}} }; LOG_PARSER("## PARSER ## make op - plus\n"); }
+   | '-'                    { $$ = new Node(); $$->val  = { {"op", {"symbols", "-"}} }; LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
 
-symbols : SYMS    { $$->val = { {"symbols", *$1} }; }
+symbols : SYMS    { $$ = new Node(); $$->val  = { {"symbols", $1->substr()} }; }
         ;
 
-funid : FUNC_ID   { $$->val = { {"funid",  *$1} }; }
+funid : FUNC_ID   { $$ = new Node(); $$->val  = { {"funid",  $1->substr()} }; }
       ;
 
 /* ------------------------------- *
@@ -239,13 +245,13 @@ varList : varList ',' var    { LOG_PARSER("## PARSER ## make variable list - var
         ;
 
 /* Оператор в префиксной форме или идентификатор функции */
-var : funid                { LOG_PARSER("## PARSER ## make variable - funid\n"); }
-    | '(' symbols ')'        { LOG_PARSER("## PARSER ## make variable - (symbols)\n"); }
+var : funid                  { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make variable - funid\n"); std::cout << $$->val << std::endl; }
+    | '(' symbols ')'        { $$ = new Node(); $$->val  = $2->val; LOG_PARSER("## PARSER ## make variable - (symbols)\n"); }
     ;
 
 /* Объявление */
-declE : var '=' expr                    { $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
-      | funlhs '=' expr                 { $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
+declE : var '=' expr                    { $$ = new Node(); $$->val  = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
+      | funlhs '=' expr                 { $$ = new Node(); $$->val  = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
       | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
       | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
       | %empty                          { LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
@@ -255,7 +261,7 @@ whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option
          | %empty                   { LOG_PARSER("## PARSER ## make where option - nothing\n"); }
          ;
 
-funlhs : var apatList               { $$->val = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
+funlhs : var apatList               { $$ = new Node(); $$->val  = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
        ;
 
 /* ------------------------------- *
@@ -265,15 +271,15 @@ funlhs : var apatList               { $$->val = { {"funlhs", {{"name", $1->val},
 module : MODULEKW tycon WHEREKW body
        { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID WHERE body\n"); }
        | body
-       { $$->val = { {"module", {"name", 0}, {"body", $1->val} } }; LOG_PARSER("## PARSER ## make module - body\n"); }
+       { root = { {"module", {"name", 0}, {"body", $1->val} } }; LOG_PARSER("## PARSER ## make module - body\n"); }
        ;
 
 body : '{' topDeclList '}'
-     { $$ = $2; LOG_PARSER("## PARSER ## make body - { topDeclList }\n"); }
+     {  $$ = new Node(); $$->val = $2->val; LOG_PARSER("## PARSER ## make body - { topDeclList }\n"); }
      ;
 
 topDeclList : topDecl
-            { $$ = $1; LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
+            { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
             | topDeclList ';' topDecl
             { LOG_PARSER("## PARSER ## make topDeclList - topDeclList ; topDecl\n"); }
             ;
@@ -289,7 +295,7 @@ topDecl : typeDecl
         | defaultDecl
         { LOG_PARSER("## PARSER ## make topDecl - defaultDecl\n"); }
         | declE
-        { $$ = $1; LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
+        { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
         ;
 
 /* ------------------------------- *

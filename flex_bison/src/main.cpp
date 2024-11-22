@@ -12,7 +12,7 @@ extern int yylex();
 extern FILE* yyin;
 extern void yy_scan_string(const char* str);
 
-extern YYSTYPE yylval; 
+extern json root;
 
 int main(int argc, char* argv[]) {
     const char* default_file = "flex_bison/resources/code_examples/sample.hs";
@@ -40,11 +40,12 @@ int main(int argc, char* argv[]) {
     }
 
     yyparse();
-    std::cout << yylval.node->val.dump();
+    std::cout << "json: " << root;
 
 
     if (input_file) {
         fclose(input_file);  
     }
+    
     return EXIT_SUCCESS;
 }
