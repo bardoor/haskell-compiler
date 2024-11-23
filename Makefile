@@ -9,7 +9,7 @@ OBJ = $(patsubst flex_bison/src/%.cpp, $(OBJ_DIR)/%.o, $(SRC)) $(OBJ_DIR)/haskel
 
 TARGET = $(BIN_DIR)/haskellc.exe
 
-all: generate_bison generate_flexer $(TARGET)
+all: clean generate_bison generate_flexer $(TARGET)
 
 generate_flexer:
 	flex --outfile=flex_bison/src/haskell.flex.cpp flex_bison/resources/hslexer.flex
