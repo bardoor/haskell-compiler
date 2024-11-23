@@ -136,19 +136,19 @@ funid : FUNC_ID   { $$ = new Node(); $$->val  = { {"funid",  $1->substr()} }; }
  *         Кортежи, списки         *
  * ------------------------------- */
 
-tuple : '(' expr ',' commaSepExprs ')'  { $$->val["tuple"] = $4->val; $$->val["tuple"].push_back($2->val); LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
-      | '(' ')'                         { $$->val["tuple"] = json::array(); LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
+tuple : '(' expr ',' commaSepExprs ')'  { $$ = new Node(); $$->val["tuple"] = $4->val; $$->val["tuple"].push_back($2->val); LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); }
+      | '(' ')'                         { $$ = new Node(); $$->val["tuple"] = json::array(); LOG_PARSER("## PARSER ## make tuple - ( )\n"); }
       ;
 
 comprehension : '[' expr '|' commaSepExprs ']'
               ;
 
-list : '[' ']'                          { LOG_PARSER("## PARSER ## make list - [ ]\n"); }
-     | '[' commaSepExprs ']'            { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
+list : '[' ']'                          { $$ = new Node(); $$->val["list"] = json::array(); LOG_PARSER("## PARSER ## make list - [ ]\n"); }
+     | '[' commaSepExprs ']'            { $$ = new Node(); $$->val["list"] = $2->val; LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); }
      ;
 
-commaSepExprs : expr                    { $$->val = json::array(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
-              | expr ',' commaSepExprs  { $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
+commaSepExprs : expr                    { $$ = new Node();  $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); }
+              | expr ',' commaSepExprs  { $$ = $3; $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); }
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
@@ -245,13 +245,13 @@ varList : varList ',' var    { LOG_PARSER("## PARSER ## make variable list - var
         ;
 
 /* Оператор в префиксной форме или идентификатор функции */
-var : funid                  { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make variable - funid\n"); std::cout << $$->val << std::endl; }
-    | '(' symbols ')'        { $$ = new Node(); $$->val  = $2->val; LOG_PARSER("## PARSER ## make variable - (symbols)\n"); }
+var : funid                  { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make variable - funid\n"); }
+    | '(' symbols ')'        { $$ = new Node(); $$->val = $2->val; LOG_PARSER("## PARSER ## make variable - (symbols)\n"); }
     ;
 
 /* Объявление */
-declE : var '=' expr                    { $$ = new Node(); $$->val  = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
-      | funlhs '=' expr                 { $$ = new Node(); $$->val  = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
+declE : var '=' expr                    { $$ = new Node(); $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - var = expr\n"); }
+      | funlhs '=' expr                 { $$ = new Node(); $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
       | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
       | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
       | %empty                          { LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
