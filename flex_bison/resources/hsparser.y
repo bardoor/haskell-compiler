@@ -53,7 +53,7 @@ json root;
 
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
-             type symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats
+             type symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -87,12 +87,12 @@ expr : oexpr DCOLON type DARROW type { $$ = new Node(); $$->val = { {"expr_type"
      ;
 
 /* Применение инфиксного оператора */
-oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val["expr"]}, {"right", $3->val["expr"]} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
       | dexpr                      { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
 /* Денотированное выражение */
-dexpr : '-' kexpr        { $$ = new Node(); $$->val = { {"unary_expr", { {"type", "minus"}, {"expr", $2->val} }} }; LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
+dexpr : '-' kexpr        { $$ = new Node(); $$->val = { {"expr", { {"uminus", $2->val} }} }; LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); }
       | kexpr            { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); }
       ;
 
@@ -183,8 +183,21 @@ dpat : '-' fpat           { LOG_PARSER("## PARSER ## make dpat - '-' fpat\n"); }
      | fpat               { LOG_PARSER("## PARSER ## make dpat - fpat\n"); }
      ;
 
-fpat : fpat apat          { LOG_PARSER("## PARSER ## make fpat - fpat apat\n"); }
-     | apat               { LOG_PARSER("## PARSER ## make fpat - apat\n"); }
+fpat : fpat apat  {
+            if ($2->val.is_array()) {
+                  $2->val["apats"].push_back($1->val);
+                  $$ = new Node();
+                  $$->val = $2->val;
+            }
+            else {
+                  $$ = new Node();
+                  $$->val["fpat"] = json::array();
+                  $$->val["fpat"].push_back($1->val);
+                  $$->val["fpat"].push_back($2->val);
+            }
+            LOG_PARSER("## PARSER ## make fpat - fpat apat\n");
+     }
+     | apat               { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make fpat - apat\n"); }
      ;
 
 /* Примитивные паттерны */
@@ -270,7 +283,7 @@ funlhs : var apatList               { $$ = new Node(); $$->val  = { {"funlhs", {
 module : MODULEKW tycon WHEREKW body
        { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID WHERE body\n"); }
        | body
-       { root = { {"module", {"name", 0}, {"body", $1->val} } }; LOG_PARSER("## PARSER ## make module - body\n"); }
+       { root = { {"module", { {"name", 0}, {"body", $1->val} }} }; LOG_PARSER("## PARSER ## make module - body\n"); }
        ;
 
 body : '{' topDeclList '}'
