@@ -54,6 +54,8 @@ json root;
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
              type symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats
+             classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
+             valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma btype typeListComma atypeList contextList
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -302,100 +304,100 @@ topDecl : typeDecl
  * ------------------------------- */
 
 classDecl : CLASSKW context DARROW class classBody
-          { LOG_PARSER("## PARSER ## make classDecl - CLASS context => class classBody\n"); }
+          { $$ = new Node(); $$->val = {{"class_decl", {{"context", $2->val}, {"class", $4->val},{"body", $5->val}}}}; LOG_PARSER("## PARSER ## make classDecl - CLASS context => class classBody\n"); }
           | CLASSKW class classBody
-          { LOG_PARSER("## PARSER ## make classDecl - CLASS class classBody\n"); }
+          { $$ = new Node(); $$->val = {{"class_decl", {{"class", $2->val},{"body", $3->val}}}}; LOG_PARSER("## PARSER ## make classDecl - CLASS class classBody\n"); }
           ;
 
 classBody : %empty
-          { LOG_PARSER("## PARSER ## make classBody - nothing\n"); }
+          { $$ = new Node(); $$->val = {{"body", nullptr}}; LOG_PARSER("## PARSER ## make classBody - nothing\n"); }
           | WHEREKW '{' declList '}'
-          { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); }
+          { $$ = new Node(); $$->val = {{"body", $3->val}}; LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); }
           ;
 
 instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
-         { LOG_PARSER("## PARSER ## make instDecl - INSTANCE context => tycon restrictInst rinstOpt\n"); }
+         { $$ = new Node(); $$->val = {{"inst_decl", {{"context", $2->val}, {"tycon", $4->val}, {"restrictInst", $5->val}, {"rinstOpt", $6->val}}}}; LOG_PARSER("## PARSER ## make instDecl - INSTANCE context => tycon restrictInst rinstOpt\n"); }
          | INSTANCEKW tycon generalInst rinstOpt
-         { LOG_PARSER("## PARSER ## make instDecl - INSTANCE tycon generalInst rinstOpt\n"); }
+         { $$ = new Node(); $$->val = {{"inst_decl", {{"tycon", $2->val}, {"generalInst", $3->val}, {"rinstOpt", $4->val}}}}; LOG_PARSER("## PARSER ## make instDecl - INSTANCE tycon generalInst rinstOpt\n"); }
          ;
 
 rinstOpt : %empty
-         { LOG_PARSER("## PARSER ## make rinstOpt - nothing\n"); }
+         { $$ = new Node(); $$->val = {{"rinstOpt", nullptr}}; LOG_PARSER("## PARSER ## make rinstOpt - nothing\n"); }
          | WHEREKW '{' valDefList '}'
-         { LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); }
+         { $$ = new Node(); $$->val = {{"rinstOpt", $3->val}}; LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); }
          ;
 
 valDefList : %empty
-            { LOG_PARSER("## PARSER ## make valDefList - nothing\n"); }
+            { $$ = new Node(); $$->val = {{"valDefList", json::array()}}; LOG_PARSER("## PARSER ## make valDefList - nothing\n"); }
             | valDef
-            { LOG_PARSER("## PARSER ## make valDefList - valDef\n"); }
+            { $$ = new Node(); $$->val = {{"valDefList", json::array({$1->val})}}; LOG_PARSER("## PARSER ## make valDefList - valDef\n"); }
             | valDef ';' valDef
-            { LOG_PARSER("## PARSER ## make valDefList - valDef ; valDef\n"); }
+            { $$ = new Node(); $$->val = {{"valDefList", json::array({$1->val, $3->val})}}; LOG_PARSER("## PARSER ## make valDefList - valDef ; valDef\n"); }
             ;
 
 valDef : opat valrhs
-       { LOG_PARSER("## PARSER ## make valDef - opat valrhs\n"); }
+       { $$ = new Node(); $$->val = {{"valDef", {{"opat", $1->val},{"valrhs", $2->val}}}}; LOG_PARSER("## PARSER ## make valDef - opat valrhs\n"); }
        ;
 
 /* Правосторонее значение */
 valrhs : valrhs1 whereOpt
-       { LOG_PARSER("## PARSER ## make valrhs - valrhs1 whereOpt\n"); }
+       { $$ = new Node(); $$->val = {{"valrhs", {{"valrhs1", $1->val},{"whereOpt", $2->val}}}}; LOG_PARSER("## PARSER ## make valrhs - valrhs1 whereOpt\n"); }
        ;
 
 valrhs1 : guardrhs
-        { LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n"); }
+        { $$ = new Node(); $$->val = {{"valrhs1", {{"guardrhs", $1->val}}}}; LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n"); }
         | '=' expr
-        { LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); }
+        { $$ = new Node(); $$->val = {{"valrhs1", {{"expr", $2->val}}}}; LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); }
         ;
 
 guardrhs : guard '=' expr
-         { LOG_PARSER("## PARSER ## make guardrhs - guard = expr\n"); }
+         { $$ = new Node(); $$->val = {{"guardrhs", {{"guard", $1->val}, {"expr", $3->val}}}}; LOG_PARSER("## PARSER ## make guardrhs - guard = expr\n"); }
          | guard '=' expr guardrhs
-         { LOG_PARSER("## PARSER ## make guardrhs - guard = expr guardrhs\n"); }
+         { $$ = new Node(); $$->val = {{"guardrhs", {{"guard", $1->val}, {"expr", $3->val},{"guardrhs", $4->val}}}}; LOG_PARSER("## PARSER ## make guardrhs - guard = expr guardrhs\n"); }
          ;
 
 restrictInst : tycon
-             { LOG_PARSER("## PARSER ## make restrictInst - tycon\n"); }
+             { $$ = new Node(); $$->val = {{"restrictInst", $1->val}}; LOG_PARSER("## PARSER ## make restrictInst - tycon\n"); }
              | '(' tycon tyvarList ')'
-             { LOG_PARSER("## PARSER ## make restrictInst - (tycon tyvarList)\n"); }
+             { $$ = new Node(); $$->val = {{"restrictInst", {{"tycon", $2->val}, {"tyvarList", $3->val}}}}; LOG_PARSER("## PARSER ## make restrictInst - (tycon tyvarList)\n"); }
              | '(' tyvar ',' tyvarListComma ')'
-             { LOG_PARSER("## PARSER ## make restrictInst - (tyvar, tyvarListComma)\n"); }
+             { $$ = new Node(); $$->val = {{"restrictInst", {{"tyvar", $2->val}, {"tyvarListComma", $4->val}}}}; LOG_PARSER("## PARSER ## make restrictInst - (tyvar, tyvarListComma)\n"); }
              | '(' ')'
-             { LOG_PARSER("## PARSER ## make restrictInst - ()\n"); }
+             { $$ = new Node(); $$->val = {{"restrictInst", json::array()}}; LOG_PARSER("## PARSER ## make restrictInst - ()\n"); }
              | '[' tyvar ']'
-             { LOG_PARSER("## PARSER ## make restrictInst - [tyvar]\n"); }
+             { $$ = new Node(); $$->val = {{"restrictInst", {{"tyvar", $2->val}}}}; LOG_PARSER("## PARSER ## make restrictInst - [tyvar]\n"); }
              | '(' tyvar RARROW tyvar ')'
-             { LOG_PARSER("## PARSER ## make restrictInst - (tyvar => tyvar)\n"); }
+             { $$ = new Node(); $$->val = {{"restrictInst", {{"from", $2->val}, {"to", $4->val}}}}; LOG_PARSER("## PARSER ## make restrictInst - (tyvar => tyvar)\n"); }
              ;
 
 generalInst : tycon
-            { LOG_PARSER("## PARSER ## make generalInst - tycon\n"); }
+            { $$ = new Node(); $$->val = {{"generalInst", $1->val}}; LOG_PARSER("## PARSER ## make generalInst - tycon\n"); }
             | '(' tycon atypeList ')'
-            { LOG_PARSER("## PARSER ## make generalInst - (tycon atypeList)\n"); }
+            { $$ = new Node();  $$->val = {{"generalInst", {{"tycon", $2->val}, {"atypeList", $3->val}}}}; LOG_PARSER("## PARSER ## make generalInst - (tycon atypeList)\n"); }
             | '(' type ',' typeListComma ')'
-            { LOG_PARSER("## PARSER ## make generalInst - (type, typeListComma)\n"); }
+            { $$ = new Node(); $$->val = {{"generalInst", {{"type", $2->val}, {"typeListComma", $4->val}}}}; LOG_PARSER("## PARSER ## make generalInst - (type, typeListComma)\n"); }
             | '(' ')'
-            { LOG_PARSER("## PARSER ## make generalInst - ()\n"); }
+            { $$ = new Node(); $$->val = {{"generalInst", json::array()}}; LOG_PARSER("## PARSER ## make generalInst - ()\n"); }
             | '[' type ']'
-            { LOG_PARSER("## PARSER ## make generalInst - [type]\n"); }
+            { $$ = new Node(); $$->val = {{"generalInst", {{"type", $2->val}}}}; LOG_PARSER("## PARSER ## make generalInst - [type]\n"); }
             | '(' btype RARROW type ')'
-            { LOG_PARSER("## PARSER ## make generalInst - (btype => type)\n"); }
+            { $$ = new Node(); $$->val = {{"generalInst", {{"from", $2->val},{"to", $4->val}}}}; LOG_PARSER("## PARSER ## make generalInst - (btype => type)\n"); }
             ;
 
 context : '(' contextList ')'
-        { LOG_PARSER("## PARSER ## make context - (contextList)\n"); }
+        { $$ = new Node(); $$->val = {{"context", $2->val}}; LOG_PARSER("## PARSER ## make context - (contextList)\n"); }
         | class
-        { LOG_PARSER("## PARSER ## make context - class\n"); }
+        { $$ = new Node(); $$->val = { {"context", $1->val} }; LOG_PARSER("## PARSER ## make context - class\n"); }
         ;
 
 contextList : class
-            { LOG_PARSER("## PARSER ## make contextList - class\n"); }
+            { $$ = new Node(); $$->val = {{"contextList", { $1->val }}}; LOG_PARSER("## PARSER ## make contextList - class\n"); }
             | contextList ',' class
-            { LOG_PARSER("## PARSER ## make contextList - contextList, class\n"); }
+            { $$ = new Node(); $$->val = $1->val; $$->val["contextList"].push_back($3->val); LOG_PARSER("## PARSER ## make contextList - contextList, class\n"); }
             ;
 
 class : tycon tyvar
-      { LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); }
+      { $$ = new Node(); $$->val = {{"class", {{"tycon", $1->val},{"tyvar", $2->val}}}}; LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); }
       ;
 
 /* ------------------------------- *
