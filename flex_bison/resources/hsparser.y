@@ -81,7 +81,7 @@ literal : INTC      { $$ = new Node(); $$->val = { {"literal", { {"value", std::
         ;
 
 /* Любое выражение с аннотацией типа или без */
-expr : oexpr DCOLON type DARROW type 
+expr : oexpr DCOLON type DARROW type { $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"context", $3->val}, {"type", $5->val} }} }; LOG_PARSER("## PARSER ## make expr - oexpr with type annotation and context\n"); }
      | oexpr DCOLON type { $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); } 
      | oexpr             { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make expr - oexpr\n"); }
      ;
