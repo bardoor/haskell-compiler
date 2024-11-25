@@ -53,7 +53,7 @@ json root;
 
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
-             type symbols tuple list op comprehension altList declList enumeration lampats
+             type symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -126,10 +126,10 @@ op : symbols                { $$ = new Node(); $$->val  = { {"op", $1->val} }; L
    | '-'                    { $$ = new Node(); $$->val  = { {"op", {"symbols", "-"}} }; LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
 
-symbols : SYMS    { $$ = new Node(); $$->val  = { {"symbols", $1->substr()} }; }
+symbols : SYMS    { $$ = new Node(); $$->val = { {"symbols", $1->substr()} }; }
         ;
 
-funid : FUNC_ID   { $$ = new Node(); $$->val  = { {"funid",  $1->substr()} }; }
+funid : FUNC_ID   { $$ = new Node(); $$->val = { {"funid",  $1->substr()} }; }
       ;
 
 /* ------------------------------- *
@@ -156,17 +156,17 @@ commaSepExprs : expr                    { $$ = new Node();  $$->val.push_back($1
               */  
               ;
 
-enumeration : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make enumeration - [ expr .. ]\n"); }
-            | '[' expr DOTDOT expr ']'          { LOG_PARSER("## PARSER ## make enumeration - [ expr .. expr ]\n"); }
-            | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); }
-            | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); }  
+enumeration : '[' expr DOTDOT ']'               { $$ = new Node(); $$->val = { {"range", { {"start", $2->val} }} }; LOG_PARSER("## PARSER ## make enumeration - [ expr .. ]\n"); }
+            | '[' expr DOTDOT expr ']'          { $$ = new Node(); $$->val = { {"range", { {"start", $2->val}, {"end", $4->val} }} }; LOG_PARSER("## PARSER ## make enumeration - [ expr .. expr ]\n"); }
+            | '[' expr ',' expr DOTDOT expr ']' { $$ = new Node(); $$->val = { {"range", { {"start", $2->val}, {"second", $4->val}, {"end", $6->val} }} }; LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); }
+            | '[' expr ',' expr DOTDOT ']'      { $$ = new Node(); $$->val = { {"range", { {"start", $2->val}, {"second", $4->val} }} }; LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); }  
             ;
 
 /* ------------------------------- *
  *            Паттерны             *
  * ------------------------------- */
 
-lampats :  apat lampats	{ LOG_PARSER("## PARSER ## make lambda pattern - apat lampats\n"); }
+lampats :  apat lampats	 { LOG_PARSER("## PARSER ## make lambda pattern - apat lampats\n"); }
 	  |  apat          { LOG_PARSER("## PARSER ## make lambda pattern - apat\n"); }
 	  ;
 
@@ -188,16 +188,15 @@ fpat : fpat apat          { LOG_PARSER("## PARSER ## make fpat - fpat apat\n"); 
      ;
 
 /* Примитивные паттерны */
-apat : funid              { LOG_PARSER("## PARSER ## make apat - funid\n"); }
-     | CONSTRUCTOR_ID     { LOG_PARSER("## PARSER ## make apat - CONSTRUCTOR_ID\n"); }
-     | funid AS apat      { LOG_PARSER("## PARSER ## make apat - funid AS apat\n"); }
-     | literal            { LOG_PARSER("## PARSER ## make apat - literal\n"); }
-     | WILDCARD           { LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); }
-     | '(' ')'            { LOG_PARSER("## PARSER ## make apat - ()\n"); }
-     | '(' opat ',' pats ')' { LOG_PARSER("## PARSER ## make apat - (opat, pats)\n"); }
-     | '[' opat ']'       { LOG_PARSER("## PARSER ## make apat - [opat]\n"); }
-     | '[' ']'            { LOG_PARSER("## PARSER ## make apat - []\n"); }
-     | '~' apat           { LOG_PARSER("## PARSER ## make apat - ~apat\n"); }
+apat : funid                  { $$ = new Node(); $$->val = { {"pattern", $1->val } }; LOG_PARSER("## PARSER ## make apat - funid\n"); }
+     | tycon                  { $$ = new Node(); $$->val = { {"pattern", $1->val } }; LOG_PARSER("## PARSER ## make apat - CONSTRUCTOR_ID\n"); }
+     | literal                { $$ = new Node(); $$->val = { {"pattern", $1->val } }; LOG_PARSER("## PARSER ## make apat - literal\n"); }
+     | WILDCARD               { $$ = new Node(); $$->val = { {"pattern", "wildcard" } }; LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); }
+     | '(' ')'                { $$ = new Node(); $$->val = { {"pattern", {"tuple", json::array()} } }; LOG_PARSER("## PARSER ## make apat - ()\n"); }
+     | '(' opat ',' pats ')'  { $$ = new Node(); $4->val.push_back($2->val); $$->val = { {"pattern", {"tuple", $4->val} } };  LOG_PARSER("## PARSER ## make apat - (opat, pats)\n"); }
+     | '[' pats ']'           { $$ = new Node(); $$->val = { {"pattern", $2->val } }; LOG_PARSER("## PARSER ## make apat - [pats]\n"); }
+     | '[' ']'                { $$ = new Node(); $$->val = { {"pattern", {"list", json::array()} } }; LOG_PARSER("## PARSER ## make apat - []\n"); }
+     | '~' apat               { $$ = new Node(); $$->val = { {"pattern", $2->val } }; LOG_PARSER("## PARSER ## make apat - ~apat\n"); }
      ;
 
 apatList : apat
