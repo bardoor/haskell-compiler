@@ -56,7 +56,7 @@ json root;
              symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
-             
+             dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -419,89 +419,89 @@ class : tycon tyvar
  * ------------------------------- */
 
 dataDecl : DATAKW context DARROW simpleType '=' constrList
-         { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList\n"); }
+         { $$ = new Node();  $$->val = {{"dataDecl", {{"context", $2->val}, {"simpleType", $4->val}, {"constrList", $6->val}}}}; LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList\n"); }
          | DATAKW simpleType '=' constrList
-         { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList\n"); }
+         { $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}}}}; LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList\n"); }
          | DATAKW context DARROW simpleType '=' constrList DERIVINGKW tyClassList
-         { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList DERIVING tyClassList\n"); }
+         { $$ = new Node(); $$->val = {{"dataDecl", {{"context", $2->val}, {"simpleType", $4->val}, {"constrList", $6->val}, {"deriving", $8->val}}}}; LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList DERIVING tyClassList\n"); }
          | DATAKW simpleType '=' constrList DERIVINGKW tyClassList
-         { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList DERIVING tyClassList\n"); }
+         { $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}, {"deriving", $6->val}}}}; LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList DERIVING tyClassList\n"); }
          ;
 
 constrList : tycon atypeList
-           { LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); }
+           { $$ = new Node(); $$->val = {{"constrList", {{"tycon", $1->val}, {"atypeList", $2->val}}}}; LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); }
            | '(' SYMS ')' atypeList
-           { LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); }
+           { $$ = new Node(); $$->val = {{"constrList", {{"syms", $2->substr()}, {"atypeList", $4->val}}}}; LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); }
            | '(' SYMS ')'
-           { LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); }
+           { $$ = new Node(); $$->val = {{"constrList", {{"syms", $2->substr()}}}}; LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); }
            | tycon
-           { LOG_PARSER("## PARSER ## make constrList - tycon\n"); }
+           { $$ = new Node(); $$->val = {{"constrList", {{"tycon", $1->val}}}}; LOG_PARSER("## PARSER ## make constrList - tycon\n"); }
            | btype conop btype
-           { LOG_PARSER("## PARSER ## make constrList - btype conop btype\n"); }
+           { $$ = new Node(); $$->val = {{"constrList", {{"btype1", $1->val}, {"conop", $2->val}, {"btype2", $3->val}}}}; LOG_PARSER("## PARSER ## make constrList - btype conop btype\n"); }
            ;
 
 conop : SYMS
-      { LOG_PARSER("## PARSER ## make conop - SYMS\n"); }
+      { $$ = new Node(); $$->val = {{"conop", $1->substr()}}; LOG_PARSER("## PARSER ## make conop - SYMS\n"); }
       | BQUOTE CONSTRUCTOR_ID BQUOTE
-      { LOG_PARSER("## PARSER ## make conop - `CONSTRUCTOR_ID`\n"); }
+      { $$ = new Node(); $$->val = {{"conop", $2->substr()}}; LOG_PARSER("## PARSER ## make conop - `CONSTRUCTOR_ID`\n"); }
       ;
 
 tyClassList : '(' tyClassListComma ')'
-            { LOG_PARSER("## PARSER ## make tyClassList - (tyClassListComma)\n"); }
+            { $$ = new Node(); $$->val = {{"tyClassList", $2->val}}; LOG_PARSER("## PARSER ## make tyClassList - (tyClassListComma)\n"); }
             | '(' ')'
-            { LOG_PARSER("## PARSER ## make tyClassList - ()\n"); }
+            { $$ = new Node(); $$->val = {{"tyClassList", json::array()}}; LOG_PARSER("## PARSER ## make tyClassList - ()\n"); }
             | tyClass
-            { LOG_PARSER("## PARSER ## make tyClassList - tyClass\n"); }
+            { $$ = new Node(); $$->val = {{"tyClassList", $1->val}}; LOG_PARSER("## PARSER ## make tyClassList - tyClass\n"); }
             ;
 
 tyClassListComma : tyClass
-                 { LOG_PARSER("## PARSER ## make tyClassListComma - tyClass\n"); }
+                 { $$ = new Node(); $$->val = {{"tyClassListComma", {$1->val}}}; LOG_PARSER("## PARSER ## make tyClassListComma - tyClass\n"); }
                  | tyClassListComma ',' tyClass
-                 { LOG_PARSER("## PARSER ## make tyClassListComma - tyClassListComma, tyClass\n"); }
+                 { $$ = new Node(); $$->val = $1->val; $$->val["tyClassListComma"].push_back($3->val); LOG_PARSER("## PARSER ## make tyClassListComma - tyClassListComma, tyClass\n"); }
                  ;
 
 tyClass : tycon
-        { LOG_PARSER("## PARSER ## make tyClass - tycon\n"); }
+        { $$ = new Node(); $$->val = {{"tyClass", $1->val}}; LOG_PARSER("## PARSER ## make tyClass - tycon\n"); }
         ;
 
 typeDecl : TYPEKW simpleType '=' type
-         { LOG_PARSER("## PARSER ## make typeDecl - TYPE simpleType = type\n"); }
+         { $$ = new Node(); $$->val = {{"typeDecl", {{"simpleType", $2->val}, {"type", $4->val}}}}; LOG_PARSER("## PARSER ## make typeDecl - TYPE simpleType = type\n"); }
          ;
 
 simpleType : tycon
-           { LOG_PARSER("## PARSER ## make simpleType - tycon\n"); }
+           { $$ = new Node(); $$->val = {{"simpleType", {{"tycon", $1->val}}}}; LOG_PARSER("## PARSER ## make simpleType - tycon\n"); }
            | tycon tyvarList
-           { LOG_PARSER("## PARSER ## make simpleType - tycon tyvarList\n"); }
+           { $$ = new Node(); $$->val = {{"simpleType", {{"tycon", $1->val}, {"tyvarList", $2->val}}}}; LOG_PARSER("## PARSER ## make simpleType - tycon tyvarList\n"); }
            ;
 
 tycon : CONSTRUCTOR_ID
-      { LOG_PARSER("## PARSER ## make tycon - CONSTRUCTOR_ID\n"); }
+      { $$ = new Node(); $$->val = {{"tycon", $1->substr()}}; LOG_PARSER("## PARSER ## make tycon - CONSTRUCTOR_ID\n"); }
       ;
 
 tyvarList : tyvar
-          { LOG_PARSER("## PARSER ## make tyvarList - tyvar\n"); }
+          { $$ = new Node(); $$->val = {{"tyvarList", {{"tyvar", $1->val}}}}; LOG_PARSER("## PARSER ## make tyvarList - tyvar\n"); }
           | tyvarList tyvar
-          { LOG_PARSER("## PARSER ## make tyvarList - tyvarList tyvar\n"); }
+          { $$ = new Node(); $$->val = $1->val; $$->val["tyvarList"].push_back($2->val); LOG_PARSER("## PARSER ## make tyvarList - tyvarList tyvar\n"); }
           ;
 
 tyvarListComma : tyvar
-               { LOG_PARSER("## PARSER ## make tyvarListComma - tyvar\n"); }
+               { $$ = new Node(); $$->val = {{"tyvarListComma", {{"tyvar", $1->val}}}}; LOG_PARSER("## PARSER ## make tyvarListComma - tyvar\n"); }
                | tyvarList ',' tyvar
-               { LOG_PARSER("## PARSER ## make tyvarListComma - tyvarList, tyvar\n"); }
+               { $$ = new Node(); $$->val = $1->val; $$->val["tyvarListComma"].push_back($3->val); LOG_PARSER("## PARSER ## make tyvarListComma - tyvarList, tyvar\n"); }
                ;
 
 tyvar : funid
-      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); }
+      { $$ = new Node(); $$->val = {{"tyvar", {{"funid", $1->val}}}}; LOG_PARSER("## PARSER ## make tyvar - funid\n"); }
       ;
 
 defaultDecl : DEFAULTKW defaultTypes
-            { LOG_PARSER("## PARSER ## make defaultDecl - DEFAULT defaultTypes\n"); }
+            { $$ = new Node(); $$->val = {{"defaultDecl", {{"defaultTypes", $2->val}}}}; LOG_PARSER("## PARSER ## make defaultDecl - DEFAULT defaultTypes\n"); }
             ;
 
 defaultTypes : '(' type ',' typeListComma ')'
-             { LOG_PARSER("## PARSER ## make defaultTypes - (type, typeListComma)\n"); }
+             { $$ = new Node(); $$->val = {{"defaultTypes", {{"type", $2->val}, {"typeListComma", $4->val}}}}; LOG_PARSER("## PARSER ## make defaultTypes - (type, typeListComma)\n"); }
              | ttype
-             { LOG_PARSER("## PARSER ## make defaultTypes - ttype\n"); }
+             { $$ = new Node(); $$->val = {{"defaultTypes", $1->val}}; LOG_PARSER("## PARSER ## make defaultTypes - ttype\n"); }
              ;
 
 /* ------------------------------- *
