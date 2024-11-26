@@ -138,3 +138,57 @@ def test_func_declarations():
     }
 
     assert expected == actual
+
+
+def test_patterns_func_def():
+    result = parse_to_dict("{ func (1,2,_,xs) = xs }")
+
+    assert result[0] != "error", result[1]
+
+    actual = result[1]
+
+    expected = {
+        "module": {
+            "decls": [
+                {
+                    "decl": {
+                        "left": {
+                            "funlhs": {
+                                "name": {"funid": "func"},
+                                "params": [
+                                    {
+                                        "pattern": {
+                                            "tuple": [
+                                                {
+                                                    "pattern": {
+                                                        "literal": {
+                                                            "type": "int",
+                                                            "value": "1",
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "pattern": {
+                                                        "literal": {
+                                                            "type": "int",
+                                                            "value": "2",
+                                                        }
+                                                    }
+                                                },
+                                                {"pattern": "wildcard"},
+                                                {"pattern": {"funid": "xs"}},
+                                            ]
+                                        }
+                                    }
+                                ],
+                            }
+                        },
+                        "right": {"expr": {"funid": "xs"}},
+                    }
+                }
+            ],
+            "name": 0,
+        }
+    }
+
+    assert expected == actual
