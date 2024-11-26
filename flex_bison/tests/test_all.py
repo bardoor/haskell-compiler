@@ -1,22 +1,54 @@
-import subprocess
-
-import tree_sitter_json as tsjson 
-from tree_sitter import Language, Parser, Tree
-
-JSON_LANG = Language(tsjson.language())
-JSON_PARSER = Parser(JSON_LANG)
-
-def run_parser(code: str, parser_name: str = "bin/haskellc") -> tuple[str, str]:
-    output = subprocess.run([parser_name, "-c", code], capture_output=True)
-    return (output.stdout.decode(), output.stderr.decode())
+from tools import parse_to_dict
 
 def test_constant_declare():
-    (out, errors) = run_parser("{ a = x + 1; }")
+    result = parse_to_dict("{ a = x + 1; b = 5 + 7; c = a - b }")
     
-    json_index = out.find("json")
-    assert json_index != -1
+    assert result[0] != 'error', result[1]
 
-    json_str = out[json_index + 5:]
-    json_tree = JSON_PARSER.parse(bytes(json_str, "utf-8"))
+    actual = result[1]
+
+    expected = {
+        "module": {
+            "decls": [
+                {
+                    "decl": {
+                        "left": {"funid": "a"},
+                        "right": {
+                            "bin_expr": {
+                                "left": {"funid": "x"},
+                                "op": {"type": "symbols", "repr": "+"},
+                                "right": {"literal": {"type": "int", "value": "1"}},
+                            }
+                        },
+                    }
+                },
+                {
+                    "decl": {
+                        "left": {"funid": "b"},
+                        "right": {
+                            "bin_expr": {
+                                "left": {"literal": {"type": "int", "value": "5"}},
+                                "op": {"type": "symbols", "repr": "+"},
+                                "right": {"literal": {"type": "int", "value": "7"}},
+                            }
+                        },
+                    }
+                },
+                {
+                    "decl": {
+                        "left": {"funid": "c"},
+                        "right": {
+                            "bin_expr": {
+                                "left": {"funid": "a"},
+                                "op": {"type": "symbols", "repr": "-"},
+                                "right": {"funid": "b"},
+                            }
+                        },
+                    }
+                },
+            ],
+            "name": 0,
+        }
+    }
     
-    assert len(errors) == 0
+    assert expected == actual
