@@ -1,7 +1,7 @@
 import subprocess
 import json
 from graphviz import Digraph
-
+import pprint
 
 def run_parser(code: str, parser_name: str = "bin/haskellc") -> tuple[str, str]:
     output = subprocess.run([parser_name, "-c", code], capture_output=True)
@@ -51,6 +51,5 @@ def dict_to_dot(source: dict, parent=None, graph=None):
 
     return graph
 
-(status, result) = parse_to_dict("{ a = a + 1; b = 5 + 7; c = a + b; d = c + a + b; }")
-print(result)
-dict_to_dot(result).render(format='pdf')
+(status, result) = parse_to_dict("{ a 1 2 3 = a + 1; }")
+pprint.pp(result)
