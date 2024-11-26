@@ -13,5 +13,6 @@ haskell.flex.cpp
 *.png
 *.output
 *.gv
+*.pdf
 
 __pycache__
