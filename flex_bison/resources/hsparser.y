@@ -53,9 +53,10 @@ json root;
 
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
-             type symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat
+             symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
-             valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma btype typeListComma atypeList contextList
+             valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
+             
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -89,7 +90,7 @@ expr : oexpr DCOLON type DARROW type { $$ = new Node(); $$->val = { {"expr_type"
      ;
 
 /* Применение инфиксного оператора */
-oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val["expr"]}, {"right", $3->val["expr"]} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val["expr"]}, {"op", $2->val}, {"right", $3->val["expr"]} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
       | dexpr                      { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
@@ -99,11 +100,11 @@ dexpr : '-' kexpr        { $$ = new Node(); $$->val = { {"expr", { {"uminus", $2
       ;
 
 /* Выражение с ключевым словом */
-kexpr : '\\' lampats RARROW expr            { $$ = new Node(); $$->val  = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
-      | LETKW '{' declList '}' INKW expr    { $$ = new Node(); $$->val  = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
-      | IFKW expr THENKW expr ELSEKW expr   { $$ = new Node(); $$->val  = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
-      | CASEKW expr OFKW '{' altList '}'    { $$ = new Node(); $$->val  = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
-      | fapply                              { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
+kexpr : '\\' lampats RARROW expr            { $$ = new Node(); $$->val = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; LOG_PARSER("## PARSER ## make kexpr - lambda\n"); }
+      | LETKW '{' declList '}' INKW expr    { $$ = new Node(); $$->val = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); }
+      | IFKW expr THENKW expr ELSEKW expr   { $$ = new Node(); $$->val = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); }
+      | CASEKW expr OFKW '{' altList '}'    { $$ = new Node(); $$->val = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); }
+      | fapply                              { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make kexpr - func apply\n"); }
       ;
 
 /* Применение функции */
@@ -112,20 +113,20 @@ fapply : fapply aexpr        { $$ = new Node(); $$->val  = { {"fun_apply", {"par
        ;
 
 /* Простое выражение */
-aexpr : literal         { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
-      | funid           { $$ = new Node(); $$->val  = { {"expr", $1->val} }; }
-      | '(' expr ')'    { $$ = new Node(); $$->val  = $2->val; }
-      | tuple           { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - tuple\n"); }
-      | list            { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list\n"); }
-      | enumeration     { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
-      | comprehension   { $$ = new Node(); $$->val  = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
+aexpr : literal         { $$ = new Node(); $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - literal\n"); }
+      | funid           { $$ = new Node(); $$->val = { {"expr", $1->val} }; }
+      | '(' expr ')'    { $$ = new Node(); $$->val = $2->val; }
+      | tuple           { $$ = new Node(); $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - tuple\n"); }
+      | list            { $$ = new Node(); $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list\n"); }
+      | enumeration     { $$ = new Node(); $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - enumeration\n"); }
+      | comprehension   { $$ = new Node(); $$->val = { {"expr", $1->val} }; LOG_PARSER("## PARSER ## make expr - list comprehension\n"); }
       ;
 
 /* Оператор */
-op : symbols                { $$ = new Node(); $$->val  = { {"op", $1->val} }; LOG_PARSER("## PARSER ## make op - symbols\n"); }
-   | BQUOTE funid BQUOTE    { $$ = new Node(); $$->val  = { {"quoted_op", $2->val} }; LOG_PARSER("## PARSER ## make op - `op`\n"); }
-   | '+'                    { $$ = new Node(); $$->val  = { {"op", {"symbols", "+"}} }; LOG_PARSER("## PARSER ## make op - plus\n"); }
-   | '-'                    { $$ = new Node(); $$->val  = { {"op", {"symbols", "-"}} }; LOG_PARSER("## PARSER ## make op - minus\n"); }
+op : symbols                { $$ = new Node(); $$->val = { {"type", "symbols"}, {"repr", $1->val} }; LOG_PARSER("## PARSER ## make op - symbols\n"); }
+   | BQUOTE funid BQUOTE    { $$ = new Node(); $$->val = { {"type", "quoted"}, {"id", $2->val} }; LOG_PARSER("## PARSER ## make op - `op`\n"); }
+   | '+'                    { $$ = new Node(); $$->val = { {"type", "symbols"}, {"repr", "+"} }; LOG_PARSER("## PARSER ## make op - plus\n"); }
+   | '-'                    { $$ = new Node(); $$->val = { {"type", "symbols"}, {"repr", "-"} }; LOG_PARSER("## PARSER ## make op - minus\n"); }
    ;
 
 symbols : SYMS    { $$ = new Node(); $$->val = { {"symbols", $1->substr()} }; }
@@ -268,7 +269,7 @@ declE : var '=' expr                    { $$ = new Node(); $$->val = { {"decl", 
       | funlhs '=' expr                 { $$ = new Node(); $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); }
       | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
       | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
-      | %empty                          { LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
+      | %empty                          { $$ = new Node(); $$->val = { {"decl", {}}}; LOG_PARSER("## PARSER ## make declaration - nothing\n"); }
       ;
 
 whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option - WHERE declList\n"); }
@@ -285,7 +286,7 @@ funlhs : var apatList               { $$ = new Node(); $$->val  = { {"funlhs", {
 module : MODULEKW tycon WHEREKW body
        { LOG_PARSER("## PARSER ## make module - MODULE CONSTRUCTOR_ID WHERE body\n"); }
        | body
-       { root = { {"module", { {"name", 0}, {"body", $1->val} }} }; LOG_PARSER("## PARSER ## make module - body\n"); }
+       { root = { {"module", { {"name", 0}, {"decls", $1->val} }} }; LOG_PARSER("## PARSER ## make module - body\n"); }
        ;
 
 body : '{' topDeclList '}'
@@ -293,9 +294,9 @@ body : '{' topDeclList '}'
      ;
 
 topDeclList : topDecl
-            { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
+            { $$ = new Node(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make topDeclList - topDecl\n"); }
             | topDeclList ';' topDecl
-            { LOG_PARSER("## PARSER ## make topDeclList - topDeclList ; topDecl\n"); }
+            { $$ = new Node(); $$->val = $1->val; $$->val.push_back($3->val); LOG_PARSER("## PARSER ## make topDeclList - topDeclList ; topDecl\n"); }
             ;
 
 topDecl : typeDecl
@@ -309,7 +310,7 @@ topDecl : typeDecl
         | defaultDecl
         { LOG_PARSER("## PARSER ## make topDecl - defaultDecl\n"); }
         | declE
-        { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
+        { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make topDecl - declE\n"); }
         ;
 
 /* ------------------------------- *
@@ -508,53 +509,53 @@ defaultTypes : '(' type ',' typeListComma ')'
  * ------------------------------- */
 
 type : btype
-     { LOG_PARSER("## PARSER ## make type - btype\n"); }
+     { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make type - btype\n"); }
      | btype RARROW type
-     { LOG_PARSER("## PARSER ## make type - btype => type\n"); }
+     { $$ = $3; $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make type - btype -> type\n"); }
      ;
 
 btype : atype
-      { LOG_PARSER("## PARSER ## make btype - atype\n"); }
+      { $$ = $1; LOG_PARSER("## PARSER ## make btype - atype\n"); }
       | tycon atypeList
-      { LOG_PARSER("## PARSER ## make btype - tycon atypeList\n"); }
+      { $$ = new Node(); $$->val = { {"overlay", { {"constructor", $1->val}, {"type_list", $2->val} }} }; LOG_PARSER("## PARSER ## make btype - tycon atypeList\n"); }
       ;
 
 atype : ntatype
-      { LOG_PARSER("## PARSER ## make atype - ntatype\n"); }
+      { $$ = $1; LOG_PARSER("## PARSER ## make atype - ntatype\n"); }
       | '(' type ',' typeListComma ')'
-      { LOG_PARSER("## PARSER ## make atype - (type, typeListComma)\n"); }
+      { $$ = $4; $$->val.push_back($2->val); LOG_PARSER("## PARSER ## make atype - (type, typeListComma)\n"); }
       ;
 
 atypeList : atypeList atype
-          { LOG_PARSER("## PARSER ## make atypeList - atypeList atype\n"); }
+          { $$ = $1; $$->val.push_back($2->val); LOG_PARSER("## PARSER ## make atypeList - atypeList atype\n"); }
           | atype
-          { LOG_PARSER("## PARSER ## make atypeList - atype\n"); }
+          { $$ = new Node(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make atypeList - atype\n"); }
           ;
 
 ttype : ntatype
-      { LOG_PARSER("## PARSER ## make ttype - ntatype\n"); }
+      { $$ = $1; LOG_PARSER("## PARSER ## make ttype - ntatype\n"); }
       | btype RARROW type
-      { LOG_PARSER("## PARSER ## make ttype - btype => type\n"); }
+      { $$ = $1; $$->val["to"] = $3->val; LOG_PARSER("## PARSER ## make ttype - btype -> type\n"); }
       | tycon atypeList
-      { LOG_PARSER("## PARSER ## make ttype - tycon atypeList\n"); }
+      { $$ = new Node(); $$->val = { {"overlay", { {"constructor", $1->val}, {"type_list", $2->val} }} }; LOG_PARSER("## PARSER ## make ttype - tycon atypeList\n"); }
       ;
 
 ntatype : tyvar
-        { LOG_PARSER("## PARSER ## make ntatype - tyvar\n"); }
+        { $$ = $1; LOG_PARSER("## PARSER ## make ntatype - tyvar\n"); }
         | tycon
-        { LOG_PARSER("## PARSER ## make ntatype - tycon\n"); }
+        { $$ = $1; LOG_PARSER("## PARSER ## make ntatype - tycon\n"); }
         | '(' ')'
-        { LOG_PARSER("## PARSER ## make ntatype - ()\n"); }
+        { $$ = new Node(); $$->val = {{"tuple", json::array()}}; LOG_PARSER("## PARSER ## make ntatype - ()\n"); }
         | '(' type ')'
-        { LOG_PARSER("## PARSER ## make ntatype - (type)\n"); }
+        { $$ = new Node(); $$->val = {{"tuple", $2->val}}; LOG_PARSER("## PARSER ## make ntatype - (type)\n"); }
         | '[' type ']'
-        { LOG_PARSER("## PARSER ## make ntatype - [type]\n"); }
+        { $$ = new Node(); $$->val = {{"list", $2->val}}; LOG_PARSER("## PARSER ## make ntatype - [type]\n"); }
         ;
 
 typeListComma : type
-              { LOG_PARSER("## PARSER ## make typeListComma - type\n"); }
+              { $$ = new Node(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make typeListComma - type\n"); }
               | type ',' typeListComma
-              { LOG_PARSER("## PARSER ## make typeListComma - type, typeListComma\n"); }
+              { $$ = $3; $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make typeListComma - type, typeListComma\n"); }
               ;
 
 %%
