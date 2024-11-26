@@ -215,8 +215,8 @@ apat : funid                  { $$ = new Node(); $$->val = { {"pattern", $1->val
      | '~' apat               { $$ = new Node(); $$->val = { {"pattern", $2->val } }; LOG_PARSER("## PARSER ## make apat - ~apat\n"); }
      ;
 
-apatList : apat
-         | apatList apat
+apatList : apat               { $$ = new Node(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make apatList - apat\n"); }
+         | apatList apat      { $$ = new Node(); $$->val = $1->val; $$->val.push_back($2->val); LOG_PARSER("## PARSER ## make apatList - apat\n"); }
          ;
 
 /* Альтернативы в case */
@@ -276,7 +276,7 @@ whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option
          | %empty                   { LOG_PARSER("## PARSER ## make where option - nothing\n"); }
          ;
 
-funlhs : var apatList               { $$ = new Node(); $$->val  = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
+funlhs : var apatList               { $$ = new Node(); $$->val = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
        ;
 
 /* ------------------------------- *
