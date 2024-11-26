@@ -53,7 +53,7 @@ json root;
 
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
-             symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat
+             symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat dpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
              dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes
@@ -169,21 +169,21 @@ enumeration : '[' expr DOTDOT ']'               { $$ = new Node(); $$->val = { {
  *            Паттерны             *
  * ------------------------------- */
 
-lampats :  apat lampats	 { LOG_PARSER("## PARSER ## make lambda pattern - apat lampats\n"); }
-	  |  apat          { LOG_PARSER("## PARSER ## make lambda pattern - apat\n"); }
+lampats :  apat lampats	 { $$ = new Node(); $$->val = $2->val; $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make lambda pattern - apat lampats\n"); }
+	  |  apat          { $$ = new Node(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make lambda pattern - apat\n"); }
 	  ;
 
 /* Список паттернов */
-pats : pats ',' opat      { LOG_PARSER("## PARSER ## make pattern list - pats, opat\n"); }
-     | opat               { LOG_PARSER("## PARSER ## make pattern list - opat\n"); }
+pats : pats ',' opat      { $$ = new Node(); $$->val = $1->val; $$->val.push_back($3->val); LOG_PARSER("## PARSER ## make pattern list - pats, opat\n"); }
+     | opat               { $$ = new Node(); $$->val.push_back($1->val); LOG_PARSER("## PARSER ## make pattern list - opat\n"); }
      ;
 
-opat : dpat               { LOG_PARSER("## PARSER ## make optional pattern - dpat\n"); }
-     | opat op opat %prec '+' { LOG_PARSER("## PARSER ## make optional pattern - opat op opat\n"); }
+opat : dpat                   { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make optional pattern - dpat\n"); }
+     | opat op opat %prec '+' { $$ = new Node(); $$->val = { {"left", {$1->val}, {"op", {$2->val}},{"right", {$3->val}}} }; LOG_PARSER("## PARSER ## make optional pattern - opat op opat\n"); }
      ;
 
-dpat : '-' fpat           { LOG_PARSER("## PARSER ## make dpat - '-' fpat\n"); }
-     | fpat               { LOG_PARSER("## PARSER ## make dpat - fpat\n"); }
+dpat : '-' fpat           { $$ = new Node(); $$->val = {{"uminus", {$2->val}}}; LOG_PARSER("## PARSER ## make dpat - '-' fpat\n"); }
+     | fpat               { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make dpat - fpat\n"); }
      ;
 
 fpat : fpat apat  {
@@ -209,7 +209,7 @@ apat : funid                  { $$ = new Node(); $$->val = { {"pattern", $1->val
      | literal                { $$ = new Node(); $$->val = { {"pattern", $1->val } }; LOG_PARSER("## PARSER ## make apat - literal\n"); }
      | WILDCARD               { $$ = new Node(); $$->val = { {"pattern", "wildcard" } }; LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); }
      | '(' ')'                { $$ = new Node(); $$->val = { {"pattern", {"tuple", json::array()} } }; LOG_PARSER("## PARSER ## make apat - ()\n"); }
-     | '(' opat ',' pats ')'  { $$ = new Node(); $4->val.push_back($2->val); $$->val = { {"pattern", {"tuple", $4->val} } };  LOG_PARSER("## PARSER ## make apat - (opat, pats)\n"); }
+     | '(' opat ',' pats ')'  { LOG_PARSER("## PARSER ## make apat - (opat, pats)\n"); $$ = new Node(); $$->val["pattern"]["tuple"] = $4->val; $$->val["pattern"]["tuple"].insert($$->val["pattern"]["tuple"].begin(), $2->val);  }
      | '[' pats ']'           { $$ = new Node(); $$->val = { {"pattern", $2->val } }; LOG_PARSER("## PARSER ## make apat - [pats]\n"); }
      | '[' ']'                { $$ = new Node(); $$->val = { {"pattern", {"list", json::array()} } }; LOG_PARSER("## PARSER ## make apat - []\n"); }
      | '~' apat               { $$ = new Node(); $$->val = { {"pattern", $2->val } }; LOG_PARSER("## PARSER ## make apat - ~apat\n"); }
@@ -276,7 +276,7 @@ whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option
          | %empty                   { LOG_PARSER("## PARSER ## make where option - nothing\n"); }
          ;
 
-funlhs : var apatList               { $$ = new Node(); $$->val = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList"); }
+funlhs : var apatList               { $$ = new Node(); $$->val = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList\n"); }
        ;
 
 /* ------------------------------- *
