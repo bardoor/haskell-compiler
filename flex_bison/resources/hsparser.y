@@ -90,7 +90,7 @@ expr : oexpr DCOLON type DARROW type { $$ = new Node(); $$->val = { {"expr_type"
      ;
 
 /* Применение инфиксного оператора */
-oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val["expr"]}, {"op", $2->val}, {"right", $3->val["expr"]} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
+oexpr : oexpr op oexpr %prec '+'   { $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val}, {"op", $2->val}, {"right", $3->val} }} }; LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); }
       | dexpr                      { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); }
       ;
 
@@ -108,8 +108,8 @@ kexpr : '\\' lampats RARROW expr            { $$ = new Node(); $$->val = { {"lam
       ;
 
 /* Применение функции */
-fapply : fapply aexpr        { $$ = new Node(); $$->val  = { {"fun_apply", {"param", $2->val}} }; LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
-       | aexpr               { $$ = new Node(); $$->val  = $1->val; LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
+fapply : fapply aexpr        { $$ = new Node(); $$->val = $1->val; $$->val["fun_apply"].push_back($2->val); LOG_PARSER("## PARSER ## made func apply - many exprs\n"); }
+       | aexpr               { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make func apply - one expr\n"); }
        ;
 
 /* Простое выражение */
