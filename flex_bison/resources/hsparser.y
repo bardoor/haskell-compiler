@@ -35,6 +35,8 @@ json root;
  *           Приоритеты            *
  * ------------------------------- */
 
+%nonassoc LOWER_THAN_TYPED_EXPR
+
 %left	CASE		LET	IN		LAMBDA
   	IF		ELSE
 
@@ -56,7 +58,7 @@ json root;
              symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat dpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
-             dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes
+             dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -85,7 +87,7 @@ literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); $$ = new
 
 expr : oexpr DCOLON type DARROW type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation and context\n"); $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"context", $3->val}, {"type", $5->val} }} }; }
      | oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; }
-     | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); $$ = new Node(); $$->val = $1->val; }
+     | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); $$ = new Node(); $$->val = $1->val; } %prec LOWER_THAN_TYPED_EXPR
      ;
 
 oexpr : oexpr op oexpr %prec '+'   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val}, {"op", $2->val}, {"right", $3->val} }} }; }
@@ -99,6 +101,7 @@ dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"
 kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); $$ = new Node(); $$->val = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; }
       | LETKW '{' declList '}' INKW expr    { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); $$ = new Node(); $$->val = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; }
       | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); $$ = new Node(); $$->val = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; }
+      | DOKW '{' stmts '}'                  { LOG_PARSER("## PARSER ## make kexpr - DO { stmts }"); $$ = new Node(); $$->val = { {"do", { {"stmts", $3->val} }} }; }
       | CASEKW expr OFKW '{' altList '}'    { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); $$ = new Node(); $$->val = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; }
       | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); $$ = new Node(); $$->val = $1->val; }
       ;
@@ -114,6 +117,7 @@ aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); $$ =
       | list            { LOG_PARSER("## PARSER ## make expr - list\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
       | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
       | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
+      | WILDCARD
       ;
 
 
@@ -129,6 +133,15 @@ symbols : SYMS    { LOG_PARSER("## PARSER ## make symbols\n"); $$ = new Node(); 
 
 funid : FUNC_ID   { LOG_PARSER("## PARSER ## make funid\n"); $$ = new Node(); $$->val = { {"funid",  $1->substr()} }; }
       ;
+
+stmts : stmt        { LOG_PARSER("## PARSER ## make stmts - stmt\n"); $$ = new Node(); $$->val.push_back($1->val); }
+      | stmts stmt  { LOG_PARSER("## PARSER ## make stmts - stmts stmt\n"); $$ = new Node(); $$->val = $1->val; $$->val.push_back($1->val); }
+      ;
+
+stmt : expr LARROW expr ';'   { LOG_PARSER("## PARSER ## make stmt - expr <- expr;\n"); $$ = new Node(); $$->val = { {"binding", { {"left", {$1->val}}, {"right", {$3->val}} }} }; }
+     | expr ';'               { LOG_PARSER("## PARSER ## make stmt - expr;\n"); $$ = new Node(); $$->val.push_back($1->val); }
+     | ';'                    { LOG_PARSER("## PARSER ## make stmt - ;\n"); $$ = new Node(); }
+     ;
 
 /* ------------------------------- *
  *         Кортежи, списки         *
