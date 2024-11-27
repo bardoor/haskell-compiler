@@ -46,11 +46,13 @@ json root;
 %right RARROW
 
 
-%type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs funid topDeclList topDecl declE var apatList commaSepExprs
-             symbols tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat dpat
+%type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs topDeclList topDecl declE var apatList commaSepExprs
+             tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat dpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
              dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts
+
+%type <str> funid symbols
 
 /* ------------------------------- *
  *      Терминальные символы       *
@@ -114,16 +116,16 @@ aexpr : literal         { mk_expr($$, $1); }
 
 
 /* Оператор */
-op : symbols                { LOG_PARSER("## PARSER ## make op - symbols\n"); $$ = new Node(); $$->val = { {"type", "symbols"}, {"repr", $1->val} }; }
-   | BQUOTE funid BQUOTE    { LOG_PARSER("## PARSER ## make op - `op`\n"); $$ = new Node(); $$->val = { {"type", "quoted"}, {"id", $2->val} }; }
-   | '+'                    { LOG_PARSER("## PARSER ## make op - plus\n"); $$ = new Node(); $$->val = { {"type", "symbols"}, {"repr", "+"} }; }
-   | '-'                    { LOG_PARSER("## PARSER ## make op - minus\n"); $$ = new Node(); $$->val = { {"type", "symbols"}, {"repr", "-"} }; }
+op : symbols                { mk_operator($$, "symbols", $1); }
+   | BQUOTE funid BQUOTE    { mk_operator($$, "quoted", $2); }
+   | '+'                    { mk_operator($$, "symbols", "+"); }
+   | '-'                    { mk_operator($$, "symbols", "-"); }
    ;
 
-symbols : SYMS    { LOG_PARSER("## PARSER ## make symbols\n"); $$ = new Node(); $$->val = { {"symbols", $1->substr()} }; }
+symbols : SYMS    { $$ = $1->substr(); }
         ;
 
-funid : FUNC_ID   { LOG_PARSER("## PARSER ## make funid\n"); $$ = new Node(); $$->val = { {"funid",  $1->substr()} }; }
+funid : FUNC_ID   { $$ = $1->substr(); }
       ;
 
 stmts : stmt        { LOG_PARSER("## PARSER ## make stmts - stmt\n"); $$ = new Node(); $$->val.push_back($1->val); }

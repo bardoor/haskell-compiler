@@ -158,3 +158,13 @@ void inline mk_expr(Node* node, Node* expr) {
         "expr", expr->val
     }};
 }
+
+void inline mk_operator(Node* node, std::string type, std::string repr) {
+    LOG_PARSER("## PARSER ## make op\n");
+
+    node = new Node();
+    node->val = {
+        {"type", type},
+        {"repr", repr}
+    };
+}
