@@ -86,20 +86,20 @@ oexpr : oexpr op oexpr %prec '+'   { mk_bin_expr($$, $1, $2, $3); }
       | dexpr                      { $$ = $1; }
       ;
 
-dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); $$ = new Node(); $$->val = { {"expr", { {"uminus", $2->val} }} }; }
-      | kexpr            { LOG_PARSER("## PARSER ## make dexpr - kexpr\n"); $$ = new Node(); $$->val = $1->val; }
+dexpr : '-' kexpr        { mk_negate_expr($$, $2); }
+      | kexpr            { $$ = $1; }
       ;
 
-kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexpr - lambda\n"); $$ = new Node(); $$->val = { {"lambda", { {"params", $2->val}, {"body", $4->val} }} }; }
-      | LETKW '{' declList '}' INKW expr    { LOG_PARSER("## PARSER ## make kexpr - LET .. IN ..\n"); $$ = new Node(); $$->val = { {"let", { {"decls", $3->val}, {"body", $6->val} } } }; }
-      | IFKW expr THENKW expr ELSEKW expr   { LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n"); $$ = new Node(); $$->val = { {"if_else", { {"cond", $2->val}, {"true_branch", $4->val}, {"false_branch", $6->val} }} }; }
-      | DOKW '{' stmts '}'                  { LOG_PARSER("## PARSER ## make kexpr - DO { stmts }"); $$ = new Node(); $$->val = { {"do", { {"stmts", $3->val} }} }; }
-      | CASEKW expr OFKW '{' altList '}'    { LOG_PARSER("## PARSER ## make kexpr - CASE .. OF .. \n"); $$ = new Node(); $$->val = { {"case", { {"expr", $2->val}, {"alternatives", $5->val} }} }; }
-      | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); $$ = new Node(); $$->val = $1->val; }
+kexpr : '\\' lampats RARROW expr            { mk_lambda($$, $2, $4); }
+      | LETKW '{' declList '}' INKW expr    { mk_let_in($$, $3, $6); }
+      | IFKW expr THENKW expr ELSEKW expr   { mk_if_else($$, $2, $4, $6); }
+      | DOKW '{' stmts '}'                  { mk_do($$, $3); }
+      | CASEKW expr OFKW '{' altList '}'    { mk_case($$, $2, $5); }
+      | fapply                              { $$ = $1; }
       ;
 
-fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); $$ = new Node(); $$->val = $1->val; $$->val["func_apply"].push_back($2->val); }
-       | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); $$ = new Node(); $$->val["func_apply"].push_back($1->val); }
+fapply : fapply aexpr        { mk_fapply($$, $1, $2); }
+       | aexpr               { mk_fapply($$, $1, NULL); }
        ;
 
 aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
