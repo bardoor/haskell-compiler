@@ -351,3 +351,37 @@ def test_class_decl_with_where():
     }
     
     assert expected == actual
+
+def test_class_decl_with_contextList():
+    result = parse_to_dict("{class (Read a, Show a) => Textual a}")
+    
+    assert result[0] != 'error', result[1]
+
+    actual = result[1]
+
+    expected = {
+        'module': {
+            'decls': [
+                {
+                    'class_decl': {
+                        'class': {
+                            'tycon': 'Textual', 'tyvar': {'funid': {'funid': 'a'}}
+                        },
+                        'context': {
+                            'contextList': [ 
+                                            {
+                                                'tycon': 'Read', 'tyvar': {'funid': {'funid': 'a'}}
+                                            },
+                                            {
+                                                'tycon': 'Show', 'tyvar': {'funid': {'funid': 'a'}}
+                                            }
+                            ]
+                        },
+                        'body': None,
+                    }
+                }
+            ],
+            'name': 0
+        }
+    }
+    assert expected == actual
