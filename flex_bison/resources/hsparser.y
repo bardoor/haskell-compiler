@@ -333,9 +333,9 @@ classDecl : CLASSKW context DARROW class classBody
           ;
 
 classBody : %empty
-          { LOG_PARSER("## PARSER ## make classBody - nothing\n"); $$ = new Node(); $$->val = {{"body", nullptr}}; }
+          { LOG_PARSER("## PARSER ## make classBody - nothing\n"); $$ = new Node(); $$->val = nullptr; }
           | WHEREKW '{' declList '}'
-          { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); $$ = new Node(); $$->val = {{"body", $3->val}}; }
+          { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); $$ = new Node(); $$->val =  $3->val; }
           ;
 
 instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
@@ -421,7 +421,7 @@ contextList : class
             ;
 
 class : tycon tyvar
-      { LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); $$ = new Node(); $$->val = {{"class", {{"tycon", $1->val},{"tyvar", $2->val}}}}; }
+      { LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); $$ = new Node(); $$->val = {{"tycon", $1->val},{"tyvar", $2->val}}; }
       ;
 
 /* ------------------------------- *
@@ -485,7 +485,7 @@ simpleType : tycon
            ;
 
 tycon : CONSTRUCTOR_ID
-      { LOG_PARSER("## PARSER ## make tycon - CONSTRUCTOR_ID\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()}}; }
+      { LOG_PARSER("## PARSER ## make tycon - CONSTRUCTOR_ID\n"); $$ = new Node(); $$->val = $1->substr(); }
       ;
 
 tyvarList : tyvar
@@ -501,7 +501,7 @@ tyvarListComma : tyvar
                ;
 
 tyvar : funid
-      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); $$ = new Node(); $$->val = {{"tyvar", {{"funid", $1->val}}}}; }
+      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); $$ = new Node();  $$->val = {{"funid", $1->val}}; }
       ;
 
 defaultDecl : DEFAULTKW defaultTypes
