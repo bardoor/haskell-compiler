@@ -168,3 +168,12 @@ void inline mk_operator(Node* node, std::string type, std::string repr) {
         {"repr", repr}
     };
 }
+
+void inline mk_stmts(Node* node, Node* stmt, Node* stmts) {
+    node = new Node();
+
+    if (stmts != NULL) {
+        node->val = stmts->val;
+    }
+    node->val.push_back(stmt->val);        
+}

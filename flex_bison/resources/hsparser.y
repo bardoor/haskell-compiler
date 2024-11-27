@@ -128,8 +128,8 @@ symbols : SYMS    { $$ = $1->substr(); }
 funid : FUNC_ID   { $$ = $1->substr(); }
       ;
 
-stmts : stmt        { LOG_PARSER("## PARSER ## make stmts - stmt\n"); $$ = new Node(); $$->val.push_back($1->val); }
-      | stmts stmt  { LOG_PARSER("## PARSER ## make stmts - stmts stmt\n"); $$ = new Node(); $$->val = $1->val; $$->val.push_back($2->val); }
+stmts : stmt        { mk_stmts($$, $1, NULL); }
+      | stmts stmt  { mk_stmts($$, $2, $1); }
       ;
 
 stmt : expr LARROW expr ';'   { LOG_PARSER("## PARSER ## make stmt - expr <- expr;\n"); $$ = new Node(); $$->val = { {"binding", { {"left", {$1->val}}, {"right", {$3->val}} }} }; }
