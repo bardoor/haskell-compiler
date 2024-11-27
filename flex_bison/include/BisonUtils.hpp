@@ -149,3 +149,12 @@ void inline mk_fapply(Node* node, Node* fapply, Node* expr) {
         node->val["func_apply"].push_back(expr->val);
     }
 } 
+
+void inline mk_expr(Node* node, Node* expr) {
+    LOG_PARSER("## PARSER ## make expr\n");
+
+    node = new Node();
+    node->val = {{
+        "expr", expr->val
+    }};
+}

@@ -102,14 +102,14 @@ fapply : fapply aexpr        { mk_fapply($$, $1, $2); }
        | aexpr               { mk_fapply($$, $1, NULL); }
        ;
 
-aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
-      | funid           { $$ = new Node(); $$->val = { {"expr", $1->val} }; }
-      | '(' expr ')'    { $$ = new Node(); $$->val = $2->val; }
-      | tuple           { LOG_PARSER("## PARSER ## make expr - tuple\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
-      | list            { LOG_PARSER("## PARSER ## make expr - list\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
-      | enumeration     { LOG_PARSER("## PARSER ## make expr - enumeration\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
-      | comprehension   { LOG_PARSER("## PARSER ## make expr - list comprehension\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
-      | WILDCARD
+aexpr : literal         { mk_expr($$, $1); }
+      | funid           { mk_expr($$, $1); }
+      | '(' expr ')'    { $$ = $2; }
+      | tuple           { mk_expr($$, $1); }
+      | list            { mk_expr($$, $1); }
+      | enumeration     { mk_expr($$, $1); }
+      | comprehension   { mk_expr($$, $1); }
+      | WILDCARD        
       ;
 
 
