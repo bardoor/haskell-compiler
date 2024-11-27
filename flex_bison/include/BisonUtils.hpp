@@ -22,6 +22,7 @@ struct Node {
     json val; 
 };
 
+
 void inline mk_literal(Node* node, std::string type, std::string literal) {
     LOG_PARSER("## PARSER ## making %s literal", type.c_str());
 
@@ -45,4 +46,15 @@ void inline mk_typed_expr(Node* node, Node* expr, Node* type) {
     }}};
 }
 
+void inline mk_bin_expr(Node* node, Node* left, Node* op, Node* right) {
+    LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); 
 
+    node = new Node();
+    node->val = {{
+        "bin_expr", {
+            {"left", left->val},
+            {"op", op->val},
+            {"right", right->val}
+        }
+    }};
+}   

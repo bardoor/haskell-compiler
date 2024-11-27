@@ -78,12 +78,12 @@ literal : INTC      { mk_literal($$, "int", std::to_string($1)); }
         | CHARC     { mk_literal($$, "char", $1->substr()); }
         ;
 
-expr : oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; }
-     | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); $$ = new Node(); $$->val = $1->val; } %prec LOWER_THAN_TYPED_EXPR
+expr : oexpr DCOLON type { mk_typed_expr($$, $1, $3); }
+     | oexpr             { $$ = $1; } %prec LOWER_THAN_TYPED_EXPR
      ;
 
-oexpr : oexpr op oexpr %prec '+'   { LOG_PARSER("## PARSER ## make oexpr - oexpr op oexpr\n"); $$ = new Node(); $$->val = { {"bin_expr", { {"left", $1->val}, {"op", $2->val}, {"right", $3->val} }} }; }
-      | dexpr                      { LOG_PARSER("## PARSER ## make oexpr - dexpr\n"); $$ = new Node(); $$->val = $1->val; }
+oexpr : oexpr op oexpr %prec '+'   { mk_bin_expr($$, $1, $2, $3); }
+      | dexpr                      { $$ = $1; }
       ;
 
 dexpr : '-' kexpr        { LOG_PARSER("## PARSER ## make dexpr - MINUS kexpr \n"); $$ = new Node(); $$->val = { {"expr", { {"uminus", $2->val} }} }; }
