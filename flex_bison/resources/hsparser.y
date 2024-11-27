@@ -9,14 +9,6 @@
 extern int yylex();
 extern int yylineno;
 
-#define DEBUG_PARSER
-
-#ifdef DEBUG_PARSER
-    #define LOG_PARSER(msg, ...) printf(msg, ##__VA_ARGS__);
-#else
-    #define LOG_PARSER(msg, ...)
-#endif
-
 void yyerror(const char* s);
 
 json root;
@@ -63,9 +55,10 @@ json root;
 /* ------------------------------- *
  *      Терминальные символы       *
  * ------------------------------- */
-%token <str> STRINGC FLOATC SYMS CHARC
+%token <str> STRINGC SYMS CHARC
 %token <str> FUNC_ID CONSTRUCTOR_ID
 %token <intVal> INTC
+%token <floatVal> FLOATC
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW  
@@ -79,14 +72,13 @@ json root;
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { LOG_PARSER("## PARSER ## make literal - INTC\n"); $$ = new Node(); $$->val = { {"literal", { {"value", std::to_string($1)}, {"type", "int"} }} }; }
-        | FLOATC    { LOG_PARSER("## PARSER ## make literal - FLOATC\n"); $$ = new Node(); $$->val = { {"literal", { {"value", $1->substr()}, {"type", "float"} }} }; }
-        | STRINGC   { LOG_PARSER("## PARSER ## make literal - STRINGC\n"); $$ = new Node(); $$->val = { {"literal", { {"value", $1->substr()}, {"type", "str"} }} }; }
-        | CHARC     { LOG_PARSER("## PARSER ## make literal - CHARC\n"); $$ = new Node(); $$->val = { {"literal", { {"value", $1->substr()}, {"type", "char"} }} }; }
+literal : INTC      { mk_literal($$, "int", std::to_string($1)); }
+        | FLOATC    { mk_literal($$, "float", std::to_string($1)); }
+        | STRINGC   { mk_literal($$, "str", $1->substr()); }
+        | CHARC     { mk_literal($$, "char", $1->substr()); }
         ;
 
-expr : oexpr DCOLON type DARROW type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation and context\n"); $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"context", $3->val}, {"type", $5->val} }} }; }
-     | oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; }
+expr : oexpr DCOLON type { LOG_PARSER("## PARSER ## make expr - oexpr with type annotation\n"); $$ = new Node(); $$->val = { {"expr_type", { {"expr", $1->val}, {"type", $3->val} }} }; }
      | oexpr             { LOG_PARSER("## PARSER ## make expr - oexpr\n"); $$ = new Node(); $$->val = $1->val; } %prec LOWER_THAN_TYPED_EXPR
      ;
 
@@ -106,8 +98,8 @@ kexpr : '\\' lampats RARROW expr            { LOG_PARSER("## PARSER ## make kexp
       | fapply                              { LOG_PARSER("## PARSER ## make kexpr - func apply\n"); $$ = new Node(); $$->val = $1->val; }
       ;
 
-fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); $$ = new Node(); $$->val = $1->val; $$->val["fun_apply"].push_back($2->val); }
-       | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); $$ = new Node(); $$->val = $1->val; }
+fapply : fapply aexpr        { LOG_PARSER("## PARSER ## made func apply - many exprs\n"); $$ = new Node(); $$->val = $1->val; $$->val["func_apply"].push_back($2->val); }
+       | aexpr               { LOG_PARSER("## PARSER ## make func apply - one expr\n"); $$ = new Node(); $$->val["func_apply"].push_back($1->val); }
        ;
 
 aexpr : literal         { LOG_PARSER("## PARSER ## make expr - literal\n"); $$ = new Node(); $$->val = { {"expr", $1->val} }; }
@@ -135,7 +127,7 @@ funid : FUNC_ID   { LOG_PARSER("## PARSER ## make funid\n"); $$ = new Node(); $$
       ;
 
 stmts : stmt        { LOG_PARSER("## PARSER ## make stmts - stmt\n"); $$ = new Node(); $$->val.push_back($1->val); }
-      | stmts stmt  { LOG_PARSER("## PARSER ## make stmts - stmts stmt\n"); $$ = new Node(); $$->val = $1->val; $$->val.push_back($1->val); }
+      | stmts stmt  { LOG_PARSER("## PARSER ## make stmts - stmts stmt\n"); $$ = new Node(); $$->val = $1->val; $$->val.push_back($2->val); }
       ;
 
 stmt : expr LARROW expr ';'   { LOG_PARSER("## PARSER ## make stmt - expr <- expr;\n"); $$ = new Node(); $$->val = { {"binding", { {"left", {$1->val}}, {"right", {$3->val}} }} }; }
