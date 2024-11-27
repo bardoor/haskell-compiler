@@ -409,9 +409,9 @@ generalInst : tycon
             ;
 
 context : '(' contextList ')'
-        { LOG_PARSER("## PARSER ## make context - (contextList)\n"); $$ = new Node(); $$->val = {{"context", $2->val}}; }
+        { LOG_PARSER("## PARSER ## make context - (contextList)\n"); $$ = new Node(); $$->val = $2->val; }
         | class
-        { LOG_PARSER("## PARSER ## make context - class\n"); $$ = new Node(); $$->val = { {"context", $1->val} }; }
+        { LOG_PARSER("## PARSER ## make context - class\n"); $$ = new Node(); $$->val = $1->val; }
         ;
 
 contextList : class
