@@ -192,3 +192,108 @@ def test_patterns_func_def():
     }
 
     assert expected == actual
+
+
+def test_do_stmt():
+    result = parse_to_dict('{ a = do { (1,2,3) <- lol; put "hehe"; }}')
+
+    assert result[0] != "error", result[1]
+
+    actual = result[1]
+
+    excepted = {
+        "module": {
+            "decls": [
+                {
+                    "decl": {
+                        "left": {"funid": "a"},
+                        "right": {
+                            "do": {
+                                "stmts": [
+                                    {
+                                        "binding": {
+                                            "left": [
+                                                {
+                                                    "expr": {
+                                                        "tuple": [
+                                                            {
+                                                                "expr": {
+                                                                    "literal": {
+                                                                        "type": "int",
+                                                                        "value": "3",
+                                                                    }
+                                                                }
+                                                            },
+                                                            {
+                                                                "expr": {
+                                                                    "literal": {
+                                                                        "type": "int",
+                                                                        "value": "2",
+                                                                    }
+                                                                }
+                                                            },
+                                                            {
+                                                                "expr": {
+                                                                    "literal": {
+                                                                        "type": "int",
+                                                                        "value": "1",
+                                                                    }
+                                                                }
+                                                            },
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "right": [{"expr": {"funid": "lol"}}],
+                                        }
+                                    },
+                                    [
+                                        {
+                                            "binding": {
+                                                "left": [
+                                                    {
+                                                        "expr": {
+                                                            "tuple": [
+                                                                {
+                                                                    "expr": {
+                                                                        "literal": {
+                                                                            "type": "int",
+                                                                            "value": "3",
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "expr": {
+                                                                        "literal": {
+                                                                            "type": "int",
+                                                                            "value": "2",
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "expr": {
+                                                                        "literal": {
+                                                                            "type": "int",
+                                                                            "value": "1",
+                                                                        }
+                                                                    }
+                                                                },
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                                "right": [{"expr": {"funid": "lol"}}],
+                                            }
+                                        }
+                                    ],
+                                ]
+                            }
+                        },
+                    }
+                }
+            ],
+            "name": 0,
+        }
+    }
+
+    assert excepted == actual
