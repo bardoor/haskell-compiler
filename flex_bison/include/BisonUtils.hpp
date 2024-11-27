@@ -177,3 +177,15 @@ void inline mk_stmts(Node* node, Node* stmt, Node* stmts) {
     }
     node->val.push_back(stmt->val);        
 }
+
+void inline mk_binding_stmt(Node* node, Node* left, Node* right) {
+    LOG_PARSER("## PARSER ## make stmt - expr <- expr;\n"); 
+
+    node = new Node();
+    node->val = {{
+        "binding", {
+            {"left", left->val},
+            {"right", right->val}
+        }
+    }};
+}

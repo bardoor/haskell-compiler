@@ -132,9 +132,9 @@ stmts : stmt        { mk_stmts($$, $1, NULL); }
       | stmts stmt  { mk_stmts($$, $2, $1); }
       ;
 
-stmt : expr LARROW expr ';'   { LOG_PARSER("## PARSER ## make stmt - expr <- expr;\n"); $$ = new Node(); $$->val = { {"binding", { {"left", {$1->val}}, {"right", {$3->val}} }} }; }
-     | expr ';'               { LOG_PARSER("## PARSER ## make stmt - expr;\n"); $$ = new Node(); $$->val.push_back($1->val); }
-     | ';'                    { LOG_PARSER("## PARSER ## make stmt - ;\n"); $$ = new Node(); }
+stmt : expr LARROW expr ';'   { mk_binding_stmt($$, $1, $3); }
+     | expr ';'               { $$ = $1; }
+     | ';'                    { $$ = new Node(); }
      ;
 
 /* ------------------------------- *
