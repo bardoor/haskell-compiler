@@ -231,3 +231,16 @@ void inline mk_comma_sep_exprs(Node* node, Node* expr, Node* exprs) {
     node = exprs;
     node->val.insert(node->val.begin(), expr->val);
 }
+
+void inline mk_range(Node* node, Node* start, Node* snd, Node* end) {
+    node = new Node();
+    node->val["range"]["start"] = start->val;
+
+    if (snd != NULL) {
+        node->val["range"]["second"] = snd->val;
+    }
+
+    if (end != NULL) {
+        node->val["range"]["end"] = end->val;
+    }
+}

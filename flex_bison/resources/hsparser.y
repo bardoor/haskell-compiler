@@ -161,10 +161,10 @@ commaSepExprs : expr                    { mk_comma_sep_exprs($$, $1, NULL); }
               */  
               ;
 
-enumeration : '[' expr DOTDOT ']'               { LOG_PARSER("## PARSER ## make enumeration - [ expr .. ]\n"); $$ = new Node(); $$->val = { {"range", { {"start", $2->val} }} }; }
-            | '[' expr DOTDOT expr ']'          { LOG_PARSER("## PARSER ## make enumeration - [ expr .. expr ]\n"); $$ = new Node(); $$->val = { {"range", { {"start", $2->val}, {"end", $4->val} }} }; }
-            | '[' expr ',' expr DOTDOT expr ']' { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. expr ]\n"); $$ = new Node(); $$->val = { {"range", { {"start", $2->val}, {"second", $4->val}, {"end", $6->val} }} }; }
-            | '[' expr ',' expr DOTDOT ']'      { LOG_PARSER("## PARSER ## make enumeration - [ expr, expr .. ]\n"); $$ = new Node(); $$->val = { {"range", { {"start", $2->val}, {"second", $4->val} }} }; }  
+enumeration : '[' expr DOTDOT ']'               { mk_range($$, $2, NULL, NULL); }
+            | '[' expr DOTDOT expr ']'          { mk_range($$, $2, NULL, $4); }
+            | '[' expr ',' expr DOTDOT expr ']' { mk_range($$, $2, $4, $6); }
+            | '[' expr ',' expr DOTDOT ']'      { mk_range($$, $2, $4, NULL); }
             ;
 
 
