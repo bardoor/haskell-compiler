@@ -257,3 +257,58 @@ void inline mk_var(Node* node, std::string type, std::string repr) {
     node->val["type"] = type;
     node->val["repr"] = repr;
 }
+
+void inline mk_simple_pat(Node* node, Node* pat) {
+    LOG_PARSER("## PARSER ## make apat");
+
+    node = new Node();
+    node->val["pattern"] = pat->val;
+}
+
+void inline mk_simple_pat(Node* node, std::string val) {
+    LOG_PARSER("## PARSER ## make apat");
+
+    node = new Node();
+    node->val["pattern"] = val;
+}
+
+void inline mk_list_pat(Node* node, Node* pats) {
+    LOG_PARSER("## PARSER ## make apat - list");
+
+    node = new Node();
+    if (pats == NULL) {
+        node->val["pattern"]["list"] = json::array();
+        return;
+    }
+    node->val["pattern"] = pats->val;
+}
+
+void inline mk_tuple_pat(Node* node, Node* pat, Node* pats) {
+    LOG_PARSER("## PARSER ## make apat - tuple");
+
+    node = new Node();
+    node->val["pattern"]["tuple"] = json::array();
+
+    if (pats != NULL && pat == NULL) {
+        node->val["pattern"]["tuple"].push_back(pat->val);
+        node->val["pattern"]["tuple"].insert(
+            node->val["pattern"]["tuple"].begin(), 
+            pats->val
+            );
+        return;
+    }
+}
+
+void inline mk_pat_list(Node* node, Node* pats, Node* pat) {
+    LOG_PARSER("## PARSER ## make pattern list");
+
+    if (pats == NULL) {
+       node = new Node();
+       node->val.push_back(pat->val);
+       return;
+    }
+
+    node = pats;
+    node->val.push_back(pat->val);
+}   
+

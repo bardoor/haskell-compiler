@@ -207,19 +207,19 @@ fpat : fpat apat  {
      ;
 
 /* Примитивные паттерны */
-apat : funid                  { LOG_PARSER("## PARSER ## make apat - funid\n"); $$ = new Node(); $$->val = { {"pattern", $1->substr() } }; }
-     | tycon                  { LOG_PARSER("## PARSER ## make apat - CONSTRUCTOR_ID\n"); $$ = new Node(); $$->val = { {"pattern", $1->val } }; }
-     | literal                { LOG_PARSER("## PARSER ## make apat - literal\n"); $$ = new Node(); $$->val = { {"pattern", $1->val } }; }
-     | WILDCARD               { LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); $$ = new Node(); $$->val = { {"pattern", "wildcard" } }; }
-     | '(' ')'                { LOG_PARSER("## PARSER ## make apat - ()\n"); $$ = new Node(); $$->val = { {"pattern", {"tuple", json::array()} } }; }
-     | '(' opat ',' pats ')'  { LOG_PARSER("## PARSER ## make apat - (opat, pats)\n"); $$ = new Node(); $$->val["pattern"]["tuple"] = $4->val; $$->val["pattern"]["tuple"].insert($$->val["pattern"]["tuple"].begin(), $2->val); }
-     | '[' pats ']'           { LOG_PARSER("## PARSER ## make apat - [pats]\n"); $$ = new Node(); $$->val = { {"pattern", $2->val } }; }
-     | '[' ']'                { LOG_PARSER("## PARSER ## make apat - []\n"); $$ = new Node(); $$->val = { {"pattern", {"list", json::array()} } }; }
-     | '~' apat               { LOG_PARSER("## PARSER ## make apat - ~apat\n"); $$ = new Node(); $$->val = { {"pattern", $2->val } }; }
+apat : funid                  { mk_simple_pat($$, $1->substr()); }
+     | tycon                  { mk_simple_pat($$, $1); }
+     | literal                { mk_simple_pat($$, $1); }
+     | WILDCARD               { mk_simple_pat($$, "wildcard"); }
+     | '(' ')'                { mk_tuple_pat($$, NULL, NULL); }
+     | '(' opat ',' pats ')'  { mk_tuple_pat($$, $2, $4); }
+     | '[' pats ']'           { mk_list_pat($$, $2); }
+     | '[' ']'                { mk_list_pat($$, NULL); }
+     | '~' apat               { mk_simple_pat($$, $2); }
      ;
 
-apatList : apat               { LOG_PARSER("## PARSER ## make apatList - apat\n"); $$ = new Node(); $$->val.push_back($1->val); }
-         | apatList apat      { LOG_PARSER("## PARSER ## make apatList - apat\n"); $$ = new Node(); $$->val = $1->val; $$->val.push_back($2->val); }
+apatList : apat               { mk_pat_list($$, NULL, $1); }
+         | apatList apat      { mk_pat_list($$, $1, $2); }
          ;
 
 /* Альтернативы в case */
