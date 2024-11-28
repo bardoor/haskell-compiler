@@ -189,3 +189,45 @@ void inline mk_binding_stmt(Node* node, Node* left, Node* right) {
         }
     }};
 }
+
+void inline mk_tuple(Node* node, Node* expr, Node* exprs) {
+    node = new Node();
+    
+    // Создать пустой кортеж
+    if (expr == NULL && exprs == NULL) {
+        LOG_PARSER("## PARSER ## make tuple - ( )\n");
+        node->val["tuple"] = json::array();
+        return;
+    }
+
+    LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n");
+    node->val["tuple"] = exprs->val;
+    node->val["tuple"].push_back(expr->val);
+}
+
+void inline mk_list(Node* node, Node* exprs) {
+    node = new Node();
+
+    // Создать пустой список
+    if (exprs == NULL) {
+        LOG_PARSER("## PARSER ## make list - [ ]\n");
+        node->val["list"] = json::array();
+        return;
+    }
+
+    LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n");
+    node->val["list"] = exprs->val;
+}
+
+void inline mk_comma_sep_exprs(Node* node, Node* expr, Node* exprs) {
+    if (exprs == NULL) {
+        LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); 
+
+        node = new Node();
+        node->val.push_back(expr->val);
+        return;
+    }
+
+    node = exprs;
+    node->val.insert(node->val.begin(), expr->val);
+}

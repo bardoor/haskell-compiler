@@ -141,19 +141,19 @@ stmt : expr LARROW expr ';'   { mk_binding_stmt($$, $1, $3); }
  *         Кортежи, списки         *
  * ------------------------------- */
 
-tuple : '(' expr ',' commaSepExprs ')'  { LOG_PARSER("## PARSER ## make tuple - (expr, expr, ...)\n"); $$ = new Node(); $$->val["tuple"] = $4->val; $$->val["tuple"].push_back($2->val); }
-      | '(' ')'                         { LOG_PARSER("## PARSER ## make tuple - ( )\n"); $$ = new Node(); $$->val["tuple"] = json::array(); }
+tuple : '(' expr ',' commaSepExprs ')'  { mk_tuple($$, $2, $4); }
+      | '(' ')'                         { mk_tuple($$, NULL, NULL); }
       ;
 
 comprehension : '[' expr '|' commaSepExprs ']'
               ;
 
-list : '[' ']'                          { LOG_PARSER("## PARSER ## make list - [ ]\n"); $$ = new Node(); $$->val["list"] = json::array(); }
-     | '[' commaSepExprs ']'            { LOG_PARSER("## PARSER ## make list - [ commaSepExprs ]\n"); $$ = new Node(); $$->val["list"] = $2->val; }
+list : '[' ']'                          { mk_list($$, NULL); }
+     | '[' commaSepExprs ']'            { mk_list($$, $2); }
      ;
 
-commaSepExprs : expr                    { LOG_PARSER("## PARSER ## make commaSepExprs - expr\n"); $$ = new Node();  $$->val.push_back($1->val); }
-              | expr ',' commaSepExprs  { LOG_PARSER("## PARSER ## make commaSepExprs - expr ',' commaSepExprs\n"); $$ = $3; $$->val.push_back($1->val); }
+commaSepExprs : expr                    { mk_comma_sep_exprs($$, $1, NULL); }
+              | expr ',' commaSepExprs  { mk_comma_sep_exprs($$, $1, $3); }
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
