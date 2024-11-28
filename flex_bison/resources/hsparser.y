@@ -172,38 +172,25 @@ enumeration : '[' expr DOTDOT ']'               { mk_range($$, $2, NULL, NULL); 
  *            Паттерны             *
  * ------------------------------- */
 
-lampats :  apat lampats	 { LOG_PARSER("## PARSER ## make lambda pattern - apat lampats\n"); $$ = new Node(); $$->val = $2->val; $$->val.push_back($1->val); }
-	  |  apat          { LOG_PARSER("## PARSER ## make lambda pattern - apat\n"); $$ = new Node(); $$->val.push_back($1->val); }
+lampats :  apat lampats	 { mk_lambda_pats($$, $1, $2); }
+	  |  apat          { $$ = $1; }
 	  ;
 
 /* Список паттернов */
-pats : pats ',' opat      { LOG_PARSER("## PARSER ## make pattern list - pats, opat\n");  $$ = new Node(); $$->val = $1->val; $$->val.push_back($3->val); }
-     | opat               { LOG_PARSER("## PARSER ## make pattern list - opat\n"); $$ = new Node(); $$->val.push_back($1->val); }
+pats : pats ',' opat      { mk_pats($$, $3, $1); }
+     | opat               { $$ = $1; }
      ;
 
-opat : dpat                   { LOG_PARSER("## PARSER ## make optional pattern - dpat\n"); $$ = new Node(); $$->val = $1->val; }
-     | opat op opat %prec '+' { LOG_PARSER("## PARSER ## make optional pattern - opat op opat\n"); $$ = new Node(); $$->val = { {"left", {$1->val}, {"op", {$2->val}},{"right", {$3->val}}} }; }
+opat : dpat                   { $$ = $1; }
+     | opat op opat %prec '+' { mk_bin_pat($$, $1, $2, $3); }
      ;
 
-dpat : '-' fpat           { LOG_PARSER("## PARSER ## make dpat - '-' fpat\n"); $$ = new Node(); $$->val = {{"uminus", {$2->val}}}; }
-     | fpat               { LOG_PARSER("## PARSER ## make dpat - fpat\n"); $$ = new Node(); $$->val = $1->val; }
+dpat : '-' fpat           { mk_negate($$, $2); }
+     | fpat               { $$ = $1; }
      ;
 
-fpat : fpat apat  {
-            if ($2->val.is_array()) {
-                  $2->val["apats"].push_back($1->val);
-                  $$ = new Node();
-                  $$->val = $2->val;
-            }
-            else {
-                  $$ = new Node();
-                  $$->val["fpat"] = json::array();
-                  $$->val["fpat"].push_back($1->val);
-                  $$->val["fpat"].push_back($2->val);
-            }
-            LOG_PARSER("## PARSER ## make fpat - fpat apat\n");
-     }
-     | apat               { $$ = new Node(); $$->val = $1->val; LOG_PARSER("## PARSER ## make fpat - apat\n"); }
+fpat : fpat apat  { mk_fpat($$, $1, $2); }
+     | apat       { $$ = $1; }
      ;
 
 /* Примитивные паттерны */

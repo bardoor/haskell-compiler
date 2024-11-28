@@ -312,3 +312,62 @@ void inline mk_pat_list(Node* node, Node* pats, Node* pat) {
     node->val.push_back(pat->val);
 }   
 
+void inline mk_fpat(Node* node, Node* fpat, Node* pat) {
+    LOG_PARSER("## PARSER ## make fpat");
+
+    if (fpat->val.is_array()) {
+        fpat->val["fpat"].push_back(pat->val);
+        node = fpat;
+    }
+    else {
+        node = new Node();
+        node->val["fpat"].push_back(fpat->val);
+        node->val["fpat"].push_back(pat->val);
+    }
+}
+
+void inline mk_negate(Node* node, Node* pat) {
+    LOG_PARSER("## PARSER ## make dpat");
+
+    node = new Node();
+    node->val["negate"] = pat->val;
+}
+
+void inline mk_bin_pat(Node* node, Node* left, Node* op, Node* right) {
+    LOG_PARSER("## PARSER ## make bin pat");
+
+    node = new Node();
+    node->val = {
+        {"left", left->val},
+        {"op", op->val},
+        {"right", right->val}
+    };
+}
+
+void inline mk_pats(Node* node, Node* pat, Node* pats) {
+    LOG_PARSER("## PARSER ## make pats");
+    
+    if (pats->val.is_array()) {
+        node = pats;
+        node->val.push_back(pat->val);
+        return;
+    }
+
+    node = new Node();
+    node->val.push_back(pats->val);
+    node->val.push_back(pat->val);
+}
+
+void inline mk_lambda_pats(Node* node, Node* pat, Node* pats) {
+    LOG_PARSER("## PARSER ## make lambda pats");
+
+    if (pats->val.is_array()) {
+        node = pats;
+        node->val.push_back(pat->val);
+        return;
+    }
+
+    node = new Node();
+    node->val.push_back(pats->val);
+    node->val.insert(node->val.begin(), pat->val);
+}
