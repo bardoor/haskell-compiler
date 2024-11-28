@@ -105,7 +105,7 @@ fapply : fapply aexpr        { mk_fapply($$, $1, $2); }
        ;
 
 aexpr : literal         { mk_expr($$, $1); }
-      | funid           { mk_expr($$, $1); }
+      | funid           { mk_expr($$, $1->substr()); }
       | '(' expr ')'    { $$ = $2; }
       | tuple           { mk_expr($$, $1); }
       | list            { mk_expr($$, $1); }
@@ -116,16 +116,16 @@ aexpr : literal         { mk_expr($$, $1); }
 
 
 /* Оператор */
-op : symbols                { mk_operator($$, "symbols", $1); }
-   | BQUOTE funid BQUOTE    { mk_operator($$, "quoted", $2); }
+op : symbols                { mk_operator($$, "symbols", $1->substr()); }
+   | BQUOTE funid BQUOTE    { mk_operator($$, "quoted", $2->substr()); }
    | '+'                    { mk_operator($$, "symbols", "+"); }
    | '-'                    { mk_operator($$, "symbols", "-"); }
    ;
 
-symbols : SYMS    { $$ = $1->substr(); }
+symbols : SYMS    { $$ = $1; }
         ;
 
-funid : FUNC_ID   { $$ = $1->substr(); }
+funid : FUNC_ID   { $$ = $1; }
       ;
 
 stmts : stmt        { mk_stmts($$, $1, NULL); }
@@ -207,7 +207,7 @@ fpat : fpat apat  {
      ;
 
 /* Примитивные паттерны */
-apat : funid                  { LOG_PARSER("## PARSER ## make apat - funid\n"); $$ = new Node(); $$->val = { {"pattern", $1->val } }; }
+apat : funid                  { LOG_PARSER("## PARSER ## make apat - funid\n"); $$ = new Node(); $$->val = { {"pattern", $1->substr() } }; }
      | tycon                  { LOG_PARSER("## PARSER ## make apat - CONSTRUCTOR_ID\n"); $$ = new Node(); $$->val = { {"pattern", $1->val } }; }
      | literal                { LOG_PARSER("## PARSER ## make apat - literal\n"); $$ = new Node(); $$->val = { {"pattern", $1->val } }; }
      | WILDCARD               { LOG_PARSER("## PARSER ## make apat - WILDCARD\n"); $$ = new Node(); $$->val = { {"pattern", "wildcard" } }; }
@@ -263,8 +263,8 @@ varList : varList ',' var    { LOG_PARSER("## PARSER ## make variable list - var
         ;
 
 /* Оператор в префиксной форме или идентификатор функции */
-var : funid                  { LOG_PARSER("## PARSER ## make variable - funid\n"); $$ = new Node(); $$->val = $1->val;  }
-    | '(' symbols ')'        { LOG_PARSER("## PARSER ## make variable - (symbols)\n"); $$ = new Node(); $$->val = $2->val; }
+var : funid                  { mk_var($$, "funid", $1->substr()); }
+    | '(' symbols ')'        { mk_var($$, "symbols", $2->substr()); }
     ;
 
 /* Объявление */
@@ -495,7 +495,7 @@ tyvarListComma : tyvar
                ;
 
 tyvar : funid
-      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); $$ = new Node();  $$->val = {{"funid", $1->val}}; }
+      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); $$ = new Node();  $$->val = {{"funid", $1->substr()}}; }
       ;
 
 defaultDecl : DEFAULTKW defaultTypes

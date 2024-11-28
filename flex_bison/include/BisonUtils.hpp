@@ -159,6 +159,13 @@ void inline mk_expr(Node* node, Node* expr) {
     }};
 }
 
+void inline mk_expr(Node* node, std::string funid) {
+    LOG_PARSER("## PARSER ## make expr - funid\n");
+
+    node = new Node();
+    node->val["expr"]["funid"] = funid;
+}
+
 void inline mk_operator(Node* node, std::string type, std::string repr) {
     LOG_PARSER("## PARSER ## make op\n");
 
@@ -243,4 +250,10 @@ void inline mk_range(Node* node, Node* start, Node* snd, Node* end) {
     if (end != NULL) {
         node->val["range"]["end"] = end->val;
     }
+}
+
+void inline mk_var(Node* node, std::string type, std::string repr) {
+    node = new Node();
+    node->val["type"] = type;
+    node->val["repr"] = repr;
 }
