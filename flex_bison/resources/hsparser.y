@@ -47,8 +47,8 @@ json root;
 
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs topDeclList topDecl declE var apatList commaSepExprs
-             tuple list op comprehension altList declList enumeration lampats apat tycon opat pats fpat dpat
-             classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef 
+             tuple list op comprehension altList declList range lampats apat tycon opat pats fpat dpat
+             classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef con conList varList
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
              dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts
 
@@ -80,18 +80,44 @@ literal : INTC      { mk_literal($$, "int", std::to_string($1)); }
         | CHARC     { mk_literal($$, "char", $1->substr()); }
         ;
 
+/* 
+      Типизированные выражения:
+      1 + 2 :: Int 
+
+      Выражения без типа:
+      1 + 2
+
+      TODO выражение с типом и контекстом
+      1 + 2 :: (Integer a) => a
+*/
 expr : oexpr DCOLON type { mk_typed_expr($$, $1, $3); }
      | oexpr             { $$ = $1; } %prec LOWER_THAN_TYPED_EXPR
      ;
 
+/*
+      Бинарное выражение с оператором
+      a + b
+      a `fun` b
+*/
 oexpr : oexpr op oexpr %prec '+'   { mk_bin_expr($$, $1, $2, $3); }
       | dexpr                      { $$ = $1; }
       ;
 
+/*
+      Унарный минус (других унарных выражений просто нет... (да, даже унарного плюса))
+*/
 dexpr : '-' kexpr        { mk_negate_expr($$, $2); }
       | kexpr            { $$ = $1; }
       ;
 
+/*
+      Выражения с ключевым словом
+      1. лямбда-абстракция: \x y -> x + y
+      2. let-выражение: let x = 1 in x
+      3. if-выражение: if a > b then 2 else 3
+      4. do-выражение: do { x = 1; print 5; x }
+      5. case-выражение: case x of { 1 -> Just 2; _ -> Nothing }
+*/
 kexpr : '\\' lampats RARROW expr            { mk_lambda($$, $2, $4); }
       | LETKW '{' declList '}' INKW expr    { mk_let_in($$, $3, $6); }
       | IFKW expr THENKW expr ELSEKW expr   { mk_if_else($$, $2, $4, $6); }
@@ -100,22 +126,36 @@ kexpr : '\\' lampats RARROW expr            { mk_lambda($$, $2, $4); }
       | fapply                              { $$ = $1; }
       ;
 
+/*
+      Применение функции
+*/
 fapply : fapply aexpr        { mk_fapply($$, $1, $2); }
        | aexpr               { mk_fapply($$, $1, NULL); }
        ;
 
+/*
+      Атомарное выражение
+
+      Также включает в себя часть паттернов для решения r/r конфликтов:
+      (a,b,c) <- (1,2,3)
+      Пока мы не дошли до стрелки, невозможно сказать - выражение это или паттерн
+*/
 aexpr : literal         { mk_expr($$, $1); }
       | funid           { mk_expr($$, $1->substr()); }
       | '(' expr ')'    { $$ = $2; }
       | tuple           { mk_expr($$, $1); }
       | list            { mk_expr($$, $1); }
-      | enumeration     { mk_expr($$, $1); }
+      | range           { mk_expr($$, $1); }
       | comprehension   { mk_expr($$, $1); }
-      | WILDCARD        
+      | WILDCARD        { mk_simple_pat($$, "wildcard"); }
       ;
 
-
-/* Оператор */
+/* 
+      Оператор
+      1. Последовательность символов
+      2. 🐸 - ква-ква оператор, иначе говоря идентификатор функции в обратных кавычках: `fun`
+      3. Плюс или минус
+*/
 op : symbols                { mk_operator($$, "symbols", $1->substr()); }
    | BQUOTE funid BQUOTE    { mk_operator($$, "quoted", $2->substr()); }
    | '+'                    { mk_operator($$, "symbols", "+"); }
@@ -132,6 +172,12 @@ stmts : stmt        { mk_stmts($$, $1, NULL); }
       | stmts stmt  { mk_stmts($$, $2, $1); }
       ;
 
+/*
+      Стейтменты в do выражении
+      1. Биндинг: (a,b,c) <- (1,2,3)
+            Примечание: По левую сторону на этапе парсинга невозможно понять - выражение это или паттерн
+      2. Любое выражение
+*/
 stmt : expr LARROW expr ';'   { mk_binding_stmt($$, $1, $3); }
      | expr ';'               { $$ = $1; }
      | ';'                    { $$ = new Node(); }
@@ -141,10 +187,18 @@ stmt : expr LARROW expr ';'   { mk_binding_stmt($$, $1, $3); }
  *         Кортежи, списки         *
  * ------------------------------- */
 
+/*
+      Кортеж
+      Либо пуст, либо 2 и более элементов
+*/
 tuple : '(' expr ',' commaSepExprs ')'  { mk_tuple($$, $2, $4); }
       | '(' ')'                         { mk_tuple($$, NULL, NULL); }
       ;
 
+/*
+      Списковое включение
+      [x * x | x <- [1..10], even x]
+*/
 comprehension : '[' expr '|' commaSepExprs ']'
               ;
 
@@ -161,11 +215,18 @@ commaSepExprs : expr                    { mk_comma_sep_exprs($$, $1, NULL); }
               */  
               ;
 
-enumeration : '[' expr DOTDOT ']'               { mk_range($$, $2, NULL, NULL); }
-            | '[' expr DOTDOT expr ']'          { mk_range($$, $2, NULL, $4); }
-            | '[' expr ',' expr DOTDOT expr ']' { mk_range($$, $2, $4, $6); }
-            | '[' expr ',' expr DOTDOT ']'      { mk_range($$, $2, $4, NULL); }
-            ;
+/*
+      Диапазон
+      [1..]       - от 1 до бесконечности
+      [1..10]     - от 1 до 10
+      [1,3..10]   - от 1 до 10 с шагом 2 
+      [1,3..]     - от 1 до бесконечности с шагом 2
+*/
+range : '[' expr DOTDOT ']'               { mk_range($$, $2, NULL, NULL); }
+      | '[' expr DOTDOT expr ']'          { mk_range($$, $2, NULL, $4); }
+      | '[' expr ',' expr DOTDOT expr ']' { mk_range($$, $2, $4, $6); }
+      | '[' expr ',' expr DOTDOT ']'      { mk_range($$, $2, $4, NULL); }
+      ;
 
 
 /* ------------------------------- *
@@ -176,24 +237,46 @@ lampats :  apat lampats	 { mk_lambda_pats($$, $1, $2); }
 	  |  apat          { $$ = $1; }
 	  ;
 
-/* Список паттернов */
+/* 
+      Список паттернов
+*/
 pats : pats ',' opat      { mk_pats($$, $3, $1); }
      | opat               { $$ = $1; }
      ;
 
+/*
+      Паттерн с оператором
+      x:xs = lst
+*/
 opat : dpat                   { $$ = $1; }
      | opat op opat %prec '+' { mk_bin_pat($$, $1, $2, $3); }
      ;
 
+/*
+      Специально для мистера унарного минуса
+*/
 dpat : '-' fpat           { mk_negate($$, $2); }
      | fpat               { $$ = $1; }
      ;
 
+/*
+      Применение функции в паттерне
+      case func x y of {...}
+*/
 fpat : fpat apat  { mk_fpat($$, $1, $2); }
      | apat       { $$ = $1; }
      ;
 
-/* Примитивные паттерны */
+/*
+      Атомарный паттерн
+      1. Идентификатор функции
+      2. Конструктор типа
+      3. Литерал
+      4. _
+      5. Списки, кортежи
+      6. Ленивый паттерн
+      7. TODO: AS-паттерн
+*/
 apat : funid                  { mk_simple_pat($$, $1->substr()); }
      | tycon                  { mk_simple_pat($$, $1); }
      | literal                { mk_simple_pat($$, $1); }
@@ -209,7 +292,9 @@ apatList : apat               { mk_pat_list($$, NULL, $1); }
          | apatList apat      { mk_pat_list($$, $1, $2); }
          ;
 
-/* Альтернативы в case */
+/* 
+      Альтернативы для case 
+*/
 altList : altList ';' altE  { LOG_PARSER("## PARSER ## make alternative list - altList ; altE\n"); }
         | altE              { LOG_PARSER("## PARSER ## make alternative list - altE\n"); }
         ;
@@ -233,40 +318,46 @@ guard : VBAR oexpr          { LOG_PARSER("## PARSER ## make guard - VBAR oexpr\n
  *           Объявления            *
  * ------------------------------- */
 
-declList : declE              { LOG_PARSER("## PARSER ## make declaration list - declE\n"); }
-         | declList ';' declE { LOG_PARSER("## PARSER ## make declaration list - declList ; declE\n"); }
+declList : declE              { $$ = $1; }
+         | declList ';' declE { mk_decl_list($$, $1, $3); }
          ;
 
-con : tycon                  { LOG_PARSER("## PARSER ## make constructor - tycon\n"); }
-    | '(' symbols ')'        { LOG_PARSER("## PARSER ## make constructor - (symbols)\n"); }
+con : tycon                  { mk_con($$, $1); }
+    | '(' symbols ')'        { mk_con($$, $2); }
     ;
 
-conList : con                { LOG_PARSER("## PARSER ## make constructor list - con\n"); }
-        | conList ',' con    { LOG_PARSER("## PARSER ## make constructor list - conList , con\n"); }
+conList : con                { $$ = $1; }
+        | conList ',' con    { mk_con_list($$, $1, $3); }
         ;
 
-varList : varList ',' var    { LOG_PARSER("## PARSER ## make variable list - varList , var\n"); }
-        | var                { LOG_PARSER("## PARSER ## make variable list - var\n"); }
+varList : varList ',' var    { mk_var_list($$, $1, $3); }
+        | var                { $$ = $1; }
         ;
 
-/* Оператор в префиксной форме или идентификатор функции */
+/* 
+      Оператор в префиксной форме или идентификатор функции 
+*/
 var : funid                  { mk_var($$, "funid", $1->substr()); }
     | '(' symbols ')'        { mk_var($$, "symbols", $2->substr()); }
     ;
 
-/* Объявление */
-declE : var '=' expr                    { LOG_PARSER("## PARSER ## make declaration - var = expr\n"); $$ = new Node(); $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} };  }
-      | funlhs '=' expr                 { LOG_PARSER("## PARSER ## make declaration - funclhs = expr\n"); $$ = new Node(); $$->val = { {"decl", { {"left", $1->val}, {"right", $3->val} }} }; }
+/* 
+      Объявление 
+      1. Биндинг функции
+      2. Список функций с типом
+*/
+declE : var '=' expr                    { mk_fun_decl($$, $1, $3); }
+      | funlhs '=' expr                 { mk_fun_decl($$, $1, $3); }
       | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
-      | varList DCOLON type             { LOG_PARSER("## PARSER ## make declaration - varList :: type\n"); }
-      | %empty                          { LOG_PARSER("## PARSER ## make declaration - nothing\n");  $$ = new Node(); $$->val = { {"decl", {}}}; }
+      | varList DCOLON type             { mk_typed_var_list($$, $1, $3); }
+      | %empty                          { mk_empty_decl($$); }
       ;
 
-whereOpt : WHEREKW '{' declList '}' { LOG_PARSER("## PARSER ## make where option - WHERE declList\n"); }
-         | %empty                   { LOG_PARSER("## PARSER ## make where option - nothing\n"); }
+whereOpt : WHEREKW '{' declList '}' { mk_where($$, $3); }
+         | %empty                   { mk_where($$, NULL); }
          ;
 
-funlhs : var apatList               { $$ = new Node(); $$->val = { {"funlhs", {{"name", $1->val}, {"params", $2->val}} } }; LOG_PARSER("## PARSER ## make funlhs - var apatList\n"); }
+funlhs : var apatList               { mk_funlhs($$, $1, $2); }
        ;
 
 /* ------------------------------- *

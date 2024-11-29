@@ -23,6 +23,49 @@ struct Node {
 };
 
 
+
+/* ------------------------------- *
+ *            Выражения            *
+ * ------------------------------- */
+
+/**
+ * Создаёт узел списка добавлением в начало
+ * 
+ * @param result[out] результирующий узлов списка
+ * @param node[in] узел, добавляемый в начало
+ * @param nodes[in] узел списка либо обычный узел, берётся за основу результирующего узла
+ */
+void inline mk_node_list_prepend(Node* result, Node* node, Node* nodes) {
+    if (nodes->val.is_array()) {
+        result = nodes;
+        nodes->val.push_back(node->val);
+        return;
+    }
+
+    result = new Node();
+    result->val.push_back(nodes->val);
+    result->val.insert(result->val.begin(), node->val);
+}
+
+/**
+ * Создаёт узел списка добавлением в конец
+ * 
+ * @param result[out] результирующий узлов списка
+ * @param node[in] узел, добавляемый в конец
+ * @param nodes[in] узел списка либо обычный узел, берётся за основу результирующего узла
+ */
+void inline mk_node_list_append(Node* result, Node* node, Node* nodes) {
+    if (nodes->val.is_array()) {
+        result = nodes;
+        nodes->val.push_back(node->val);
+        return;
+    }
+
+    result = new Node();
+    result->val.push_back(nodes->val);
+    result->val.push_back(node->val);
+}
+
 void inline mk_literal(Node* node, std::string type, std::string literal) {
     LOG_PARSER("## PARSER ## making %s literal", type.c_str());
 
@@ -139,15 +182,7 @@ void inline mk_fapply(Node* node, Node* fapply, Node* expr) {
 
     LOG_PARSER("## PARSER ## made func apply - many exprs\n");
 
-    if (fapply->val.is_array()) {
-        fapply->val["func_apply"].push_back(expr->val);
-        node = fapply;
-    }
-    else {
-        node = new Node();
-        node->val["func_apply"].push_back(fapply->val);
-        node->val["func_apply"].push_back(expr->val);
-    }
+    mk_node_list_append(node, expr, fapply);
 } 
 
 void inline mk_expr(Node* node, Node* expr) {
@@ -196,6 +231,11 @@ void inline mk_binding_stmt(Node* node, Node* left, Node* right) {
         }
     }};
 }
+
+
+/* ------------------------------- *
+ *         Кортежи, списки         *
+ * ------------------------------- */
 
 void inline mk_tuple(Node* node, Node* expr, Node* exprs) {
     node = new Node();
@@ -257,6 +297,10 @@ void inline mk_var(Node* node, std::string type, std::string repr) {
     node->val["type"] = type;
     node->val["repr"] = repr;
 }
+
+/* ------------------------------- *
+ *            Паттерны             *
+ * ------------------------------- */
 
 void inline mk_simple_pat(Node* node, Node* pat) {
     LOG_PARSER("## PARSER ## make apat");
@@ -347,27 +391,86 @@ void inline mk_bin_pat(Node* node, Node* left, Node* op, Node* right) {
 void inline mk_pats(Node* node, Node* pat, Node* pats) {
     LOG_PARSER("## PARSER ## make pats");
     
-    if (pats->val.is_array()) {
-        node = pats;
-        node->val.push_back(pat->val);
-        return;
-    }
-
-    node = new Node();
-    node->val.push_back(pats->val);
-    node->val.push_back(pat->val);
+    mk_node_list_append(node, pat, pats);
 }
 
 void inline mk_lambda_pats(Node* node, Node* pat, Node* pats) {
     LOG_PARSER("## PARSER ## make lambda pats");
 
-    if (pats->val.is_array()) {
-        node = pats;
-        node->val.push_back(pat->val);
-        return;
-    }
+    mk_node_list_prepend(node, pat, pats);
+}
+
+/* ------------------------------- *
+ *           Объявления            *
+ * ------------------------------- */
+
+void inline mk_fun_decl(Node* node, Node* left, Node* right) {
+    LOG_PARSER("## PARSER ## make fun decl");
 
     node = new Node();
-    node->val.push_back(pats->val);
-    node->val.insert(node->val.begin(), pat->val);
+    node->val = {
+        {"left", left->val},
+        {"right", right->val}
+    };
+}
+
+void inline mk_typed_var_list(Node* node, Node* vars, Node* type) {
+    LOG_PARSER("## PARSER ## make typed var list");
+
+    node = new Node();
+    node->val = {
+        {"vars", vars->val},
+        {"type", type->val}
+    };
+}
+
+void inline mk_empty_decl(Node* node) {
+    LOG_PARSER("## PARSER ## make empty decl");
+
+    node = new Node();
+    node->val["decl"] = json::object();
+}
+
+void inline mk_where(Node* node, Node* decls) {
+    LOG_PARSER("## PARSER ## make where");
+
+    node = new Node();
+    if (decls != NULL) {
+        node->val["where"]["decls"] = decls->val;
+    }
+}
+
+void inline mk_funlhs(Node* node, Node* name, Node* params) {
+    LOG_PARSER("## PARSER ## make funlhs");
+
+    node = new Node();
+    node->val["funlhs"] = {
+        {"name", name->val},
+        {"params", params->val}
+    };
+}
+
+void inline mk_decl_list(Node* node, Node* decls, Node* decl) {
+    LOG_PARSER("## PARSER ## make decl list");
+
+    mk_node_list_append(node, decl, decls);
+}
+
+void inline mk_con(Node* node, Node* con) {
+    LOG_PARSER("## PARSER ## make con");
+
+    node = new Node();
+    node->val["con"] = con->val;
+}
+
+void inline mk_con_list(Node* node, Node* cons, Node* con) {
+    LOG_PARSER("## PARSER ## make con list");
+
+    mk_node_list_append(node, con, cons);
+}
+
+void inline mk_var_list(Node* node, Node* vars, Node* var) {
+    LOG_PARSER("## PARSER ## make var list");
+
+    mk_node_list_append(node, var, vars);
 }
