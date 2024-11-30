@@ -292,17 +292,18 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	BEGIN(INITIAL);
 	if (buffer.size() > 1) {
 		LOG_LEXEM("ERROR: char literal opened in %d line can't be longer than 1 symbol!\n", opened_line);
+		return -1;
 	}
-	else {
-		LOG_LEXEM("found char: %s\n", buffer.c_str());
-	}
+	LOG_LEXEM("found char: %s\n", buffer.c_str());
+	yylval.str = &buffer;
+	return CHARC;
 }
 <CHAR><<EOF>>			{ LOG_LEXEM("ERROR: end of file in char literal opened in %d line\n", opened_line); return -1; }
 
 \"						{ BEGIN(STRING); buffer = ""; opened_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
 <STRING>[^\"\\] 		{ buffer += yytext; }
-<STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); }
+<STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); yylval.str = &buffer; return STRINGC; }
 <STRING><<EOF>>			{ LOG_LEXEM("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
 [\n\t ] { if (yytext[0] == '\n') { yylineno++; } layoutBuilder->addSpace(yytext[0]); }
