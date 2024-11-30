@@ -74,10 +74,10 @@ json root;
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { mk_literal($$, "int", std::to_string($1)); }
-        | FLOATC    { mk_literal($$, "float", std::to_string($1)); }
-        | STRINGC   { mk_literal($$, "str", $1->substr()); }
-        | CHARC     { mk_literal($$, "char", $1->substr()); }
+literal : INTC      { $$ = mk_literal("int", std::to_string($1)); }
+        | FLOATC    { $$ = mk_literal("float", std::to_string($1)); }
+        | STRINGC   { $$ = mk_literal("str", $1->substr()); }
+        | CHARC     { $$ = mk_literal("char", $1->substr()); }
         ;
 
 /* 
@@ -90,7 +90,7 @@ literal : INTC      { mk_literal($$, "int", std::to_string($1)); }
       TODO выражение с типом и контекстом
       1 + 2 :: (Integer a) => a
 */
-expr : oexpr DCOLON type { mk_typed_expr($$, $1, $3); }
+expr : oexpr DCOLON type { $$ = mk_typed_expr($1, $3); }
      | oexpr             { $$ = $1; } %prec LOWER_THAN_TYPED_EXPR
      ;
 
@@ -99,14 +99,14 @@ expr : oexpr DCOLON type { mk_typed_expr($$, $1, $3); }
       a + b
       a `fun` b
 */
-oexpr : oexpr op oexpr %prec '+'   { mk_bin_expr($$, $1, $2, $3); }
+oexpr : oexpr op oexpr %prec '+'   { $$ = mk_bin_expr($1, $2, $3); }
       | dexpr                      { $$ = $1; }
       ;
 
 /*
       Унарный минус (других унарных выражений просто нет... (да, даже унарного плюса))
 */
-dexpr : '-' kexpr        { mk_negate_expr($$, $2); }
+dexpr : '-' kexpr        { $$ = mk_negate_expr($2); }
       | kexpr            { $$ = $1; }
       ;
 
@@ -118,19 +118,19 @@ dexpr : '-' kexpr        { mk_negate_expr($$, $2); }
       4. do-выражение: do { x = 1; print 5; x }
       5. case-выражение: case x of { 1 -> Just 2; _ -> Nothing }
 */
-kexpr : '\\' lampats RARROW expr            { mk_lambda($$, $2, $4); }
-      | LETKW '{' declList '}' INKW expr    { mk_let_in($$, $3, $6); }
-      | IFKW expr THENKW expr ELSEKW expr   { mk_if_else($$, $2, $4, $6); }
-      | DOKW '{' stmts '}'                  { mk_do($$, $3); }
-      | CASEKW expr OFKW '{' altList '}'    { mk_case($$, $2, $5); }
+kexpr : '\\' lampats RARROW expr            { $$ = mk_lambda($2, $4); }
+      | LETKW '{' declList '}' INKW expr    { $$ = mk_let_in($3, $6); }
+      | IFKW expr THENKW expr ELSEKW expr   { $$ = mk_if_else($2, $4, $6); }
+      | DOKW '{' stmts '}'                  { $$ = mk_do($3); }
+      | CASEKW expr OFKW '{' altList '}'    { $$ = mk_case($2, $5); }
       | fapply                              { $$ = $1; }
       ;
 
 /*
       Применение функции
 */
-fapply : fapply aexpr        { mk_fapply($$, $1, $2); }
-       | aexpr               { mk_fapply($$, $1, NULL); }
+fapply : fapply aexpr        { $$ = mk_fapply($1, $2); }
+       | aexpr               { $$ = mk_fapply($1, NULL); }
        ;
 
 /*
@@ -140,36 +140,36 @@ fapply : fapply aexpr        { mk_fapply($$, $1, $2); }
       (a,b,c) <- (1,2,3)
       Пока мы не дошли до стрелки, невозможно сказать - выражение это или паттерн
 */
-aexpr : literal         { mk_expr($$, $1); }
-      | funid           { mk_expr($$, $1->substr()); }
+aexpr : literal         { $$ = mk_expr($1); }
+      | funid           { $$ = mk_expr($1->substr()); }
       | '(' expr ')'    { $$ = $2; }
-      | tuple           { mk_expr($$, $1); }
-      | list            { mk_expr($$, $1); }
-      | range           { mk_expr($$, $1); }
-      | comprehension   { mk_expr($$, $1); }
-      | WILDCARD        { mk_simple_pat($$, "wildcard"); }
+      | tuple           { $$ = mk_expr($1); }
+      | list            { $$ = mk_expr($1); }
+      | range           { $$ = mk_expr($1); }
+      | comprehension   { $$ = mk_expr($1); }
+      | WILDCARD        { $$ = mk_simple_pat("wildcard"); }
       ;
 
 /* 
       Оператор
       1. Последовательность символов
-      2. 🐸 - ква-ква оператор, иначе говоря идентификатор функции в обратных кавычках: `fun`
+      2. - ква-ква оператор, иначе говоря идентификатор функции в обратных кавычках: `fun`
       3. Плюс или минус
 */
-op : symbols                { mk_operator($$, "symbols", $1->substr()); }
-   | BQUOTE funid BQUOTE    { mk_operator($$, "quoted", $2->substr()); }
-   | '+'                    { mk_operator($$, "symbols", "+"); }
-   | '-'                    { mk_operator($$, "symbols", "-"); }
+op : symbols                { $$ = mk_operator("symbols", $1->substr()); }
+   | BQUOTE funid BQUOTE    { $$ = mk_operator("quoted", $2->substr()); }
+   | '+'                    { $$ = mk_operator("symbols", "+"); }
+   | '-'                    { $$ = mk_operator("symbols", "-"); }
    ;
 
-symbols : SYMS    { $$ = $1; }
+symbols : SYMS    { $$ = new std::string($1->substr()); }
         ;
 
-funid : FUNC_ID   { $$ = $1; }
+funid : FUNC_ID   { $$ = new std::string($1->substr()); }
       ;
 
-stmts : stmt        { mk_stmts($$, $1, NULL); }
-      | stmts stmt  { mk_stmts($$, $2, $1); }
+stmts : stmt        { $$ = mk_stmts($1, NULL); }
+      | stmts stmt  { $$ = mk_stmts($2, $1); }
       ;
 
 /*
@@ -178,7 +178,7 @@ stmts : stmt        { mk_stmts($$, $1, NULL); }
             Примечание: По левую сторону на этапе парсинга невозможно понять - выражение это или паттерн
       2. Любое выражение
 */
-stmt : expr LARROW expr ';'   { mk_binding_stmt($$, $1, $3); }
+stmt : expr LARROW expr ';'   { $$ = mk_binding_stmt($1, $3); }
      | expr ';'               { $$ = $1; }
      | ';'                    { $$ = new Node(); }
      ;
@@ -191,8 +191,8 @@ stmt : expr LARROW expr ';'   { mk_binding_stmt($$, $1, $3); }
       Кортеж
       Либо пуст, либо 2 и более элементов
 */
-tuple : '(' expr ',' commaSepExprs ')'  { mk_tuple($$, $2, $4); }
-      | '(' ')'                         { mk_tuple($$, NULL, NULL); }
+tuple : '(' expr ',' commaSepExprs ')'  { $$ = mk_tuple($2, $4); }
+      | '(' ')'                         { $$ = mk_tuple(NULL, NULL); }
       ;
 
 /*
@@ -202,12 +202,12 @@ tuple : '(' expr ',' commaSepExprs ')'  { mk_tuple($$, $2, $4); }
 comprehension : '[' expr '|' commaSepExprs ']'
               ;
 
-list : '[' ']'                          { mk_list($$, NULL); }
-     | '[' commaSepExprs ']'            { mk_list($$, $2); }
+list : '[' ']'                          { $$ = mk_list(NULL); }
+     | '[' commaSepExprs ']'            { $$ = mk_list($2); }
      ;
 
-commaSepExprs : expr                    { mk_comma_sep_exprs($$, $1, NULL); }
-              | expr ',' commaSepExprs  { mk_comma_sep_exprs($$, $1, $3); }
+commaSepExprs : expr                    { $$ = mk_comma_sep_exprs($1, NULL); }
+              | expr ',' commaSepExprs  { $$ = mk_comma_sep_exprs($1, $3); }
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
@@ -222,25 +222,26 @@ commaSepExprs : expr                    { mk_comma_sep_exprs($$, $1, NULL); }
       [1,3..10]   - от 1 до 10 с шагом 2 
       [1,3..]     - от 1 до бесконечности с шагом 2
 */
-range : '[' expr DOTDOT ']'               { mk_range($$, $2, NULL, NULL); }
-      | '[' expr DOTDOT expr ']'          { mk_range($$, $2, NULL, $4); }
-      | '[' expr ',' expr DOTDOT expr ']' { mk_range($$, $2, $4, $6); }
-      | '[' expr ',' expr DOTDOT ']'      { mk_range($$, $2, $4, NULL); }
+range : '[' expr DOTDOT ']'               { $$ = mk_range($2, NULL, NULL); }
+      | '[' expr DOTDOT expr ']'          { $$ = mk_range($2, NULL, $4); }
+      | '[' expr ',' expr DOTDOT expr ']' { $$ = mk_range($2, $4, $6); }
+      | '[' expr ',' expr DOTDOT ']'      { $$ = mk_range($2, $4, NULL); }
       ;
+
 
 
 /* ------------------------------- *
  *            Паттерны             *
  * ------------------------------- */
 
-lampats :  apat lampats	 { mk_lambda_pats($$, $1, $2); }
+lampats :  apat lampats	 { $$ = mk_lambda_pats($1, $2); }
 	  |  apat          { $$ = $1; }
 	  ;
 
 /* 
       Список паттернов
 */
-pats : pats ',' opat      { mk_pats($$, $3, $1); }
+pats : pats ',' opat      { $$ = mk_pats($3, $1); }
      | opat               { $$ = $1; }
      ;
 
@@ -249,13 +250,13 @@ pats : pats ',' opat      { mk_pats($$, $3, $1); }
       x:xs = lst
 */
 opat : dpat                   { $$ = $1; }
-     | opat op opat %prec '+' { mk_bin_pat($$, $1, $2, $3); }
+     | opat op opat %prec '+' { $$ = mk_bin_pat($1, $2, $3); }
      ;
 
 /*
       Специально для мистера унарного минуса
 */
-dpat : '-' fpat           { mk_negate($$, $2); }
+dpat : '-' fpat           { $$ = mk_negate($2); }
      | fpat               { $$ = $1; }
      ;
 
@@ -263,7 +264,7 @@ dpat : '-' fpat           { mk_negate($$, $2); }
       Применение функции в паттерне
       case func x y of {...}
 */
-fpat : fpat apat  { mk_fpat($$, $1, $2); }
+fpat : fpat apat  { $$ = mk_fpat($1, $2); }
      | apat       { $$ = $1; }
      ;
 
@@ -277,21 +278,17 @@ fpat : fpat apat  { mk_fpat($$, $1, $2); }
       6. Ленивый паттерн
       7. TODO: AS-паттерн
 */
-apat : funid                  { mk_simple_pat($$, $1->substr()); }
-     | tycon                  { mk_simple_pat($$, $1); }
-     | literal                { mk_simple_pat($$, $1); }
-     | WILDCARD               { mk_simple_pat($$, "wildcard"); }
-     | '(' ')'                { mk_tuple_pat($$, NULL, NULL); }
-     | '(' opat ',' pats ')'  { mk_tuple_pat($$, $2, $4); }
-     | '[' pats ']'           { mk_list_pat($$, $2); }
-     | '[' ']'                { mk_list_pat($$, NULL); }
-     | '~' apat               { mk_simple_pat($$, $2); }
+apat : funid                  { $$ = mk_simple_pat($1->substr()); }
+     | tycon                  { $$ = mk_simple_pat($1); }
+     | literal                { $$ = mk_simple_pat($1); }
+     | WILDCARD               { $$ = mk_simple_pat("wildcard"); }
+     | '(' ')'                { $$ = mk_tuple_pat(NULL, NULL); }
+     | '(' opat ',' pats ')'  { $$ = mk_tuple_pat($2, $4); }
      ;
 
-apatList : apat               { mk_pat_list($$, NULL, $1); }
-         | apatList apat      { mk_pat_list($$, $1, $2); }
+apatList : apat               { $$ = mk_pat_list(NULL, $1); }
+         | apatList apat      { $$ = mk_pat_list($1, $2); }
          ;
-
 /* 
       Альтернативы для case 
 */
@@ -319,26 +316,26 @@ guard : VBAR oexpr          { LOG_PARSER("## PARSER ## make guard - VBAR oexpr\n
  * ------------------------------- */
 
 declList : declE              { $$ = $1; }
-         | declList ';' declE { mk_decl_list($$, $1, $3); }
+         | declList ';' declE { $$ = mk_decl_list($1, $3); }
          ;
 
-con : tycon                  { mk_con($$, $1); }
-    | '(' symbols ')'        { mk_con($$, $2); }
+con : tycon                  { $$ = mk_con($1); }
+    | '(' symbols ')'        { $$ = mk_con($2); }
     ;
 
 conList : con                { $$ = $1; }
-        | conList ',' con    { mk_con_list($$, $1, $3); }
+        | conList ',' con    { $$ = mk_con_list($1, $3); }
         ;
 
-varList : varList ',' var    { mk_var_list($$, $1, $3); }
+varList : varList ',' var    { $$ = mk_var_list($1, $3); }
         | var                { $$ = $1; }
         ;
 
 /* 
       Оператор в префиксной форме или идентификатор функции 
 */
-var : funid                  { mk_var($$, "funid", $1->substr()); }
-    | '(' symbols ')'        { mk_var($$, "symbols", $2->substr()); }
+var : funid                  { $$ = mk_var("funid", $1->substr()); }
+    | '(' symbols ')'        { $$ = mk_var("symbols", $2->substr()); }
     ;
 
 /* 
@@ -346,18 +343,18 @@ var : funid                  { mk_var($$, "funid", $1->substr()); }
       1. Биндинг функции
       2. Список функций с типом
 */
-declE : var '=' expr                    { mk_fun_decl($$, $1, $3); }
-      | funlhs '=' expr                 { mk_fun_decl($$, $1, $3); }
+declE : var '=' expr                    { $$ = mk_fun_decl($1, $3); }
+      | funlhs '=' expr                 { $$ = mk_fun_decl($1, $3); }
       | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
-      | varList DCOLON type             { mk_typed_var_list($$, $1, $3); }
-      | %empty                          { mk_empty_decl($$); }
+      | varList DCOLON type             { $$ = mk_typed_var_list($1, $3); }
+      | %empty                          { $$ = mk_empty_decl(); }
       ;
 
-whereOpt : WHEREKW '{' declList '}' { mk_where($$, $3); }
-         | %empty                   { mk_where($$, NULL); }
+whereOpt : WHEREKW '{' declList '}' { $$ = mk_where($3); }
+         | %empty                   { $$ = mk_where(NULL); }
          ;
 
-funlhs : var apatList               { mk_funlhs($$, $1, $2); }
+funlhs : var apatList               { $$ = mk_funlhs($1, $2); }
        ;
 
 /* ------------------------------- *
