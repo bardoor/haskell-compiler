@@ -12,10 +12,10 @@ def test_constant_declarations():
         "module": {
             "decls": [
                 {
-                    "decl": {
-                        "left": {"funid": "a"},
+                    "fun_decl": {
+                        "left": {"repr": "a", "type": "funid"},
                         "right": {
-                            "bin_expr": {
+                            "expr": {
                                 "left": {"expr": {"funid": "x"}},
                                 "op": {"repr": "+", "type": "symbols"},
                                 "right": {
@@ -26,10 +26,10 @@ def test_constant_declarations():
                     }
                 },
                 {
-                    "decl": {
-                        "left": {"funid": "b"},
+                    "fun_decl": {
+                        "left": {"repr": "b", "type": "funid"},
                         "right": {
-                            "bin_expr": {
+                            "expr": {
                                 "left": {
                                     "expr": {"literal": {"type": "int", "value": "5"}}
                                 },
@@ -42,10 +42,10 @@ def test_constant_declarations():
                     }
                 },
                 {
-                    "decl": {
-                        "left": {"funid": "c"},
+                    "fun_decl": {
+                        "left": {"repr": "c", "type": "funid"},
                         "right": {
-                            "bin_expr": {
+                            "expr": {
                                 "left": {"expr": {"funid": "a"}},
                                 "op": {"repr": "-", "type": "symbols"},
                                 "right": {"expr": {"funid": "b"}},
@@ -71,27 +71,27 @@ def test_func_declarations():
         "module": {
             "decls": [
                 {
-                    "decl": {
+                    "fun_decl": {
                         "left": {
                             "funlhs": {
-                                "name": {"funid": "func"},
+                                "name": {"repr": "func", "type": "funid"},
                                 "params": [
-                                    {"pattern": {"funid": "a"}},
-                                    {"pattern": {"funid": "b"}},
-                                    {"pattern": {"funid": "c"}},
+                                    {"pattern": "a"},
+                                    {"pattern": "b"},
+                                    {"pattern": "c"},
                                 ],
                             }
                         },
                         "right": {
-                            "bin_expr": {
+                            "expr": {
                                 "left": {
                                     "expr": {"literal": {"type": "int", "value": "2"}}
                                 },
-                                "op": {"repr": {"symbols": "*"}, "type": "symbols"},
+                                "op": {"repr": "*", "type": "symbols"},
                                 "right": {
-                                    "bin_expr": {
+                                    "expr": {
                                         "left": {
-                                            "bin_expr": {
+                                            "expr": {
                                                 "left": {"expr": {"funid": "a"}},
                                                 "op": {"repr": "+", "type": "symbols"},
                                                 "right": {"expr": {"funid": "b"}},
@@ -106,10 +106,10 @@ def test_func_declarations():
                     }
                 },
                 {
-                    "decl": {
+                    "fun_decl": {
                         "left": {
                             "funlhs": {
-                                "name": {"funid": "otherFunc"},
+                                "name": {"repr": "otherFunc", "type": "funid"},
                                 "params": [
                                     {
                                         "pattern": {
@@ -151,14 +151,26 @@ def test_patterns_func_def():
         "module": {
             "decls": [
                 {
-                    "decl": {
+                    "fun_decl": {
                         "left": {
                             "funlhs": {
-                                "name": {"funid": "func"},
+                                "name": {"repr": "func", "type": "funid"},
                                 "params": [
                                     {
                                         "pattern": {
                                             "tuple": [
+                                                [
+                                                    {
+                                                        "pattern": {
+                                                            "literal": {
+                                                                "type": "int",
+                                                                "value": "2",
+                                                            }
+                                                        }
+                                                    },
+                                                    {"pattern": "wildcard"},
+                                                    {"pattern": "xs"},
+                                                ],
                                                 {
                                                     "pattern": {
                                                         "literal": {
@@ -167,16 +179,6 @@ def test_patterns_func_def():
                                                         }
                                                     }
                                                 },
-                                                {
-                                                    "pattern": {
-                                                        "literal": {
-                                                            "type": "int",
-                                                            "value": "2",
-                                                        }
-                                                    }
-                                                },
-                                                {"pattern": "wildcard"},
-                                                {"pattern": {"funid": "xs"}},
                                             ]
                                         }
                                     }
@@ -205,86 +207,56 @@ def test_do_stmt():
         "module": {
             "decls": [
                 {
-                    "decl": {
-                        "left": {"funid": "a"},
+                    "fun_decl": {
+                        "left": {"repr": "a", "type": "funid"},
                         "right": {
                             "do": {
                                 "stmts": [
                                     {
                                         "binding": {
-                                            "left": [
-                                                {
-                                                    "expr": {
-                                                        "tuple": [
-                                                            {
-                                                                "expr": {
-                                                                    "literal": {
-                                                                        "type": "int",
-                                                                        "value": "3",
-                                                                    }
+                                            "left": {
+                                                "expr": {
+                                                    "tuple": [
+                                                        {
+                                                            "expr": {
+                                                                "literal": {
+                                                                    "type": "int",
+                                                                    "value": "2",
                                                                 }
-                                                            },
-                                                            {
-                                                                "expr": {
-                                                                    "literal": {
-                                                                        "type": "int",
-                                                                        "value": "2",
-                                                                    }
+                                                            }
+                                                        },
+                                                        {
+                                                            "expr": {
+                                                                "literal": {
+                                                                    "type": "int",
+                                                                    "value": "3",
                                                                 }
-                                                            },
-                                                            {
-                                                                "expr": {
-                                                                    "literal": {
-                                                                        "type": "int",
-                                                                        "value": "1",
-                                                                    }
+                                                            }
+                                                        },
+                                                        {
+                                                            "expr": {
+                                                                "literal": {
+                                                                    "type": "int",
+                                                                    "value": "1",
                                                                 }
-                                                            },
-                                                        ]
-                                                    }
+                                                            }
+                                                        },
+                                                    ]
                                                 }
-                                            ],
-                                            "right": [{"expr": {"funid": "lol"}}],
+                                            },
+                                            "right": {"expr": {"funid": "lol"}},
                                         }
                                     },
                                     [
+                                        {"expr": {"funid": "put"}},
                                         {
-                                            "binding": {
-                                                "left": [
-                                                    {
-                                                        "expr": {
-                                                            "tuple": [
-                                                                {
-                                                                    "expr": {
-                                                                        "literal": {
-                                                                            "type": "int",
-                                                                            "value": "3",
-                                                                        }
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "expr": {
-                                                                        "literal": {
-                                                                            "type": "int",
-                                                                            "value": "2",
-                                                                        }
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "expr": {
-                                                                        "literal": {
-                                                                            "type": "int",
-                                                                            "value": "1",
-                                                                        }
-                                                                    }
-                                                                },
-                                                            ]
-                                                        }
-                                                    }
-                                                ],
-                                                "right": [{"expr": {"funid": "lol"}}],
+                                            "expr": {
+                                                "literal": {
+                                                    "type": "str",
+                                                    "value": "hehe",
+                                                }
                                             }
-                                        }
+                                        },
                                     ],
                                 ]
                             }
@@ -298,10 +270,11 @@ def test_do_stmt():
 
     assert excepted == actual
 
+
 def test_class_decl_body_none():
     result = parse_to_dict("{class MyClass foo}")
-    
-    assert result[0] != 'error', result[1]
+
+    assert result[0] != "error", result[1]
 
     actual = result[1]
 
@@ -310,24 +283,22 @@ def test_class_decl_body_none():
             "decls": [
                 {
                     "class_decl": {
-                        "class": { 
-                            "tycon": "MyClass",
-                            "tyvar": {"funid":{"funid":"foo"}},
-                        },
-                        'body': None,
+                        "body": None,
+                        "class": {"tycon": "MyClass", "tyvar": {"funid": "foo"}},
                     }
                 }
             ],
             "name": 0,
         }
     }
-    
+
     assert expected == actual
+
 
 def test_class_decl_with_where():
     result = parse_to_dict("{class MyClass foo where {}}")
-    
-    assert result[0] != 'error', result[1]
+
+    assert result[0] != "error", result[1]
 
     actual = result[1]
 
@@ -336,12 +307,37 @@ def test_class_decl_with_where():
             "decls": [
                 {
                     "class_decl": {
-                        "class": { 
-                            "tycon": "MyClass",
-                            "tyvar": {"funid":{"funid":"foo"}},
-                        },
-                        "body":{
-                                "decl": None,
+                        "body": {"decl": {}},
+                        "class": {"tycon": "MyClass", "tyvar": {"funid": "foo"}},
+                    }
+                }
+            ],
+            "name": 0,
+        }
+    }
+
+    assert expected == actual
+
+
+def test_class_decl_with_contextList():
+    result = parse_to_dict("{class (Read a, Show a) => Textual a}")
+
+    assert result[0] != "error", result[1]
+
+    actual = result[1]
+
+    expected = {
+        "module": {
+            "decls": [
+                {
+                    "class_decl": {
+                        "body": None,
+                        "class": {"tycon": "Textual", "tyvar": {"funid": "a"}},
+                        "context": {
+                            "contextList": [
+                                {"tycon": "Read", "tyvar": {"funid": "a"}},
+                                {"tycon": "Show", "tyvar": {"funid": "a"}},
+                            ]
                         },
                     }
                 }
@@ -350,38 +346,4 @@ def test_class_decl_with_where():
         }
     }
     
-    assert expected == actual
-
-def test_class_decl_with_contextList():
-    result = parse_to_dict("{class (Read a, Show a) => Textual a}")
-    
-    assert result[0] != 'error', result[1]
-
-    actual = result[1]
-
-    expected = {
-        'module': {
-            'decls': [
-                {
-                    'class_decl': {
-                        'class': {
-                            'tycon': 'Textual', 'tyvar': {'funid': {'funid': 'a'}}
-                        },
-                        'context': {
-                            'contextList': [ 
-                                            {
-                                                'tycon': 'Read', 'tyvar': {'funid': {'funid': 'a'}}
-                                            },
-                                            {
-                                                'tycon': 'Show', 'tyvar': {'funid': {'funid': 'a'}}
-                                            }
-                            ]
-                        },
-                        'body': None,
-                    }
-                }
-            ],
-            'name': 0
-        }
-    }
     assert expected == actual
