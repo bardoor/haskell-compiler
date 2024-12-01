@@ -316,7 +316,7 @@ inline Node* mk_var(std::string type, std::string repr) {
  * ------------------------------- */
 
 inline Node* mk_simple_pat(Node* pat) {
-    LOG_PARSER("## PARSER ## make apat");
+    LOG_PARSER("## PARSER ## make apat\n");
 
     Node* node = new Node();
     node->val["pattern"] = pat->val;
@@ -324,7 +324,7 @@ inline Node* mk_simple_pat(Node* pat) {
 }
 
 inline Node* mk_simple_pat(const std::string& val) {
-    LOG_PARSER("## PARSER ## make apat");
+    LOG_PARSER("## PARSER ## make apat\n");
 
     Node* node = new Node();
     node->val["pattern"] = val;
@@ -332,7 +332,7 @@ inline Node* mk_simple_pat(const std::string& val) {
 }
 
 inline Node* mk_list_pat(Node* pats) {
-    LOG_PARSER("## PARSER ## make apat - list");
+    LOG_PARSER("## PARSER ## make apat - list\n");
 
     Node* node = new Node();
     if (pats == NULL) {
@@ -344,7 +344,7 @@ inline Node* mk_list_pat(Node* pats) {
 }
 
 inline Node* mk_tuple_pat(Node* pat, Node* pats) {
-    LOG_PARSER("## PARSER ## make apat - tuple");
+    LOG_PARSER("## PARSER ## make apat - tuple\n");
 
     Node* node = new Node();
     node->val["pattern"]["tuple"] = json::array();
@@ -360,7 +360,7 @@ inline Node* mk_tuple_pat(Node* pat, Node* pats) {
 }
 
 inline Node* mk_pat_list(Node* pats, Node* pat) {
-    LOG_PARSER("## PARSER ## make pattern list");
+    LOG_PARSER("## PARSER ## make pattern list\n");
 
     if (pats == NULL) {
         Node* node = new Node();
@@ -373,7 +373,7 @@ inline Node* mk_pat_list(Node* pats, Node* pat) {
 }
 
 inline Node* mk_fpat(Node* fpat, Node* pat) {
-    LOG_PARSER("## PARSER ## make fpat");
+    LOG_PARSER("## PARSER ## make fpat\n");
 
     if (fpat->val.is_array()) {
         fpat->val["fpat"].push_back(pat->val);
@@ -387,7 +387,7 @@ inline Node* mk_fpat(Node* fpat, Node* pat) {
 }
 
 inline Node* mk_negate(Node* pat) {
-    LOG_PARSER("## PARSER ## make dpat");
+    LOG_PARSER("## PARSER ## make dpat\n");
 
     Node* node = new Node();
     node->val["negate"] = pat->val;
@@ -395,7 +395,7 @@ inline Node* mk_negate(Node* pat) {
 }
 
 inline Node* mk_bin_pat(Node* left, Node* op, Node* right) {
-    LOG_PARSER("## PARSER ## make bin pat");
+    LOG_PARSER("## PARSER ## make bin pat\n");
 
     Node* node = new Node();
     node->val = {
@@ -407,13 +407,13 @@ inline Node* mk_bin_pat(Node* left, Node* op, Node* right) {
 }
 
 inline Node* mk_pats(Node* pat, Node* pats) {
-    LOG_PARSER("## PARSER ## make pats");
+    LOG_PARSER("## PARSER ## make pats\n");
     
     return mk_node_list_append(pat, pats);
 }
 
 inline Node* mk_lambda_pats(Node* pat, Node* pats) {
-    LOG_PARSER("## PARSER ## make lambda pats");
+    LOG_PARSER("## PARSER ## make lambda pats\n");
 
     return mk_node_list_prepend(pat, pats);
 }
@@ -423,7 +423,7 @@ inline Node* mk_lambda_pats(Node* pat, Node* pats) {
  * ------------------------------- */
 
 inline Node* mk_fun_decl(Node* left, Node* right) {
-    LOG_PARSER("## PARSER ## make fun decl");
+    LOG_PARSER("## PARSER ## make fun decl\n");
 
     Node* node = new Node();
     node->val = {{
@@ -436,7 +436,7 @@ inline Node* mk_fun_decl(Node* left, Node* right) {
 }
 
 inline Node* mk_typed_var_list(Node* vars, Node* type) {
-    LOG_PARSER("## PARSER ## make typed var list");
+    LOG_PARSER("## PARSER ## make typed var list\n");
 
     Node* node = new Node();
     node->val = {
@@ -447,7 +447,7 @@ inline Node* mk_typed_var_list(Node* vars, Node* type) {
 }
 
 inline Node* mk_typed_var_list(Node* vars, Node* context, Node* type) {
-    LOG_PARSER("## PARSER ## make typed var list with context");
+    LOG_PARSER("## PARSER ## make typed var list with context\n");
 
     Node* node = new Node();
     node->val = {
@@ -459,7 +459,7 @@ inline Node* mk_typed_var_list(Node* vars, Node* context, Node* type) {
 }
 
 inline Node* mk_empty_decl() {
-    LOG_PARSER("## PARSER ## make empty decl");
+    LOG_PARSER("## PARSER ## make empty decl\n");
 
     Node* node = new Node();
     node->val["decl"] = json::object();
@@ -467,7 +467,7 @@ inline Node* mk_empty_decl() {
 }
 
 inline Node* mk_where(Node* decls) {
-    LOG_PARSER("## PARSER ## make where");
+    LOG_PARSER("## PARSER ## make where\n");
 
     Node* node = new Node();
     if (decls != NULL) {
@@ -477,7 +477,7 @@ inline Node* mk_where(Node* decls) {
 }
 
 inline Node* mk_funlhs(Node* name, Node* params) {
-    LOG_PARSER("## PARSER ## make funlhs");
+    LOG_PARSER("## PARSER ## make funlhs\n");
 
     Node* node = new Node();
     node->val["funlhs"] = {
@@ -488,13 +488,13 @@ inline Node* mk_funlhs(Node* name, Node* params) {
 }
 
 inline Node* mk_decl_list(Node* decls, Node* decl) {
-    LOG_PARSER("## PARSER ## make decl list");
+    LOG_PARSER("## PARSER ## make decl list\n");
 
     return mk_node_list_append(decl, decls);
 }
 
 inline Node* mk_con(Node* con) {
-    LOG_PARSER("## PARSER ## make con");
+    LOG_PARSER("## PARSER ## make con\n");
 
     Node* node = new Node();
     node->val["con"] = con->val;
@@ -502,14 +502,53 @@ inline Node* mk_con(Node* con) {
 }
 
 inline Node* mk_con_list(Node* cons, Node* con) {
-    LOG_PARSER("## PARSER ## make con list");
+    LOG_PARSER("## PARSER ## make con list\n");
 
     return mk_node_list_append(con, cons);
 }
 
 inline Node* mk_var_list(Node* vars, Node* var) {
-    LOG_PARSER("## PARSER ## make var list");
+    LOG_PARSER("## PARSER ## make var list\n");
 
     return mk_node_list_append(var, vars);
+}
+
+/* ------------------------------- *
+ *             Модуль              *
+ * ------------------------------- */
+
+inline Node* mk_module(std::string name, Node* decls) {
+    LOG_PARSER("## PARSER ## make module\n");
+
+    Node* node = new Node();
+    node->val = {{
+        "module", {
+            {"name", name},
+            {"decls", decls->val}
+        }
+    }};
+
+    return node;
+}
+
+inline Node* mk_module(Node* decls) {
+    LOG_PARSER("## PARSER ## make module\n");
+
+    Node* node = new Node();
+    node->val["module"]["decls"] = decls->val;
+    return node;
+}
+
+inline Node* mk_top_decl_list(Node* decls, Node* decl) {
+    LOG_PARSER("## PARSER ## make top decl list\n");
+
+    if (decls->val.is_array()) {
+        decls->val += decl->val;
+        return decls;
+    }
+
+    Node* node = new Node();
+    node->val = { decls->val, decl->val };
+    return node;
 }
 
