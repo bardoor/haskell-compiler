@@ -271,6 +271,31 @@ def test_do_stmt():
     assert excepted == actual
 
 
+def test_typed_vars_decl():
+    result = parse_to_dict("{ a :: Num a => a }")
+
+    assert result[0] != "error", result[1]
+
+    actual = result[1]
+
+    expected = {
+        "module": {
+            "decls": [
+                {
+                    "context": {
+                        "overlay": {"constructor": "Num", "type_list": [{"funid": "a"}]}
+                    },
+                    "type": {"funid": "a"},
+                    "vars": {"repr": "a", "type": "funid"},
+                }
+            ],
+            "name": 0,
+        }
+    }
+
+    assert expected == actual
+
+
 def test_class_decl_body_none():
     result = parse_to_dict("{class MyClass foo}")
 
@@ -345,5 +370,5 @@ def test_class_decl_with_contextList():
             "name": 0,
         }
     }
-    
+
     assert expected == actual
