@@ -1,5 +1,4 @@
-#ifndef BISON_UTILS_HPP
-#define BISON_UTILS_HPP
+#pragma once
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -427,10 +426,12 @@ inline Node* mk_fun_decl(Node* left, Node* right) {
     LOG_PARSER("## PARSER ## make fun decl");
 
     Node* node = new Node();
-    node->val = {
-        {"left", left->val},
-        {"right", right->val}
-    };
+    node->val = {{
+        "fun_decl", {
+            {"left", left->val},
+            {"right", right->val}
+        }
+    }};
     return node;
 }
 
@@ -440,6 +441,18 @@ inline Node* mk_typed_var_list(Node* vars, Node* type) {
     Node* node = new Node();
     node->val = {
         {"vars", vars->val},
+        {"type", type->val}
+    };
+    return node;
+}
+
+inline Node* mk_typed_var_list(Node* vars, Node* context, Node* type) {
+    LOG_PARSER("## PARSER ## make typed var list with context");
+
+    Node* node = new Node();
+    node->val = {
+        {"vars", vars->val},
+        {"context", context->val},
         {"type", type->val}
     };
     return node;
@@ -500,4 +513,3 @@ inline Node* mk_var_list(Node* vars, Node* var) {
     return mk_node_list_append(var, vars);
 }
 
-#endif

@@ -339,13 +339,13 @@ var : funid                  { $$ = mk_var("funid", $1->substr()); }
     ;
 
 /* 
-      Объявление 
+      Объявление
       1. Биндинг функции
       2. Список функций с типом
 */
 declE : var '=' expr                    { $$ = mk_fun_decl($1, $3); }
       | funlhs '=' expr                 { $$ = mk_fun_decl($1, $3); }
-      | varList DCOLON type DARROW type { LOG_PARSER("## PARSER ## make declaration - varList :: type => type\n"); }
+      | varList DCOLON type DARROW type { $$ = mk_typed_var_list($1, $3, $5); }
       | varList DCOLON type             { $$ = mk_typed_var_list($1, $3); }
       | %empty                          { $$ = mk_empty_decl(); }
       ;
