@@ -3,7 +3,7 @@
 
 %{
 
-#include <BisonUtils.hpp>
+#include <JsonBuild.hpp>
 #include <typeinfo>
 
 extern int yylex();

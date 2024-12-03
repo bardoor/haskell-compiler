@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include <BisonUtils.hpp>
+#include <JsonBuild.hpp>
 #include <Parser.hpp>
 
 extern int yylex();
