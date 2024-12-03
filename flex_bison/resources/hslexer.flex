@@ -7,7 +7,7 @@
 	#include <algorithm>
 	#include <charconv>
 
-	#include "FlexUtils.h"
+	#include "LayoutBuild.hpp"
 	#include "Parser.hpp"
 
 	#ifdef DEBUG_LEXEMS
