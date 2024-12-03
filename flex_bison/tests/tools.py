@@ -51,5 +51,8 @@ def dict_to_dot(source: dict, parent=None, graph=None):
 
     return graph
 
-(status, result) = parse_to_dict("{ a 1 2 3 = a + 1; }")
-pprint.pp(result)
+
+if __name__ == "__main__":
+    (status, result) = parse_to_dict('{ a = do { (1,2,3) <- lol; put 1; }}')
+    pprint.pp(result)
+    dict_to_dot(result).save()
