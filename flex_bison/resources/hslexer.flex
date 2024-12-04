@@ -10,6 +10,8 @@
 	#include "LayoutBuild.hpp"
 	#include "Parser.hpp"
 
+	#define YY_DECL int original_yylex()
+
 	#ifdef DEBUG_LEXEMS
 		 #define LOG_LEXEM(msg, ...) printf(msg, ##__VA_ARGS__);
 	#else
@@ -33,41 +35,15 @@
 			} \
 		} while (next_char != EOF && next_char != '\0' || std::isalpha(next_char));
 
-	#define EMIT_LEXEM \
-	{ \
-		switch(layoutBuilder->emitLexem()) { \
-			case Lexem::OPEN_BRACE: \
-				layoutBuilder->addLexem("{"); \
-				printf("{\n"); \
-				break; \
-			case Lexem::CLOSING_BRACE: \
-				layoutBuilder->addLexem("}"); \
-				printf("}\n"); \
-				break; \
-			case Lexem::SEMICOLON: \
-				layoutBuilder->addLexem(";"); \
-				printf(";\n"); \
-				break; \
-			case Lexem::NONE: \
-				break; \
-		} \
-    }
-
-	#define YY_USER_ACTION EMIT_LEXEM
-
 	static bool check_prefix(const std::string& input_string, int base);
 	static int clean_integer(const std::string& input_string, std::string& cleaned, int base);
 	static int clean_float(const std::string& input_string, std::string& cleaned);
 	std::string replaceComma(const std::string& str);
 	unsigned occurencesCount(std::string str, std::string substr);
 
-	long long intc;
-	long double var_float;
 	unsigned lineno = 1;
 	unsigned opened_line;
 	std::string buffer;
-
-	std::unique_ptr<LayoutBuilder> layoutBuilder = std::make_unique<LayoutBuilder>();
 %}
 
 SYMBOL 		[!#$%&*+./<=>?@\\^|~:]
@@ -94,29 +70,29 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 
 %%
 
-_         { LOG_LEXEM("found lexem: _\n"); layoutBuilder->addLexem(std::string(yytext)); return WILDCARD; }
-case      { LOG_LEXEM("found lexem: case\n"); layoutBuilder->addLexem(std::string(yytext)); return CASEKW; }
-class     { LOG_LEXEM("found lexem: class\n"); layoutBuilder->addLexem(std::string(yytext)); return CLASSKW; }
-data      { LOG_LEXEM("found lexem: data\n"); layoutBuilder->addLexem(std::string(yytext)); return DATAKW; }
-newtype   { LOG_LEXEM("found lexem: newtype\n"); layoutBuilder->addLexem(std::string(yytext)); return NEWTYPEKW; }
-type      { LOG_LEXEM("found lexem: type\n"); layoutBuilder->addLexem(std::string(yytext)); return TYPEKW; }
-of        { LOG_LEXEM("found lexem: of\n"); layoutBuilder->addLexem(std::string(yytext)); return OFKW; }
-then      { LOG_LEXEM("found lexem: then\n"); layoutBuilder->addLexem(std::string(yytext)); return THENKW; }
-default   { LOG_LEXEM("found lexem: default\n"); layoutBuilder->addLexem(std::string(yytext)); return DEFAULTKW; }
-deriving  { LOG_LEXEM("found lexem: deriving\n"); layoutBuilder->addLexem(std::string(yytext)); return DERIVINGKW; }
-do        { LOG_LEXEM("found lexem: do\n"); layoutBuilder->addLexem(std::string(yytext)); return DOKW; }
-if        { LOG_LEXEM("found lexem: if\n"); layoutBuilder->addLexem(std::string(yytext)); return IFKW; }
-else      { LOG_LEXEM("found lexem: else\n"); layoutBuilder->addLexem(std::string(yytext)); return ELSEKW; }
-where     { LOG_LEXEM("found lexem: where\n"); layoutBuilder->addLexem(std::string(yytext)); return WHEREKW; }
-let       { LOG_LEXEM("found lexem: let\n"); layoutBuilder->addLexem(std::string(yytext)); return LETKW; }
-in 		  { LOG_LEXEM("found lexem: in\n"); layoutBuilder->addLexem(std::string(yytext)); return INKW; }
-foreign   { LOG_LEXEM("found lexem: foreign\n"); layoutBuilder->addLexem(std::string(yytext)); return FOREIGNKW; }
-infix     { LOG_LEXEM("found lexem: infix\n"); layoutBuilder->addLexem(std::string(yytext)); return INFIXKW; }
-infixl    { LOG_LEXEM("found lexem: infixl\n"); layoutBuilder->addLexem(std::string(yytext)); return INFIXLKW; }
-infixr    { LOG_LEXEM("found lexem: infixr\n"); layoutBuilder->addLexem(std::string(yytext)); return INFIXRKW; }
-instance  { LOG_LEXEM("found lexem: instance\n"); layoutBuilder->addLexem(std::string(yytext)); return INSTANCEKW; }
-import    { LOG_LEXEM("found lexem: import\n"); layoutBuilder->addLexem(std::string(yytext)); return IMPORTKW; }
-module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::string(yytext)); return MODULEKW; }
+_         { LOG_LEXEM("found lexem: _\n");  return WILDCARD; }
+case      { LOG_LEXEM("found lexem: case\n");  return CASEKW; }
+class     { LOG_LEXEM("found lexem: class\n");  return CLASSKW; }
+data      { LOG_LEXEM("found lexem: data\n");  return DATAKW; }
+newtype   { LOG_LEXEM("found lexem: newtype\n");  return NEWTYPEKW; }
+type      { LOG_LEXEM("found lexem: type\n");  return TYPEKW; }
+of        { LOG_LEXEM("found lexem: of\n");  return OFKW; }
+then      { LOG_LEXEM("found lexem: then\n");  return THENKW; }
+default   { LOG_LEXEM("found lexem: default\n");  return DEFAULTKW; }
+deriving  { LOG_LEXEM("found lexem: deriving\n");  return DERIVINGKW; }
+do        { LOG_LEXEM("found lexem: do\n");  return DOKW; }
+if        { LOG_LEXEM("found lexem: if\n");  return IFKW; }
+else      { LOG_LEXEM("found lexem: else\n");  return ELSEKW; }
+where     { LOG_LEXEM("found lexem: where\n");  return WHEREKW; }
+let       { LOG_LEXEM("found lexem: let\n");  return LETKW; }
+in 		  { LOG_LEXEM("found lexem: in\n");  return INKW; }
+foreign   { LOG_LEXEM("found lexem: foreign\n");  return FOREIGNKW; }
+infix     { LOG_LEXEM("found lexem: infix\n");  return INFIXKW; }
+infixl    { LOG_LEXEM("found lexem: infixl\n");  return INFIXLKW; }
+infixr    { LOG_LEXEM("found lexem: infixr\n");  return INFIXRKW; }
+instance  { LOG_LEXEM("found lexem: instance\n");  return INSTANCEKW; }
+import    { LOG_LEXEM("found lexem: import\n");  return IMPORTKW; }
+module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 
 "("     |
 ")"     |
@@ -131,36 +107,26 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 \\      |
 ":"		| 
 "="		|
-","		{ LOG_LEXEM("found: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return yytext[0]; }
-"`"     { LOG_LEXEM("found BQUOTE\n"); layoutBuilder->addLexem(std::string(yytext)); return BQUOTE; }
-".."    { LOG_LEXEM("found operator: range (..)\n"); layoutBuilder->addLexem(std::string(yytext)); return DOTDOT; }
-"->"    { LOG_LEXEM("found operator: -> (function type)\n"); layoutBuilder->addLexem(std::string(yytext)); return RARROW; }
-"<-"    { LOG_LEXEM("found operator: <- (monad binding)\n"); layoutBuilder->addLexem(std::string(yytext)); return LARROW; }
-"@"     { LOG_LEXEM("found operator: as-pattern (@)\n"); layoutBuilder->addLexem(std::string(yytext)); return AS; }
-"::"    { LOG_LEXEM("found operator: type annotation (::)\n"); layoutBuilder->addLexem(std::string(yytext)); return DCOLON; }
-"=>"    { LOG_LEXEM("found operator: type constraint (=>)\n"); layoutBuilder->addLexem(std::string(yytext)); return DARROW; }
-"|"     { LOG_LEXEM("found operator: | (guards)\n"); layoutBuilder->addLexem(std::string(yytext)); return VBAR; }
+","		{ LOG_LEXEM("found: %s\n", yytext);  return yytext[0]; }
+"`"     { LOG_LEXEM("found BQUOTE\n");  return BQUOTE; }
+".."    { LOG_LEXEM("found operator: range (..)\n");  return DOTDOT; }
+"->"    { LOG_LEXEM("found operator: -> (function type)\n");  return RARROW; }
+"<-"    { LOG_LEXEM("found operator: <- (monad binding)\n");  return LARROW; }
+"@"     { LOG_LEXEM("found operator: as-pattern (@)\n");  return AS; }
+"::"    { LOG_LEXEM("found operator: type annotation (::)\n");  return DCOLON; }
+"=>"    { LOG_LEXEM("found operator: type constraint (=>)\n");  return DARROW; }
+"|"     { LOG_LEXEM("found operator: | (guards)\n");  return VBAR; }
 
-{SYMBOL}+ { std::string syms = std::string(yytext); yylval.str = &syms; LOG_LEXEM("found symbol: %s\n", yytext); layoutBuilder->addLexem(std::string(yytext)); return SYMS; }
+{SYMBOL}+ { std::string syms = std::string(yytext); buffer = syms; LOG_LEXEM("found symbol: %s\n", yytext);  return SYMS; }
 
 {SMALL}({WORD}|')*  { 
-	std::string name = std::string(yytext);
-	layoutBuilder->addLexem(name); 
-	if (layoutBuilder->canEmit()) {
-		yyless(0);
-		EMIT_LEXEM;
-	} 
-	else {
-		LOG_LEXEM("found function identifier: %s\n", yytext);
-		yylval.str = &name;
-		return FUNC_ID;
-	}
+	buffer = std::string(yytext);
+	LOG_LEXEM("found function identifier: %s\n", yytext);
+	return FUNC_ID;
 }
 {LARGE}({WORD}|')*  { 
-	std::string name = std::string(yytext);
+	buffer = std::string(yytext);
 	LOG_LEXEM("found constructor identifier: %s\n", yytext); 
-	layoutBuilder->addLexem(name);
-	yylval.str = &name;
 	return CONSTRUCTOR_ID;
 }
 
@@ -177,8 +143,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
-		yylval.intVal = std::stoll(cleaned, nullptr, 8); 
-		LOG_LEXEM("found octal integer literal: %lld\n", yylval.intVal);
+		buffer = cleaned; 
+		LOG_LEXEM("found octal integer literal: %s\n", buffer.c_str());
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -202,8 +168,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		yylval.intVal = std::stoll(cleaned, nullptr, 10); 
-		LOG_LEXEM("found decimal integer literal: %lld\n", yylval.intVal);
+		buffer = cleaned; 
+		LOG_LEXEM("found decimal integer literal: %s\n", buffer.c_str());
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -228,8 +194,8 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
 		cleaned = replaceComma(cleaned);
-		yylval.intVal = std::stoll(cleaned, nullptr, 16); 
-		LOG_LEXEM("found hexadecimal integer literal: %lld\n", yylval.intVal);
+		buffer = cleaned; 
+		LOG_LEXEM("found hexadecimal integer literal: %s\n", buffer.c_str());
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
@@ -254,12 +220,12 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
     if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
                            [](char c) {return std::isalpha(c); })) {
 		// cleaned = replaceComma(cleaned);
-		yylval.str = &cleaned;
+		buffer = cleaned;
 
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}		
-		LOG_LEXEM("found float literal: %s\n", yylval.str->c_str());	
+		LOG_LEXEM("found float literal: %s\n", buffer.c_str());	
 		return FLOATC;
 	}  
     std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;
@@ -295,7 +261,7 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 		return -1;
 	}
 	LOG_LEXEM("found char: %s\n", buffer.c_str());
-	yylval.str = &buffer;
+	buffer = buffer;
 	return CHARC;
 }
 <CHAR><<EOF>>			{ LOG_LEXEM("ERROR: end of file in char literal opened in %d line\n", opened_line); return -1; }
@@ -303,20 +269,10 @@ module    { LOG_LEXEM("found lexem: module\n"); layoutBuilder->addLexem(std::str
 \"						{ BEGIN(STRING); buffer = ""; opened_line = yylineno; }
 <STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
 <STRING>[^\"\\] 		{ buffer += yytext; }
-<STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); yylval.str = &buffer; return STRINGC; }
+<STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); return STRINGC; }
 <STRING><<EOF>>			{ LOG_LEXEM("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-[\n\t ] { if (yytext[0] == '\n') { yylineno++; } layoutBuilder->addSpace(yytext[0]); }
-
-<*><<EOF>> { 
-	layoutBuilder->eof();  
-	if(!layoutBuilder->canEmit()) {
-		return 0;
-	}
-	else {
-		EMIT_LEXEM;
-	}
-}
+[\n\t ] { if (yytext[0] == '\n') { yylineno++; } }
 
 %%
 
