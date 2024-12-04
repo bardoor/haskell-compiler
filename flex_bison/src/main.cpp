@@ -4,15 +4,20 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 
 #include <JsonBuild.hpp>
 #include <Parser.hpp>
+#include <Token.hpp>
 
-extern int yylex();
+extern int original_yylex();
+extern std::string buffer;
 extern FILE* yyin;
 extern void yy_scan_string(const char* str);
 
 extern json root;
+
+std::vector<Token>::iterator tokensIter;
 
 int main(int argc, char* argv[]) {
     const char* default_file = "flex_bison/resources/code_examples/sample.hs";
@@ -39,6 +44,12 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    std::vector<Token> tokens;
+    do {
+        tokens.emplace_back(original_yylex(), buffer);
+    } while (tokens.back().id != YYEOF);
+
+    tokensIter = tokens.begin();
     yyparse();
     std::cout << "json: " << root;
 

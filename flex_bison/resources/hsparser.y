@@ -4,20 +4,21 @@
 %{
 
 #include <JsonBuild.hpp>
-#include <typeinfo>
+#include <Token.hpp>
 
-extern int yylex();
+extern std::vector<Token>::iterator tokensIter;
+extern int original_yylex();
 extern int yylineno;
 
 void yyerror(const char* s);
+
+int yylex();
 
 json root;
 
 %}
 
 %union {
-      long long intVal;
-      long double floatVal;
       struct Node* node;
       std::string* str;
 }
@@ -57,10 +58,7 @@ json root;
 /* ------------------------------- *
  *      Терминальные символы       *
  * ------------------------------- */
-%token <str> STRINGC SYMS CHARC
-%token <str> FUNC_ID CONSTRUCTOR_ID
-%token <intVal> INTC
-%token <floatVal> FLOATC
+%token <str> STRINGC SYMS CHARC INTC FLOATC FUNC_ID CONSTRUCTOR_ID
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW  
@@ -74,8 +72,8 @@ json root;
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { $$ = mk_literal("int", std::to_string($1)); }
-        | FLOATC    { $$ = mk_literal("float", std::to_string($1)); }
+literal : INTC      { $$ = mk_literal("int", $1->substr()); }
+        | FLOATC    { $$ = mk_literal("float", $1->substr()); }
         | STRINGC   { $$ = mk_literal("str", $1->substr()); }
         | CHARC     { $$ = mk_literal("char", $1->substr()); }
         ;
@@ -639,6 +637,12 @@ typeListComma : type
               ;
 
 %%
+
+int yylex() {
+    Token next = *tokensIter++;
+    yylval.str = &(next.value);
+    return next.id;
+}
 
 void yyerror(const char* s) {
     std::cerr << "Error: " << s << " on line " << yylineno << std::endl;
