@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
     yyparse();
     std::cout << "json: " << root;
 
-
     if (input_file) {
         fclose(input_file);  
     }

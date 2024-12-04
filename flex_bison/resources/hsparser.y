@@ -72,10 +72,10 @@ json root;
  *            Выражения            *
  * ------------------------------- */
 
-literal : INTC      { $$ = mk_literal("int", $1->substr()); }
-        | FLOATC    { $$ = mk_literal("float", $1->substr()); }
-        | STRINGC   { $$ = mk_literal("str", $1->substr()); }
-        | CHARC     { $$ = mk_literal("char", $1->substr()); }
+literal : INTC      { $$ = mk_literal("int", *$1); }
+        | FLOATC    { $$ = mk_literal("float", *$1); }
+        | STRINGC   { $$ = mk_literal("str", *$1); }
+        | CHARC     { $$ = mk_literal("char", *$1); }
         ;
 
 /* 
@@ -160,10 +160,10 @@ op : symbols                { $$ = mk_operator("symbols", $1->substr()); }
    | '-'                    { $$ = mk_operator("symbols", "-"); }
    ;
 
-symbols : SYMS    { $$ = new std::string($1->substr()); }
+symbols : SYMS    { $$ = $1; }
         ;
 
-funid : FUNC_ID   { $$ = new std::string($1->substr()); }
+funid : FUNC_ID   { $$ = $1; }
       ;
 
 stmts : stmt        { $$ = mk_stmts($1, NULL); }
@@ -332,8 +332,8 @@ varList : varList ',' var    { $$ = mk_var_list($1, $3); }
 /* 
       Оператор в префиксной форме или идентификатор функции 
 */
-var : funid                  { $$ = mk_var("funid", $1->substr()); }
-    | '(' symbols ')'        { $$ = mk_var("symbols", $2->substr()); }
+var : funid                  { std::cout << $1 << std::endl; std::cout << $1->substr() << std::endl; $$ = mk_var("funid", $1->substr()); }
+    | '(' symbols ')'        { $$ = mk_var("symbols", *$2); }
     ;
 
 /* 
@@ -639,8 +639,11 @@ typeListComma : type
 %%
 
 int yylex() {
-    Token next = *tokensIter++;
-    yylval.str = &(next.value);
+    Token next = *tokensIter;
+    
+    yylval.str = new std::string(next.value);
+      
+    tokensIter++;
     return next.id;
 }
 
