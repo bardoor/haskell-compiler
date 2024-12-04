@@ -2,7 +2,7 @@ build
 debug
 bin
 
-.vscode/settings.json
+.vscode
 
 Parser.hpp
 Parser.cpp
