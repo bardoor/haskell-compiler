@@ -5,10 +5,13 @@
 #include <stack>
 #include <stdexcept>
 #include <functional>
-#include <algorithm>
+#include <ranges>
 
 #include <Parser.hpp>
 #include <Token.hpp>
+
+namespace ranges = std::ranges;
+
 
 class LayoutBuilderState;
 
@@ -26,16 +29,21 @@ public:
     int popIndent();
     int topIndent();
 
+    template <typename... Funcs>
+    void popIndentIf(Funcs... funcs);
+
     void chageState(LayoutBuilderState* newState);
 
     std::vector<Token>& getTokens();
 
-    static const int TAB_SIZE = 4;
+    static constexpr int TAB_SIZE = 4;
+    static constexpr std::array<int, 4> keywords = {WHEREKW, DOKW, OFKW, LETKW};
 private:
     std::vector<Token> tokens;
     std::unique_ptr<LayoutBuilderState> state;
     std::stack<int> indentStack;
     int currentIndent;
+    
 };
 
 class LayoutBuilderState {
@@ -48,6 +56,46 @@ protected:
     std::unique_ptr<LayoutBuilder> owner;
 };
 
+
+/**
+ * Состояние в котором билдер находится в момент встречи первой лексемы в строке
+ * 
+ * Обязанности:
+ *  1. Зафиксировать индетацию первой лексемы
+ *  2. Вставить токен ';' если индентация лексемы равна индентации перед предыдущей лексемой
+ *  3. Вставить токен { если лексема - первая после where, do, of или let
+ *  4. Вставить токе } если индетация лексемы меньше индетации перед предыдущей лексемой
+ * 
+ */
+class FirstLexemState : public LayoutBuilderState {
+public:
+    FirstLexemState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
+
+    void addToken(std::vector<Token>::iterator& token) override {
+        Token prevToken = *(token - 1);
+        auto& tokens = owner->getTokens();
+
+        owner->pushCurrentIndent();
+
+        if (ranges::any_of(owner->keywords, [prevToken](int t){ return t == prevToken.id; })) {
+            tokens.emplace_back(VOCURLY);
+            // Переход в состояние середины строки
+        }
+
+        int topIndent = owner->popIndent();
+        int prevIndent = owner->topIndent();
+        
+        if (topIndent == prevIndent) {
+            tokens.emplace_back(SEMICOL);
+        }
+        else if (topIndent < prevIndent) {
+            tokens.emplace_back(VCCURLY);
+        }
+        
+        tokens.push_back(*token);
+        ++token;
+    }
+};
 
 
 /**
