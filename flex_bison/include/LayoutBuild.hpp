@@ -1,112 +1,94 @@
 #pragma once
 
-#include <stack>
-#include <queue>
-#include <string>
+#include <vector>
 #include <memory>
-#include <algorithm>
+#include <stack>
 #include <stdexcept>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
+#include <functional>
+#include <algorithm>
 
-#define DEBUG_LEXEMS
+#include <Parser.hpp>
+#include <Token.hpp>
 
-enum class Lexem {
-    OPEN_BRACE, 
-    CLOSING_BRACE,
-    SEMICOLON,
-    NONE
-};
-
-class LayoutBuilder;
-
-class LayoutBuilderState {
-protected:
-    LayoutBuilder* owner;
-    const unsigned TAB_SIZE = 4;
-    bool needAddLexem = false;
-
-public:
-    LayoutBuilderState(LayoutBuilder* stateOwner);
-    virtual void addLexem(const std::string& lexem) = 0;
-    virtual void addSpace(const char lexem);
-    bool needToAddLexem() { return needAddLexem; }
-    void eof();
-    virtual ~LayoutBuilderState();
-};
-
-class NewLineState : public LayoutBuilderState {
-public:
-    NewLineState(LayoutBuilder* owner);
-    NewLineState(LayoutBuilder* owner, const std::string& lexem);
-    virtual void addLexem(const std::string& lexem) override;
-};
-
-class ZeroLayoutState : public LayoutBuilderState {
-public:
-    ZeroLayoutState(LayoutBuilder* owner);
-    virtual void addLexem(const std::string& lexem) override;
-};
-
-class StartLayoutState : public LayoutBuilderState {
-private:
-    bool bracketExplicit = false;
-
-public:
-    StartLayoutState(LayoutBuilder* owner, bool bracketIsExplicit);
-    StartLayoutState(LayoutBuilder* owner, bool bracketIsExplicit, const std::string& lexem);
-    virtual void addLexem(const std::string& lexem) override;
-};
-
-class LeadingLexemState : public LayoutBuilderState {
-public:
-    LeadingLexemState(LayoutBuilder* owner, const std::string& lexem);
-    virtual void addLexem(const std::string& lexem) override;
-};
-
-class MiddlePositionState : public LayoutBuilderState {
-public:
-    MiddlePositionState(LayoutBuilder* owner);
-    MiddlePositionState(LayoutBuilder* owner, const std::string& lexem);
-    virtual void addLexem(const std::string& lexem) override;
-    void addSpace(const char lexem) override;
-};
+class LayoutBuilderState;
 
 class LayoutBuilder {
-private:
-    std::stack<int> offsetStack;
-    std::queue<Lexem> lexemsToEmit;
-    std::unique_ptr<LayoutBuilderState> state;
-    unsigned currentOffset = 0;
-    bool rememberNextOffset;
-    bool n;
-
 public:
     LayoutBuilder();
+
+    std::vector<Token> withLayout(const std::vector<Token>& tokens);
+
+    void reduceIf(std::function<bool(int,int)> condition);
+    void pushIndent(int indent);
+    void pushCurrentIndent();
+    void addToIndent(int indent);
     void newLine();
-    void addLexem(const std::string& lexem);
-    void addSpace(const char lexem);
-    void eof();
+    int popIndent();
+    int topIndent();
 
-    /** 
-     * Функция получения логической разности индентации
-     * @return 0 если последняя индентация в стеке совпадает с текущей, 
-     *         1 если текущая индентация больше, 
-     *        -1 если текущая индентация меньше
-    */
-    int offsetDifference();
-    
-    bool topOffsetIsZero() const;
-    bool canEmit();
+    void chageState(LayoutBuilderState* newState);
 
-    bool stackEmpty();
-    void pushOffsetZero();
-    void pushCurrentOffset();
-    void popOffset();
-    void pushLexem(Lexem lexem);
-    void addOffset(int value);
-    void resetOffset();
-    void changeState(std::unique_ptr<LayoutBuilderState> newState);
-    Lexem emitLexem();
+    std::vector<Token>& getTokens();
+
+    static const int TAB_SIZE = 4;
+private:
+    std::vector<Token> tokens;
+    std::unique_ptr<LayoutBuilderState> state;
+    std::stack<int> indentStack;
+    int currentIndent;
 };
+
+class LayoutBuilderState {
+public:
+    LayoutBuilderState(LayoutBuilder* owner) : owner(owner) {}
+    virtual void addToken(std::vector<Token>::iterator& token) = 0;
+    virtual ~LayoutBuilderState() {}    
+
+protected:
+    std::unique_ptr<LayoutBuilder> owner;
+};
+
+LayoutBuilder::LayoutBuilder() 
+    : state(std::make_unique<BeforeLexemState>(this)) {}
+
+std::vector<Token> LayoutBuilder::withLayout(const std::vector<Token>& tokens) {
+    auto it = this->tokens.begin();
+    while (it != this->tokens.end()) {
+        state->addToken(it);
+    }
+    return this->tokens;
+}
+
+void LayoutBuilder::pushIndent(int indent) {
+    indentStack.push(indent);
+}
+
+int LayoutBuilder::popIndent() {
+    int val = indentStack.top();
+    indentStack.pop();
+    return val;
+}
+
+int LayoutBuilder::topIndent() {
+    return indentStack.top();
+}
+
+std::vector<Token>& LayoutBuilder::getTokens() {
+    return tokens;
+}
+
+void LayoutBuilder::pushCurrentIndent() {
+    indentStack.push(currentIndent);
+}
+
+void LayoutBuilder::addToIndent(int indent) {
+    currentIndent += indent;
+}
+
+void LayoutBuilder::newLine() {
+    currentIndent = 0;
+}
+
+void LayoutBuilder::chageState(LayoutBuilderState* newState) {
+    state = std::unique_ptr<LayoutBuilderState>(newState);
+}
