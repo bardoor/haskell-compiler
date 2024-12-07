@@ -37,7 +37,7 @@ json root;
 
 %left DCOLON
 
-%left ';' ','
+%left SEMICOL ','
 
 %left '(' '[' '{'
 
@@ -61,7 +61,7 @@ json root;
 %token <str> STRINGC SYMS CHARC INTC FLOATC FUNC_ID CONSTRUCTOR_ID
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW  
+%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY TAB NEWLINE SPACE
 
 %start module
 
@@ -176,9 +176,9 @@ stmts : stmt        { $$ = mk_stmts($1, NULL); }
             Примечание: По левую сторону на этапе парсинга невозможно понять - выражение это или паттерн
       2. Любое выражение
 */
-stmt : expr LARROW expr ';'   { $$ = mk_binding_stmt($1, $3); }
-     | expr ';'               { $$ = $1; }
-     | ';'                    { $$ = new Node(); }
+stmt : expr LARROW expr SEMICOL   { $$ = mk_binding_stmt($1, $3); }
+     | expr SEMICOL               { $$ = $1; }
+     | SEMICOL                    { $$ = new Node(); }
      ;
 
 /* ------------------------------- *
@@ -290,7 +290,7 @@ apatList : apat               { $$ = mk_pat_list(NULL, $1); }
 /* 
       Альтернативы для case 
 */
-altList : altList ';' altE  { LOG_PARSER("## PARSER ## make alternative list - altList ; altE\n"); }
+altList : altList SEMICOL altE  { LOG_PARSER("## PARSER ## make alternative list - altList ; altE\n"); }
         | altE              { LOG_PARSER("## PARSER ## make alternative list - altE\n"); }
         ;
 
@@ -314,7 +314,7 @@ guard : VBAR oexpr          { LOG_PARSER("## PARSER ## make guard - VBAR oexpr\n
  * ------------------------------- */
 
 declList : declE              { $$ = $1; }
-         | declList ';' declE { $$ = mk_decl_list($1, $3); }
+         | declList SEMICOL declE { $$ = mk_decl_list($1, $3); }
          ;
 
 con : tycon                  { $$ = mk_con($1->substr()); }
@@ -371,7 +371,7 @@ body : '{' topDeclList '}'
 
 topDeclList : topDecl
             { $$ = $1; }
-            | topDeclList ';' topDecl
+            | topDeclList SEMICOL topDecl
             { $$ = mk_top_decl_list($1, $3); }
             ;
 
@@ -421,7 +421,7 @@ valDefList : %empty
             { LOG_PARSER("## PARSER ## make valDefList - nothing\n"); $$ = new Node(); $$->val = {{"valDefList", json::array()}}; }
             | valDef
             { LOG_PARSER("## PARSER ## make valDefList - valDef\n"); $$ = new Node(); $$->val = {{"valDefList", json::array({$1->val})}}; }
-            | valDef ';' valDef
+            | valDef SEMICOL valDef
             { LOG_PARSER("## PARSER ## make valDefList - valDef ; valDef\n"); $$ = new Node(); $$->val = {{"valDefList", json::array({$1->val, $3->val})}}; }
             ;
 
