@@ -6,9 +6,12 @@
 	#include <memory>
 	#include <algorithm>
 	#include <charconv>
+	#include <iostream>
 
 	#include "LayoutBuild.hpp"
 	#include "Parser.hpp"
+
+	#define DEBUG_LEXEMS
 
 	#define YY_DECL int original_yylex()
 
@@ -100,7 +103,6 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 "}"     |
 "["     |
 "]"     |
-";"		|
 "+"     |
 "-"     |
 "~"     |
@@ -108,6 +110,7 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 ":"		| 
 "="		|
 ","		{ LOG_LEXEM("found: %s\n", yytext);  return yytext[0]; }
+";"		{ LOG_LEXEM("found ';'\n"); return SEMICOL; }
 "`"     { LOG_LEXEM("found BQUOTE\n");  return BQUOTE; }
 ".."    { LOG_LEXEM("found operator: range (..)\n");  return DOTDOT; }
 "->"    { LOG_LEXEM("found operator: -> (function type)\n");  return RARROW; }
@@ -272,7 +275,9 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 <STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); return STRINGC; }
 <STRING><<EOF>>			{ LOG_LEXEM("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
 
-[\n\t ] { if (yytext[0] == '\n') { yylineno++; } }
+\n 		{ yylineno++; return NEWLINE; }
+\t 		{ return TAB; }
+" "	    { return SPACE; }
 
 %%
 
