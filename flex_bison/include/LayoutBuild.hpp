@@ -21,7 +21,6 @@ public:
 
     std::vector<Token> withLayout(const std::vector<Token>& tokens);
 
-    void reduceIf(std::function<bool(int,int)> condition);
     void pushIndent(int indent);
     void pushCurrentIndent();
     void addToIndent(int indent);
@@ -29,15 +28,13 @@ public:
     int popIndent();
     int topIndent();
 
-    template <typename... Funcs>
-    void popIndentIf(Funcs... funcs);
-
     void chageState(LayoutBuilderState* newState);
 
     std::vector<Token>& getTokens();
 
     static constexpr int TAB_SIZE = 4;
     static constexpr std::array<int, 4> keywords = {WHEREKW, DOKW, OFKW, LETKW};
+
 private:
     std::vector<Token> tokens;
     std::unique_ptr<LayoutBuilderState> state;
@@ -54,6 +51,20 @@ public:
 
 protected:
     std::unique_ptr<LayoutBuilder> owner;
+};
+
+/**
+ * Состояние в котором билдер находится после первой лексемы и до самого конца (пока не встретит перенос строки)
+ * 
+ * Обязанности:
+ *  1. Добавлять в вектор встреченные токены кроме пробельных
+ *  2. Перебросить LayoutBuilder в состояние BeforeLexemState если встречено ключевое слово размещения
+ * 
+ */
+class MiddleLineState : public LayoutBuilderState {
+public:
+    MiddleLineState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
+    void addToken(std::vector<Token>::iterator& token) override;
 };
 
 
@@ -79,7 +90,7 @@ public:
 
         if (ranges::any_of(owner->keywords, [prevToken](int t){ return t == prevToken.id; })) {
             tokens.emplace_back(VOCURLY);
-            // Переход в состояние середины строки
+            owner->chageState(new MiddleLineState(owner.get()));
         }
 
         int topIndent = owner->popIndent();
@@ -131,6 +142,25 @@ public:
     }
 };
 
+void MiddleLineState::addToken(std::vector<Token>::iterator& token) {
+    owner->getTokens().push_back(*token);
+
+    // Если токен - ключевое слово, переходим к FirstLexemState
+    if (ranges::any_of(owner->keywords, [token](int t){ return t == token->id; })) {
+        owner->chageState(new FirstLexemState(owner.get()));
+    }
+    else if (token->id == SPACE) {
+        owner->addToIndent(1);
+    }
+    else if (token->id == TAB) {
+        owner->addToIndent(LayoutBuilder::TAB_SIZE);
+    }
+    else if (token->id == NEWLINE) {
+        owner->chageState(new BeforeLexemState(owner.get()));
+    }
+
+    ++token;
+}
 
 LayoutBuilder::LayoutBuilder() 
     : state(std::make_unique<BeforeLexemState>(this)) {}
