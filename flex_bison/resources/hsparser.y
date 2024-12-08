@@ -6,7 +6,7 @@
 #include <JsonBuild.hpp>
 #include <Token.hpp>
 
-extern std::vector<Token>::iterator tokensIter;
+// extern std::vector<Token>::iterator tokensIter;
 extern int original_yylex();
 extern int yylineno;
 
@@ -33,15 +33,15 @@ json root;
 %left	CASE		LET	IN		LAMBDA
   	IF		ELSE
 
-%left SYMS '+' '-' BQUOTE
+%left SYMS PLUS MINUS BQUOTE
 
 %left DCOLON
 
-%left SEMICOL ','
+%left SEMICOL COMMA
 
-%left '(' '[' '{'
+%left OPAREN OBRACKET OCURLY
 
-%left '='
+%left EQ
 
 %right DARROW
 %right RARROW
@@ -59,9 +59,9 @@ json root;
  *      Терминальные символы       *
  * ------------------------------- */
 %token <str> STRINGC SYMS CHARC INTC FLOATC FUNC_ID CONSTRUCTOR_ID
-%token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE
+%token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE PLUS MINUS COMMA EQ
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY TAB NEWLINE SPACE
+%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY OPAREN CPAREN OBRACKET CBRACKET OCURLY CCURLY LAZY BACKSLASH COLON
 
 %start module
 
@@ -97,14 +97,14 @@ expr : oexpr DCOLON type { $$ = mk_typed_expr($1, $3); }
       a + b
       a `fun` b
 */
-oexpr : oexpr op oexpr %prec '+'   { $$ = mk_bin_expr($1, $2, $3); }
+oexpr : oexpr op oexpr %prec PLUS   { $$ = mk_bin_expr($1, $2, $3); }
       | dexpr                      { $$ = $1; }
       ;
 
 /*
       Унарный минус (других унарных выражений просто нет... (да, даже унарного плюса))
 */
-dexpr : '-' kexpr        { $$ = mk_negate_expr($2); }
+dexpr : MINUS kexpr        { $$ = mk_negate_expr($2); }
       | kexpr            { $$ = $1; }
       ;
 
@@ -116,11 +116,11 @@ dexpr : '-' kexpr        { $$ = mk_negate_expr($2); }
       4. do-выражение: do { x = 1; print 5; x }
       5. case-выражение: case x of { 1 -> Just 2; _ -> Nothing }
 */
-kexpr : '\\' lampats RARROW expr            { $$ = mk_lambda($2, $4); }
-      | LETKW '{' declList '}' INKW expr    { $$ = mk_let_in($3, $6); }
+kexpr : BACKSLASH lampats RARROW expr            { $$ = mk_lambda($2, $4); }
+      | LETKW OCURLY declList CCURLY INKW expr    { $$ = mk_let_in($3, $6); }
       | IFKW expr THENKW expr ELSEKW expr   { $$ = mk_if_else($2, $4, $6); }
-      | DOKW '{' stmts '}'                  { $$ = mk_do($3); }
-      | CASEKW expr OFKW '{' altList '}'    { $$ = mk_case($2, $5); }
+      | DOKW OCURLY stmts CCURLY                  { $$ = mk_do($3); }
+      | CASEKW expr OFKW OCURLY altList CCURLY    { $$ = mk_case($2, $5); }
       | fapply                              { $$ = $1; }
       ;
 
@@ -140,7 +140,7 @@ fapply : fapply aexpr        { $$ = mk_fapply($1, $2); }
 */
 aexpr : literal         { $$ = mk_expr($1); }
       | funid           { $$ = mk_expr($1->substr()); }
-      | '(' expr ')'    { $$ = $2; }
+      | OPAREN expr CPAREN    { $$ = $2; }
       | tuple           { $$ = mk_expr($1); }
       | list            { $$ = mk_expr($1); }
       | range           { $$ = mk_expr($1); }
@@ -156,8 +156,8 @@ aexpr : literal         { $$ = mk_expr($1); }
 */
 op : symbols                { $$ = mk_operator("symbols", $1->substr()); }
    | BQUOTE funid BQUOTE    { $$ = mk_operator("quoted", $2->substr()); }
-   | '+'                    { $$ = mk_operator("symbols", "+"); }
-   | '-'                    { $$ = mk_operator("symbols", "-"); }
+   | PLUS                    { $$ = mk_operator("symbols", "+"); }
+   | MINUS                    { $$ = mk_operator("symbols", "-"); }
    ;
 
 symbols : SYMS    { $$ = $1; }
@@ -189,23 +189,23 @@ stmt : expr LARROW expr SEMICOL   { $$ = mk_binding_stmt($1, $3); }
       Кортеж
       Либо пуст, либо 2 и более элементов
 */
-tuple : '(' expr ',' commaSepExprs ')'  { $$ = mk_tuple($2, $4); }
-      | '(' ')'                         { $$ = mk_tuple(NULL, NULL); }
+tuple : OPAREN expr COMMA commaSepExprs CPAREN  { $$ = mk_tuple($2, $4); }
+      | OPAREN CPAREN                         { $$ = mk_tuple(NULL, NULL); }
       ;
 
 /*
       Списковое включение
       [x * x | x <- [1..10], even x]
 */
-comprehension : '[' expr '|' commaSepExprs ']'
+comprehension : OBRACKET expr VBAR commaSepExprs CBRACKET
               ;
 
-list : '[' ']'                          { $$ = mk_list(NULL); }
-     | '[' commaSepExprs ']'            { $$ = mk_list($2); }
+list : OBRACKET CBRACKET                          { $$ = mk_list(NULL); }
+     | OBRACKET commaSepExprs CBRACKET            { $$ = mk_list($2); }
      ;
 
 commaSepExprs : expr                    { $$ = mk_comma_sep_exprs($1, NULL); }
-              | expr ',' commaSepExprs  { $$ = mk_comma_sep_exprs($1, $3); }
+              | expr COMMA commaSepExprs  { $$ = mk_comma_sep_exprs($1, $3); }
               /*
                     Правая рекурсия используется чтоб избежать конфликта:
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
@@ -220,10 +220,10 @@ commaSepExprs : expr                    { $$ = mk_comma_sep_exprs($1, NULL); }
       [1,3..10]   - от 1 до 10 с шагом 2 
       [1,3..]     - от 1 до бесконечности с шагом 2
 */
-range : '[' expr DOTDOT ']'               { $$ = mk_range($2, NULL, NULL); }
-      | '[' expr DOTDOT expr ']'          { $$ = mk_range($2, NULL, $4); }
-      | '[' expr ',' expr DOTDOT expr ']' { $$ = mk_range($2, $4, $6); }
-      | '[' expr ',' expr DOTDOT ']'      { $$ = mk_range($2, $4, NULL); }
+range : OBRACKET expr DOTDOT CBRACKET               { $$ = mk_range($2, NULL, NULL); }
+      | OBRACKET expr DOTDOT expr CBRACKET          { $$ = mk_range($2, NULL, $4); }
+      | OBRACKET expr COMMA expr DOTDOT expr CBRACKET { $$ = mk_range($2, $4, $6); }
+      | OBRACKET expr COMMA expr DOTDOT CBRACKET      { $$ = mk_range($2, $4, NULL); }
       ;
 
 
@@ -239,7 +239,7 @@ lampats :  apat lampats	 { $$ = mk_lambda_pats($1, $2); }
 /* 
       Список паттернов
 */
-pats : pats ',' opat      { $$ = mk_pats($3, $1); }
+pats : pats COMMA opat      { $$ = mk_pats($3, $1); }
      | opat               { $$ = $1; }
      ;
 
@@ -248,13 +248,13 @@ pats : pats ',' opat      { $$ = mk_pats($3, $1); }
       x:xs = lst
 */
 opat : dpat                   { $$ = $1; }
-     | opat op opat %prec '+' { $$ = mk_bin_pat($1, $2, $3); }
+     | opat op opat %prec PLUS { $$ = mk_bin_pat($1, $2, $3); }
      ;
 
 /*
       Специально для мистера унарного минуса
 */
-dpat : '-' fpat           { $$ = mk_negate($2); }
+dpat : MINUS fpat           { $$ = mk_negate($2); }
      | fpat               { $$ = $1; }
      ;
 
@@ -280,8 +280,8 @@ apat : funid                  { $$ = mk_simple_pat($1->substr()); }
      | tycon                  { $$ = mk_simple_pat($1->substr()); }
      | literal                { $$ = mk_simple_pat($1); }
      | WILDCARD               { $$ = mk_simple_pat("wildcard"); }
-     | '(' ')'                { $$ = mk_tuple_pat(NULL, NULL); }
-     | '(' opat ',' pats ')'  { $$ = mk_tuple_pat($2, $4); }
+     | OPAREN CPAREN                { $$ = mk_tuple_pat(NULL, NULL); }
+     | OPAREN opat COMMA pats CPAREN  { $$ = mk_tuple_pat($2, $4); }
      ;
 
 apatList : apat               { $$ = mk_pat_list(NULL, $1); }
@@ -318,14 +318,14 @@ declList : declE              { $$ = $1; }
          ;
 
 con : tycon                  { $$ = mk_con($1->substr()); }
-    | '(' symbols ')'        { $$ = mk_con($2); }
+    | OPAREN symbols CPAREN        { $$ = mk_con($2); }
     ;
 
 conList : con                { $$ = $1; }
-        | conList ',' con    { $$ = mk_con_list($1, $3); }
+        | conList COMMA con    { $$ = mk_con_list($1, $3); }
         ;
 
-varList : varList ',' var    { $$ = mk_var_list($1, $3); }
+varList : varList COMMA var    { $$ = mk_var_list($1, $3); }
         | var                { $$ = $1; }
         ;
 
@@ -333,7 +333,7 @@ varList : varList ',' var    { $$ = mk_var_list($1, $3); }
       Оператор в префиксной форме или идентификатор функции 
 */
 var : funid                  { std::cout << $1 << std::endl; std::cout << $1->substr() << std::endl; $$ = mk_var("funid", $1->substr()); }
-    | '(' symbols ')'        { $$ = mk_var("symbols", *$2); }
+    | OPAREN symbols CPAREN        { $$ = mk_var("symbols", *$2); }
     ;
 
 /* 
@@ -341,14 +341,14 @@ var : funid                  { std::cout << $1 << std::endl; std::cout << $1->su
       1. Биндинг функции
       2. Список функций с типом
 */
-declE : var '=' expr                    { $$ = mk_fun_decl($1, $3); }
-      | funlhs '=' expr                 { $$ = mk_fun_decl($1, $3); }
+declE : var MINUS expr                    { $$ = mk_fun_decl($1, $3); }
+      | funlhs MINUS expr                 { $$ = mk_fun_decl($1, $3); }
       | varList DCOLON type DARROW type { $$ = mk_typed_var_list($1, $3, $5); }
       | varList DCOLON type             { $$ = mk_typed_var_list($1, $3); }
       | %empty                          { $$ = mk_empty_decl(); }
       ;
 
-whereOpt : WHEREKW '{' declList '}' { $$ = mk_where($3); }
+whereOpt : WHEREKW OCURLY declList CCURLY { $$ = mk_where($3); }
          | %empty                   { $$ = mk_where(NULL); }
          ;
 
@@ -365,7 +365,7 @@ module : MODULEKW tycon WHEREKW body
        { $$ = mk_module($1); root = $$->val; }
        ;
 
-body : '{' topDeclList '}'
+body : OCURLY topDeclList CCURLY
      { $$ = $2; }
      ;
 
@@ -401,7 +401,7 @@ classDecl : CLASSKW context DARROW class classBody
 
 classBody : %empty
           { LOG_PARSER("## PARSER ## make classBody - nothing\n"); $$ = new Node(); $$->val = nullptr; }
-          | WHEREKW '{' declList '}'
+          | WHEREKW OCURLY declList CCURLY
           { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); $$ = new Node(); $$->val =  $3->val; }
           ;
 
@@ -413,7 +413,7 @@ instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
 
 rinstOpt : %empty
          { LOG_PARSER("## PARSER ## make rinstOpt - nothing\n"); $$ = new Node(); $$->val = {{"rinstOpt", nullptr}}; }
-         | WHEREKW '{' valDefList '}'
+         | WHEREKW OCURLY valDefList CCURLY
          { LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); $$ = new Node(); $$->val = {{"rinstOpt", $3->val}}; }
          ;
 
@@ -437,45 +437,45 @@ valrhs : valrhs1 whereOpt
 
 valrhs1 : guardrhs
         { LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n"); $$ = new Node(); $$->val = {{"valrhs1", {{"guardrhs", $1->val}}}}; }
-        | '=' expr
+        | MINUS expr
         { LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); $$ = new Node(); $$->val = {{"valrhs1", {{"expr", $2->val}}}}; }
         ;
 
-guardrhs : guard '=' expr
+guardrhs : guard MINUS expr
          { LOG_PARSER("## PARSER ## make guardrhs - guard = expr\n"); $$ = new Node(); $$->val = {{"guardrhs", {{"guard", $1->val}, {"expr", $3->val}}}}; }
-         | guard '=' expr guardrhs
+         | guard MINUS expr guardrhs
          { LOG_PARSER("## PARSER ## make guardrhs - guard = expr guardrhs\n"); $$ = new Node(); $$->val = {{"guardrhs", {{"guard", $1->val}, {"expr", $3->val},{"guardrhs", $4->val}}}}; }
          ;
 
 restrictInst : tycon
              { LOG_PARSER("## PARSER ## make restrictInst - tycon\n"); $$ = new Node(); $$->val = {{"restrictInst", $1->substr()}}; }
-             | '(' tycon tyvarList ')'
+             | OPAREN tycon tyvarList CPAREN
              { LOG_PARSER("## PARSER ## make restrictInst - (tycon tyvarList)\n"); $$ = new Node(); $$->val = {{"restrictInst", {{"tycon", $2->substr()}, {"tyvarList", $3->val}}}}; }
-             | '(' tyvar ',' tyvarListComma ')'
+             | OPAREN tyvar COMMA tyvarListComma CPAREN
              { LOG_PARSER("## PARSER ## make restrictInst - (tyvar, tyvarListComma)\n"); $$ = new Node(); $$->val = {{"restrictInst", {{"tyvar", $2->val}, {"tyvarListComma", $4->val}}}}; }
-             | '(' ')'
+             | OPAREN CPAREN
              { LOG_PARSER("## PARSER ## make restrictInst - ()\n"); $$ = new Node(); $$->val = {{"restrictInst", json::array()}}; }
-             | '[' tyvar ']'
+             | OBRACKET tyvar CBRACKET
              { LOG_PARSER("## PARSER ## make restrictInst - [tyvar]\n"); $$ = new Node(); $$->val = {{"restrictInst", {{"tyvar", $2->val}}}}; }
-             | '(' tyvar RARROW tyvar ')'
+             | OPAREN tyvar RARROW tyvar CPAREN
              { LOG_PARSER("## PARSER ## make restrictInst - (tyvar => tyvar)\n"); $$ = new Node(); $$->val = {{"restrictInst", {{"from", $2->val}, {"to", $4->val}}}}; }
              ;
 
 generalInst : tycon
             { LOG_PARSER("## PARSER ## make generalInst - tycon\n"); $$ = new Node(); $$->val = {{"generalInst", $1->substr()}}; }
-            | '(' tycon atypeList ')'
+            | OPAREN tycon atypeList CPAREN
             { LOG_PARSER("## PARSER ## make generalInst - (tycon atypeList)\n"); $$ = new Node(); $$->val = {{"generalInst", {{"tycon", $2->substr()}, {"atypeList", $3->val}}}}; }
-            | '(' type ',' typeListComma ')'
+            | OPAREN type COMMA typeListComma CPAREN
             { LOG_PARSER("## PARSER ## make generalInst - (type, typeListComma)\n"); $$ = new Node(); $$->val = {{"generalInst", {{"type", $2->val}, {"typeListComma", $4->val}}}}; }
-            | '(' ')'
+            | OPAREN CPAREN
             { LOG_PARSER("## PARSER ## make generalInst - ()\n"); $$ = new Node(); $$->val = {{"generalInst", json::array()}}; }
-            | '[' type ']'
+            | OBRACKET type CBRACKET
             { LOG_PARSER("## PARSER ## make generalInst - [type]\n"); $$ = new Node(); $$->val = {{"generalInst", {{"type", $2->val}}}}; }
-            | '(' btype RARROW type ')'
+            | OPAREN btype RARROW type CPAREN
             { LOG_PARSER("## PARSER ## make generalInst - (btype => type)\n"); $$ = new Node(); $$->val = {{"generalInst", {{"from", $2->val},{"to", $4->val}}}}; }
             ;
 
-context : '(' contextList ')'
+context : OPAREN contextList CPAREN
         { LOG_PARSER("## PARSER ## make context - (contextList)\n"); $$ = new Node(); $$->val = $2->val; }
         | class
         { LOG_PARSER("## PARSER ## make context - class\n"); $$ = new Node(); $$->val = $1->val; }
@@ -483,7 +483,7 @@ context : '(' contextList ')'
 
 contextList : class
             { LOG_PARSER("## PARSER ## make contextList - class\n"); $$ = new Node(); $$->val = {{"contextList", { $1->val }}}; }
-            | contextList ',' class
+            | contextList COMMA class
             { LOG_PARSER("## PARSER ## make contextList - contextList, class\n"); $$ = new Node(); $$->val = $1->val; $$->val["contextList"].push_back($3->val); }
             ;
 
@@ -495,21 +495,21 @@ class : tycon tyvar
  *              data               *
  * ------------------------------- */
 
-dataDecl : DATAKW context DARROW simpleType '=' constrList
+dataDecl : DATAKW context DARROW simpleType MINUS constrList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"context", $2->val}, {"simpleType", $4->val}, {"constrList", $6->val}}}}; }
-         | DATAKW simpleType '=' constrList
+         | DATAKW simpleType MINUS constrList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}}}}; }
-         | DATAKW context DARROW simpleType '=' constrList DERIVINGKW tyClassList
+         | DATAKW context DARROW simpleType MINUS constrList DERIVINGKW tyClassList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList DERIVING tyClassList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"context", $2->val}, {"simpleType", $4->val}, {"constrList", $6->val}, {"deriving", $8->val}}}}; }
-         | DATAKW simpleType '=' constrList DERIVINGKW tyClassList
+         | DATAKW simpleType MINUS constrList DERIVINGKW tyClassList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList DERIVING tyClassList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}, {"deriving", $6->val}}}}; }
          ;
 
 constrList : tycon atypeList
            { LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); $$ = new Node(); $$->val = {{"constrList", {{"tycon", $1->substr()}, {"atypeList", $2->val}}}}; }
-           | '(' SYMS ')' atypeList
+           | OPAREN SYMS CPAREN atypeList
            { LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); $$ = new Node(); $$->val = {{"constrList", {{"syms", $2->substr()}, {"atypeList", $4->val}}}}; }
-           | '(' SYMS ')'
+           | OPAREN SYMS CPAREN
            { LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); $$ = new Node(); $$->val = {{"constrList", {{"syms", $2->substr()}}}}; }
            | tycon
            { LOG_PARSER("## PARSER ## make constrList - tycon\n"); $$ = new Node(); $$->val = {{"constrList", {{"tycon", $1->substr()}}}}; }
@@ -523,9 +523,9 @@ conop : SYMS
       { LOG_PARSER("## PARSER ## make conop - `CONSTRUCTOR_ID`\n"); $$ = new Node(); $$->val = {{"conop", $2->substr()}}; }
       ;
 
-tyClassList : '(' tyClassListComma ')'
+tyClassList : OPAREN tyClassListComma CPAREN
             { LOG_PARSER("## PARSER ## make tyClassList - (tyClassListComma)\n"); $$ = new Node(); $$->val = {{"tyClassList", $2->val}}; }
-            | '(' ')'
+            | OPAREN CPAREN
             { LOG_PARSER("## PARSER ## make tyClassList - ()\n"); $$ = new Node(); $$->val = {{"tyClassList", json::array()}}; }
             | tyClass
             { LOG_PARSER("## PARSER ## make tyClassList - tyClass\n"); $$ = new Node(); $$->val = {{"tyClassList", $1->val}}; }
@@ -533,7 +533,7 @@ tyClassList : '(' tyClassListComma ')'
 
 tyClassListComma : tyClass
                  { LOG_PARSER("## PARSER ## make tyClassListComma - tyClass\n"); $$ = new Node(); $$->val = {{"tyClassListComma", {$1->val}}}; }
-                 | tyClassListComma ',' tyClass
+                 | tyClassListComma COMMA tyClass
                  { LOG_PARSER("## PARSER ## make tyClassListComma - tyClassListComma, tyClass\n"); $$ = new Node(); $$->val = $1->val; $$->val["tyClassListComma"].push_back($3->val); }
                  ;
 
@@ -541,7 +541,7 @@ tyClass : tycon
         { LOG_PARSER("## PARSER ## make tyClass - tycon\n"); $$ = new Node(); $$->val = {{"tyClass", $1->substr()}}; }
         ;
 
-typeDecl : TYPEKW simpleType '=' type
+typeDecl : TYPEKW simpleType MINUS type
          { LOG_PARSER("## PARSER ## make typeDecl - TYPE simpleType = type\n"); $$ = new Node(); $$->val = {{"typeDecl", {{"simpleType", $2->val}, {"type", $4->val}}}}; }
          ;
 
@@ -563,7 +563,7 @@ tyvarList : tyvar
 
 tyvarListComma : tyvar
                { LOG_PARSER("## PARSER ## make tyvarListComma - tyvar\n"); $$ = new Node(); $$->val = {{"tyvarListComma", {{"tyvar", $1->val}}}}; }
-               | tyvarList ',' tyvar
+               | tyvarList COMMA tyvar
                { LOG_PARSER("## PARSER ## make tyvarListComma - tyvarList, tyvar\n"); $$ = new Node(); $$->val = $1->val; $$->val["tyvarListComma"].push_back($3->val); }
                ;
 
@@ -575,7 +575,7 @@ defaultDecl : DEFAULTKW defaultTypes
             { LOG_PARSER("## PARSER ## make defaultDecl - DEFAULT defaultTypes\n"); $$ = new Node(); $$->val = {{"defaultDecl", {{"defaultTypes", $2->val}}}}; }
             ;
 
-defaultTypes : '(' type ',' typeListComma ')'
+defaultTypes : OPAREN type COMMA typeListComma CPAREN
              { LOG_PARSER("## PARSER ## make defaultTypes - (type, typeListComma)\n"); $$ = new Node(); $$->val = {{"defaultTypes", {{"type", $2->val}, {"typeListComma", $4->val}}}}; }
              | ttype
              { LOG_PARSER("## PARSER ## make defaultTypes - ttype\n"); $$ = new Node(); $$->val = {{"defaultTypes", $1->val}}; }
@@ -600,7 +600,7 @@ btype : atype
 
 atype : ntatype
       { LOG_PARSER("## PARSER ## make atype - ntatype\n"); $$ = $1; }
-      | '(' type ',' typeListComma ')'
+      | OPAREN type COMMA typeListComma CPAREN
       { LOG_PARSER("## PARSER ## make atype - (type, typeListComma)\n"); $$ = $4; $$->val.push_back($2->val); }
       ;
 
@@ -622,29 +622,29 @@ ntatype : tyvar
         { LOG_PARSER("## PARSER ## make ntatype - tyvar\n"); $$ = $1; }
         | tycon
         { LOG_PARSER("## PARSER ## make ntatype - tycon\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()}}; }
-        | '(' ')'
+        | OPAREN CPAREN
         { LOG_PARSER("## PARSER ## make ntatype - ()\n"); $$ = new Node(); $$->val = {{"tuple", json::array()}}; }
-        | '(' type ')'
+        | OPAREN type CPAREN
         { LOG_PARSER("## PARSER ## make ntatype - (type)\n"); $$ = new Node(); $$->val = {{"tuple", $2->val}}; }
-        | '[' type ']'
+        | OBRACKET type CBRACKET
         { LOG_PARSER("## PARSER ## make ntatype - [type]\n"); $$ = new Node(); $$->val = {{"list", $2->val}}; }
         ;
 
 typeListComma : type
               { LOG_PARSER("## PARSER ## make typeListComma - type\n"); $$ = new Node(); $$->val.push_back($1->val); }
-              | type ',' typeListComma
+              | type COMMA typeListComma
               { LOG_PARSER("## PARSER ## make typeListComma - type, typeListComma\n"); $$ = $3; $$->val.push_back($1->val); }
               ;
 
 %%
 
 int yylex() {
-    Token next = *tokensIter;
-    
-    yylval.str = new std::string(next.value);
-      
-    tokensIter++;
-    return next.id;
+    // Token next = *tokensIter;
+    // 
+    // yylval.str = new std::string(next.value);
+    //   
+    // tokensIter++;
+    return 1;
 }
 
 void yyerror(const char* s) {
