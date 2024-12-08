@@ -7,13 +7,26 @@
 	#include <algorithm>
 	#include <charconv>
 	#include <iostream>
+	#include <exception>
 
 	#include "LayoutBuild.hpp"
 	#include "Parser.hpp"
+	#include "Token.hpp"
 
-	#define DEBUG_LEXEMS
+	// #define DEBUG_LEXEMS
 
-	#define YY_DECL int original_yylex()
+	class LexerError : public std::exception {
+	private:
+		std::string message;
+	public:
+		explicit LexerError(const std::string& msg) : message(msg) {}
+		const char* what() const noexcept override {
+			return message.c_str();
+		}
+	};
+
+	#define YY_DECL IndentedToken original_yylex()
+	#define YY_NULL IndentedToken()
 
 	#ifdef DEBUG_LEXEMS
 		 #define LOG_LEXEM(msg, ...) printf(msg, ##__VA_ARGS__);
@@ -44,8 +57,11 @@
 	std::string replaceComma(const std::string& str);
 	unsigned occurencesCount(std::string str, std::string substr);
 
+	unsigned offset = 0;
 	unsigned lineno = 1;
 	unsigned opened_line;
+
+	IndentedToken bufferToken;
 	std::string buffer;
 %}
 
@@ -73,71 +89,80 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 
 %%
 
-_         { LOG_LEXEM("found lexem: _\n");  return WILDCARD; }
-case      { LOG_LEXEM("found lexem: case\n");  return CASEKW; }
-class     { LOG_LEXEM("found lexem: class\n");  return CLASSKW; }
-data      { LOG_LEXEM("found lexem: data\n");  return DATAKW; }
-newtype   { LOG_LEXEM("found lexem: newtype\n");  return NEWTYPEKW; }
-type      { LOG_LEXEM("found lexem: type\n");  return TYPEKW; }
-of        { LOG_LEXEM("found lexem: of\n");  return OFKW; }
-then      { LOG_LEXEM("found lexem: then\n");  return THENKW; }
-default   { LOG_LEXEM("found lexem: default\n");  return DEFAULTKW; }
-deriving  { LOG_LEXEM("found lexem: deriving\n");  return DERIVINGKW; }
-do        { LOG_LEXEM("found lexem: do\n");  return DOKW; }
-if        { LOG_LEXEM("found lexem: if\n");  return IFKW; }
-else      { LOG_LEXEM("found lexem: else\n");  return ELSEKW; }
-where     { LOG_LEXEM("found lexem: where\n");  return WHEREKW; }
-let       { LOG_LEXEM("found lexem: let\n");  return LETKW; }
-in 		  { LOG_LEXEM("found lexem: in\n");  return INKW; }
-foreign   { LOG_LEXEM("found lexem: foreign\n");  return FOREIGNKW; }
-infix     { LOG_LEXEM("found lexem: infix\n");  return INFIXKW; }
-infixl    { LOG_LEXEM("found lexem: infixl\n");  return INFIXLKW; }
-infixr    { LOG_LEXEM("found lexem: infixr\n");  return INFIXRKW; }
-instance  { LOG_LEXEM("found lexem: instance\n");  return INSTANCEKW; }
-import    { LOG_LEXEM("found lexem: import\n");  return IMPORTKW; }
-module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
+_         { IndentedToken token(WILDCARD, offset);   LOG_LEXEM("found lexem: _\n");        offset += strlen(yytext); return token; }
+case      { IndentedToken token(CASEKW, offset);     LOG_LEXEM("found lexem: case\n");     offset += strlen(yytext); return token; }
+class     { IndentedToken token(CLASSKW, offset);    LOG_LEXEM("found lexem: class\n");    offset += strlen(yytext); return token; }
+data      { IndentedToken token(DATAKW, offset);     LOG_LEXEM("found lexem: data\n");     offset += strlen(yytext); return token; }
+newtype   { IndentedToken token(NEWTYPEKW, offset);  LOG_LEXEM("found lexem: newtype\n");  offset += strlen(yytext); return token; }
+type      { IndentedToken token(TYPEKW, offset);     LOG_LEXEM("found lexem: type\n");     offset += strlen(yytext); return token; }
+of        { IndentedToken token(OFKW, offset);       LOG_LEXEM("found lexem: of\n");       offset += strlen(yytext); return token; }
+then      { IndentedToken token(THENKW, offset);     LOG_LEXEM("found lexem: then\n");     offset += strlen(yytext); return token; }
+default   { IndentedToken token(DEFAULTKW, offset);  LOG_LEXEM("found lexem: default\n");  offset += strlen(yytext); return token; }
+deriving  { IndentedToken token(DERIVINGKW, offset); LOG_LEXEM("found lexem: deriving\n"); offset += strlen(yytext); return token; }
+do        { IndentedToken token(DOKW, offset);       LOG_LEXEM("found lexem: do\n");       offset += strlen(yytext); return token; }
+if        { IndentedToken token(IFKW, offset);       LOG_LEXEM("found lexem: if\n");       offset += strlen(yytext); return token; }
+else      { IndentedToken token(ELSEKW, offset);     LOG_LEXEM("found lexem: else\n"); 	   offset += strlen(yytext); return token; }
+where     { IndentedToken token(WHEREKW, offset);    LOG_LEXEM("found lexem: where\n");    offset += strlen(yytext); return token; }
+let       { IndentedToken token(LETKW, offset);   	 LOG_LEXEM("found lexem: let\n");      offset += strlen(yytext); return token; }
+in        { IndentedToken token(INKW, offset); 		 LOG_LEXEM("found lexem: in\n");  	   offset += strlen(yytext); return token; }
+foreign   { IndentedToken token(FOREIGNKW, offset);  LOG_LEXEM("found lexem: foreign\n");  offset += strlen(yytext); return token; }
+infix     { IndentedToken token(INFIXKW, offset);    LOG_LEXEM("found lexem: infix\n");    offset += strlen(yytext); return token; }
+infixl    { IndentedToken token(INFIXLKW, offset);   LOG_LEXEM("found lexem: infixl\n");   offset += strlen(yytext); return token; }
+infixr    { IndentedToken token(INFIXRKW, offset);   LOG_LEXEM("found lexem: infixr\n");   offset += strlen(yytext); return token; }
+instance  { IndentedToken token(INSTANCEKW, offset); LOG_LEXEM("found lexem: instance\n"); offset += strlen(yytext); return token; }
+import    { IndentedToken token(IMPORTKW, offset);   LOG_LEXEM("found lexem: import\n");   offset += strlen(yytext); return token; }
+module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: module\n");   offset += strlen(yytext); return token; }
 
-"("     |
-")"     |
-"{"     |
-"}"     |
-"["     |
-"]"     |
-"+"     |
-"-"     |
-"~"     |
-\\      |
-":"		| 
-"="		|
-","		{ LOG_LEXEM("found: %s\n", yytext);  return yytext[0]; }
-";"		{ LOG_LEXEM("found ';'\n"); return SEMICOL; }
-"`"     { LOG_LEXEM("found BQUOTE\n");  return BQUOTE; }
-".."    { LOG_LEXEM("found operator: range (..)\n");  return DOTDOT; }
-"->"    { LOG_LEXEM("found operator: -> (function type)\n");  return RARROW; }
-"<-"    { LOG_LEXEM("found operator: <- (monad binding)\n");  return LARROW; }
-"@"     { LOG_LEXEM("found operator: as-pattern (@)\n");  return AS; }
-"::"    { LOG_LEXEM("found operator: type annotation (::)\n");  return DCOLON; }
-"=>"    { LOG_LEXEM("found operator: type constraint (=>)\n");  return DARROW; }
-"|"     { LOG_LEXEM("found operator: | (guards)\n");  return VBAR; }
 
-{SYMBOL}+ { std::string syms = std::string(yytext); buffer = syms; LOG_LEXEM("found symbol: %s\n", yytext);  return SYMS; }
+"("     { IndentedToken token(OPAREN, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+")"     { IndentedToken token(CPAREN, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"{"     { IndentedToken token(OCURLY, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"}"     { IndentedToken token(CCURLY, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"["     { IndentedToken token(OBRACKET, offset);  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"]"     { IndentedToken token(CBRACKET, offset);  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"+"     { IndentedToken token(PLUS, offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"-"     { IndentedToken token(MINUS, offset);     LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"~"     { IndentedToken token(LAZY, offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+\\      { IndentedToken token(BACKSLASH, offset); LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+":"		{ IndentedToken token(COLON, offset);     LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"="		{ IndentedToken token(EQ, offset);        LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+","		{ IndentedToken token(COMMA, offset); 	  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+";"		{ IndentedToken token(SEMICOL, offset);   LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"`"     { IndentedToken token(BQUOTE, offset);    LOG_LEXEM("found BQUOTE\n");         offset += strlen(yytext); return token; }
+".."    { IndentedToken token(DOTDOT, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"->"    { IndentedToken token(RARROW, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"<-"    { IndentedToken token(LARROW, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"@"     { IndentedToken token(AS, offset);        LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"::"    { IndentedToken token(DCOLON, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"=>"    { IndentedToken token(DARROW, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"|"     { IndentedToken token(VBAR, offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+
+{SYMBOL}+ { 
+	IndentedToken token(SYMS, std::string(yytext), offset); 
+	LOG_LEXEM("found symbol: %s\n", yytext); 
+	offset += strlen(yytext); 
+	return token; 
+}
 
 {SMALL}({WORD}|')*  { 
-	buffer = std::string(yytext);
+	IndentedToken token(FUNC_ID, std::string(yytext), offset); 
 	LOG_LEXEM("found function identifier: %s\n", yytext);
-	return FUNC_ID;
+	offset += strlen(yytext); 
+	return token;
 }
 {LARGE}({WORD}|')*  { 
-	buffer = std::string(yytext);
+	IndentedToken token(CONSTRUCTOR_ID, std::string(yytext), offset); 
 	LOG_LEXEM("found constructor identifier: %s\n", yytext); 
-	return CONSTRUCTOR_ID;
+	offset += strlen(yytext); 
+	return token;
 }
 
 {INT_8}  { 
   	std::string cleaned;
+	std::string errorMessage = "Error! Incorrect octal integer literal: ";
+
   	if (!clean_integer(yytext, cleaned, 8)) {
-		std::cerr << "Error! Incorrect octal literal: " << yytext << std::endl;
-		return -1;
+		throw LexerError(errorMessage + yytext);
     }
 
 	std::string after_literal;
@@ -146,23 +171,26 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
-		buffer = cleaned; 
-		LOG_LEXEM("found octal integer literal: %s\n", buffer.c_str());
+		IndentedToken token(INTC, cleaned, offset); 
+		LOG_LEXEM("found octal integer literal: %s\n", cleaned.c_str());
+
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
-		return INTC;
+
+		offset += strlen(yytext); 
+		return token;
 	}
 
-	std::cerr << "Error! Incorrect octal integer literal: " << cleaned + after_literal << std::endl;
-	return -1;
+	throw LexerError(errorMessage + cleaned + after_literal);
 }
 
 {INT_10} {
 	std::string cleaned;
+	std::string errorMessage = "Error! Incorrect decimal integer literal: ";
+
   	if (!clean_integer(yytext, cleaned, 10)) {
-		std::cerr << "Error! Incorrect decimal literal: " << yytext << std::endl;
-		return -1;
+		throw LexerError(errorMessage + yytext);
     }
 
 	std::string after_literal;
@@ -171,23 +199,26 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		buffer = cleaned; 
+		IndentedToken token(INTC, cleaned, offset); 
 		LOG_LEXEM("found decimal integer literal: %s\n", buffer.c_str());
+
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
-		return INTC;
+
+		offset += strlen(yytext); 
+		return token;
 	}
 
-	std::cerr << "Error! Incorrect decimal integer literal: " << cleaned + after_literal << std::endl;
-	return -1;
+	throw LexerError(errorMessage + cleaned + after_literal);
 }
 
 {INT_16} { 
 	std::string cleaned;
+	std::string errorMessage = "Error! Incorrect hexadecimal integer literal: ";
+
   	if (!clean_integer(yytext, cleaned, 16)) {
-		std::cerr << "Error! Incorrect hexadecimal integer literal: " << yytext << std::endl;
-		return -1;
+		throw LexerError(errorMessage + yytext);
     }
 
 	std::string after_literal;
@@ -196,24 +227,26 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
-		cleaned = replaceComma(cleaned);
-		buffer = cleaned; 
-		LOG_LEXEM("found hexadecimal integer literal: %s\n", buffer.c_str());
+		IndentedToken token(INTC, cleaned, offset); 
+		LOG_LEXEM("found hexadecimal integer literal: %s\n", cleaned.c_str());
+
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}
-		return INTC;
+
+		offset += strlen(yytext); 
+		return token;
 	}
 
-	std::cerr << "Error! Incorrect hexadecimal integer literal: " << cleaned + after_literal << std::endl;
-	return -1;
+	throw LexerError(errorMessage + cleaned + after_literal);
 }
 
 {FLOAT}  {
   	std::string cleaned;
+	std::string errorMessage = "Error! Incorrect float literal: ";
+
     if (!clean_float(yytext, cleaned)) {
-      std::cerr << "Error! Incorrect float literal: " << yytext << std::endl;
-      return -1;
+		throw LexerError(errorMessage + yytext);
     }
 
 	std::string after_literal;
@@ -223,16 +256,18 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
     if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
                            [](char c) {return std::isalpha(c); })) {
 		// cleaned = replaceComma(cleaned);
-		buffer = cleaned;
+		IndentedToken token(INTC, cleaned, offset); 
+		LOG_LEXEM("found float literal: %s\n", cleaned.c_str());	
 
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
 		}		
-		LOG_LEXEM("found float literal: %s\n", buffer.c_str());	
-		return FLOATC;
+
+		offset += strlen(yytext); 
+		return token;
 	}  
-    std::cerr << "Error! Incorrect float literal: " << cleaned + after_literal << std::endl;
-    return -1;
+
+	throw LexerError(errorMessage + cleaned + after_literal);
 }
 
 "--"						{ BEGIN(SINGLE_LINE_COMMENT); }
@@ -243,41 +278,62 @@ module    { LOG_LEXEM("found lexem: module\n");  return MODULEKW; }
 <MULTI_LINE_COMMENT>[^-]+   
 <MULTI_LINE_COMMENT>"-"[^}]  
 <MULTI_LINE_COMMENT>"-}"    { BEGIN(INITIAL); LOG_LEXEM("found a multi line comment\n"); }
-<MULTI_LINE_COMMENT><<EOF>> { LOG_LEXEM("ERROR: end of file before end of comment opened in %d line", opened_line); return -1; }
+<MULTI_LINE_COMMENT><<EOF>> { throw LexerError(std::string("Unexpected end of the file after opening char literal! Line: ") + std::to_string(opened_line)); }
 
-\'					{ BEGIN(CHAR); buffer = ""; opened_line = yylineno; }
-<STRING,CHAR>\\a	{ buffer += "\a"; }
-<STRING,CHAR>\\b	{ buffer += "\b"; }
-<STRING,CHAR>\\f	{ buffer += "\f"; }
-<STRING,CHAR>\\n	{ buffer += "\n"; }
-<STRING,CHAR>\\r	{ buffer +=	"\r"; }
-<STRING,CHAR>\\v	{ buffer += "\v"; }
-<STRING,CHAR>\\t	{ buffer += "\t"; }
-<STRING>\\({INT_8}|{INT_10}|{INT_16}) { buffer += (char) strtol(yytext + 1, NULL, 0); }
-<STRING,CHAR>\\		{ buffer += "\\"; }
-<STRING>\\&			{ }
-<CHAR>[^\'\\]		{ buffer += yytext; }
+\'					{ BEGIN(CHAR); bufferToken = IndentedToken(CHARC, offset); offset += 1; buffer = ""; opened_line = yylineno; }
+<STRING,CHAR>\\a	{ buffer += "\a"; offset += 2; }
+<STRING,CHAR>\\b	{ buffer += "\b"; offset += 2; }
+<STRING,CHAR>\\f	{ buffer += "\f"; offset += 2; }
+<STRING,CHAR>\\n	{ buffer += "\n"; offset += 2; }
+<STRING,CHAR>\\r	{ buffer +=	"\r"; offset += 2; }
+<STRING,CHAR>\\v	{ buffer += "\v"; offset += 2; }
+<STRING,CHAR>\\t	{ buffer += "\t"; offset += 2; }
+<STRING>\\({INT_8}|{INT_10}|{INT_16}) { buffer += (char) strtol(yytext + 1, NULL, 0); offset += strlen(yytext); }
+<STRING,CHAR>\\		{ buffer += "\\"; offset += 1; }
+<STRING>\\&			{ offset += 2; }
+<CHAR>[^\'\\]		{ buffer += yytext; offset += 1; }
 <CHAR>\' { 
 	BEGIN(INITIAL);
+
 	if (buffer.size() > 1) {
-		LOG_LEXEM("ERROR: char literal opened in %d line can't be longer than 1 symbol!\n", opened_line);
-		return -1;
-	}
+		throw LexerError(std::string("Char literal can't be longer than 1 character! Line: ") + std::to_string(opened_line));
+	} 
+
+	bufferToken.value = buffer;
 	LOG_LEXEM("found char: %s\n", buffer.c_str());
-	buffer = buffer;
-	return CHARC;
+	offset += 1;
+
+	return bufferToken;
 }
-<CHAR><<EOF>>			{ LOG_LEXEM("ERROR: end of file in char literal opened in %d line\n", opened_line); return -1; }
+<CHAR><<EOF>>			{ throw LexerError(std::string("Unexpected end of the file after opening char literal! Line: ") + std::to_string(opened_line)); }
 
-\"						{ BEGIN(STRING); buffer = ""; opened_line = yylineno; }
-<STRING>\\[ \n\t]*\\	{ yylineno += occurencesCount(yytext, "\n"); /* Multiline string separator */ }
-<STRING>[^\"\\] 		{ buffer += yytext; }
-<STRING>\"				{ BEGIN(INITIAL); LOG_LEXEM("found string: %s\n", buffer.c_str()); return STRINGC; }
-<STRING><<EOF>>			{ LOG_LEXEM("ERROR: end of file in string literal opened in %d line\n", opened_line); return -1; }
+\" { 
+	BEGIN(STRING); 
+	bufferToken = IndentedToken(STRINGC, offset); 
+	buffer = ""; 
+	offset += 1; 
+	opened_line = yylineno;
+}
+<STRING>\\[ \n\t]*\\ { 
+	yylineno += occurencesCount(yytext, "\n"); 
+	offset += strlen(yytext);  
+}
+<STRING>[^\"\\] { 
+	buffer += yytext; 
+	offset += strlen(yytext);
+}
+<STRING>\" { 
+	BEGIN(INITIAL); 
+	LOG_LEXEM("found string: %s\n", buffer.c_str()); 
+	offset += 1; 
+	bufferToken.value = buffer; 
+	return bufferToken; 
+}
+<STRING><<EOF>>			{ throw LexerError(std::string("Unexpected end of the file after opening string literal! Line: ") + std::to_string(opened_line)); }
 
-\n 		{ yylineno++; return NEWLINE; }
-\t 		{ return TAB; }
-" "	    { return SPACE; }
+\n 		{ yylineno++; offset = 0; }
+\t 		{ offset += 4; }
+" "	    { offset += 1; }
 
 %%
 
@@ -411,4 +467,3 @@ unsigned occurencesCount(std::string str, std::string substr) {
 
 	return occurences;
 }
-
