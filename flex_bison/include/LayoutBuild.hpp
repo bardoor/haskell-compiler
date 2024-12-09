@@ -68,20 +68,6 @@ protected:
 };
 
 /**
- * Состояние, в котором находится LayoutBuilder при встрече ключевого слова размешения (let, in, of, where)
- * 
- * Обязанность: 
- *      Перевести LayoutBuilder в состояние явного или неявно размещения в зависимости от наличия скобок
- */
-class KeywordState : public LayoutBuilderState {
-public:
-    explicit KeywordState(LayoutBuilder* owner);
-    virtual void onEnter() override {};
-    void addToken(Iterator<IndentedToken>& token) override;
-    virtual void onExit() override {};
-};
-
-/**
  * Состояние, в котором находится LayoutBuilder 
  * 
  * Обязанность:

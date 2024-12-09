@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     tokens = layoutBuilder.withLayout(tokens);
 
     for (auto token : tokens) {
-        std::cout << token.toString() << std::endl;
+        std::cout << token.value << " ";
     }
 
     // tokensIter = tokens.begin();

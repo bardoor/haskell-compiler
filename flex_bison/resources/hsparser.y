@@ -98,7 +98,7 @@ expr : oexpr DCOLON type { $$ = mk_typed_expr($1, $3); }
       a `fun` b
 */
 oexpr : oexpr op oexpr %prec PLUS   { $$ = mk_bin_expr($1, $2, $3); }
-      | dexpr                      { $$ = $1; }
+      | dexpr                       { $$ = $1; }
       ;
 
 /*
