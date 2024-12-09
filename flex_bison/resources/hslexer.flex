@@ -14,13 +14,13 @@
 	#include "Token.hpp"
 	#include "LexerError.hpp"
 
-	// #define DEBUG_LEXEMS
+	#define DEBUG_LEXEMS
 
 	#define YY_DECL IndentedToken original_yylex()
 	#define YY_NULL IndentedToken()
 
 	#ifdef DEBUG_LEXEMS
-		 #define LOG_LEXEM(msg, ...) printf(msg, ##__VA_ARGS__);
+		 #define LOG_LEXEM(msg, ...) printf("Offset is %d\n", offset); printf(msg, ##__VA_ARGS__);
 	#else
 		#define LOG_LEXEM(msg, ...)
 	#endif
@@ -150,6 +150,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 
 {INT_8}  { 
   	std::string cleaned;
+	std::string original = std::string(yytext);
 	std::string errorMessage = "Error! Incorrect octal integer literal: ";
 
   	if (!clean_integer(yytext, cleaned, 8)) {
@@ -169,7 +170,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 			UNPUT_STR(after_literal);
 		}
 
-		offset += strlen(yytext); 
+		offset += original.length(); 
 		return token;
 	}
 
@@ -178,6 +179,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 
 {INT_10} {
 	std::string cleaned;
+	std::string original = std::string(yytext);
 	std::string errorMessage = "Error! Incorrect decimal integer literal: ";
 
   	if (!clean_integer(yytext, cleaned, 10)) {
@@ -197,7 +199,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 			UNPUT_STR(after_literal);
 		}
 
-		offset += strlen(yytext); 
+		offset += original.length();
 		return token;
 	}
 
@@ -206,6 +208,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 
 {INT_16} { 
 	std::string cleaned;
+	std::string original = std::string(yytext);
 	std::string errorMessage = "Error! Incorrect hexadecimal integer literal: ";
 
   	if (!clean_integer(yytext, cleaned, 16)) {
@@ -225,7 +228,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 			UNPUT_STR(after_literal);
 		}
 
-		offset += strlen(yytext); 
+		offset += original.length(); 
 		return token;
 	}
 
@@ -234,6 +237,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 
 {FLOAT}  {
   	std::string cleaned;
+	std::string original = std::string(yytext);
 	std::string errorMessage = "Error! Incorrect float literal: ";
 
     if (!clean_float(yytext, cleaned)) {
@@ -254,7 +258,7 @@ module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: mod
 			UNPUT_STR(after_literal);
 		}		
 
-		offset += strlen(yytext); 
+		offset += original.length(); 
 		return token;
 	}  
 
