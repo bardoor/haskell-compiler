@@ -9,6 +9,7 @@
 #include <JsonBuild.hpp>
 #include <Parser.hpp>
 #include <Token.hpp>
+#include <LayoutBuild.hpp>
 
 extern IndentedToken original_yylex();
 extern std::string buffer;
@@ -30,16 +31,19 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
         yyin = input_file;
-    } else if (argc == 2) {
+    } 
+    else if (argc == 2) {
         input_file = fopen(argv[1], "r");
         if (!input_file) {
             perror("Error opening input file");
             return EXIT_FAILURE;
         }
         yyin = input_file;
-    } else if (argc == 3 && strcmp(argv[1], "-c") == 0) {
+    } 
+    else if (argc == 3 && strcmp(argv[1], "-c") == 0) {
         yy_scan_string(argv[2]);
-    } else {
+    } 
+    else {
         std::cerr << "Usage: " << argv[0] << " [filename] or " << argv[0] << " -c \"input string\"" << std::endl;
         return EXIT_FAILURE;
     }
@@ -47,11 +51,16 @@ int main(int argc, char* argv[]) {
     std::vector<IndentedToken> tokens;
     do {
         tokens.push_back(original_yylex());
-        std::cout << tokens.back().toString() << std::endl;
+        //std::cout << tokens.back().toString() << std::endl;
     } while (tokens.back().type != EOF);
 
-    // LayoutBuilder layoutBuilder = LayoutBuilder(); 
-    // tokens = layoutBuilder.withLayout(tokens);
+    std::cout << "Create layout builder" << std::endl;
+    LayoutBuilder layoutBuilder = LayoutBuilder(); 
+    tokens = layoutBuilder.withLayout(tokens);
+
+    for (auto token : tokens) {
+        std::cout << token.toString() << std::endl;
+    }
 
     // tokensIter = tokens.begin();
     // yyparse();
