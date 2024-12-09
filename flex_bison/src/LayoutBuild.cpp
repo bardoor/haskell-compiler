@@ -12,6 +12,7 @@ std::vector<IndentedToken> LayoutBuilder::withLayout(std::vector<IndentedToken> 
     while (token.hasNext()) {
         stateMachine.currentState()->addToken(token);
     }
+    stateMachine.popAll();
 
     return tokens;
 }
@@ -39,11 +40,20 @@ LayoutBuilderState* StackStateMachine::currentState() {
 
 void StackStateMachine::pop() {
     if (!stateStack.empty()) {
-        stateStack.pop();  
+        currentState()->onExit();
+        stateStack.pop();
+    }
+}
+
+void StackStateMachine::popAll() {
+    while (!stateStack.empty()) {
+        currentState()->onExit();
+        stateStack.pop();
     }
 }
 
 void StackStateMachine::push(std::unique_ptr<LayoutBuilderState> state) {
+    state->onEnter();
     stateStack.push(std::move(state));  
 }
 
@@ -59,6 +69,8 @@ void KeywordState::addToken(Iterator<IndentedToken>& token) {
     if (!token.hasNext()) {
         throw LexerError("Unexpected end of file");
     }
+    
+    owner->getTokens().push_back(*token);
     if ((token + 1)->type == OCURLY) {
         owner->changeState(std::make_unique<ExplicitLayoutState>(owner));
         token += 2;
@@ -78,6 +90,10 @@ void ExplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
 
 ImplicitLayoutState::ImplicitLayoutState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
 
+void ImplicitLayoutState::onEnter() {
+    owner->getTokens().emplace_back(VOCURLY, "virtual open curly", 0);
+}
+
 void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
     if (isFirstToken) {
         isFirstToken = false;
@@ -93,11 +109,10 @@ void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
     }
 
     if (token->offset < sectionIndent) {
-        owner->getTokens().emplace_back(VCCURLY, 0);
         owner->toPrevState();
     }
     else if (token->offset == sectionIndent) {
-        owner->getTokens().emplace_back(SEMICOL, 0);
+        owner->getTokens().emplace_back(SEMICOL, "semicolon", 0);
         owner->getTokens().push_back(*token);
         token++;
     } else {
@@ -106,6 +121,9 @@ void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
     }
 }
 
+void ImplicitLayoutState::onExit() {
+    owner->getTokens().emplace_back(VCCURLY, "virtual closing curly", 0);
+}
 
 InitBuilderState::InitBuilderState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
 
