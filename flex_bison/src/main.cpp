@@ -10,14 +10,14 @@
 #include <Parser.hpp>
 #include <Token.hpp>
 
-extern int original_yylex();
+extern IndentedToken original_yylex();
 extern std::string buffer;
 extern FILE* yyin;
 extern void yy_scan_string(const char* str);
 
 extern json root;
 
-std::vector<Token>::iterator tokensIter;
+std::vector<IndentedToken>::iterator tokensIter;
 
 int main(int argc, char* argv[]) {
     const char* default_file = "flex_bison/resources/code_examples/sample.hs";
@@ -44,13 +44,17 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::vector<Token> tokens;
+    std::vector<IndentedToken> tokens;
     do {
-        tokens.emplace_back(original_yylex(), buffer);
-    } while (tokens.back().id != YYEOF);
+        tokens.push_back(original_yylex());
+        std::cout << tokens.back().toString() << std::endl;
+    } while (tokens.back().type != EOF);
 
-    tokensIter = tokens.begin();
-    yyparse();
+    // LayoutBuilder layoutBuilder = LayoutBuilder(); 
+    // tokens = layoutBuilder.withLayout(tokens);
+
+    // tokensIter = tokens.begin();
+    // yyparse();
     std::cout << "json: " << root;
 
     if (input_file) {

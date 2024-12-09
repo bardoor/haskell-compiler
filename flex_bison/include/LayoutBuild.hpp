@@ -1,17 +1,13 @@
 #pragma once
 
+#include <stack>
 #include <vector>
 #include <memory>
-#include <stack>
-#include <stdexcept>
-#include <functional>
-#include <ranges>
+#include <unordered_set>
 
-#include <Parser.hpp>
-#include <Token.hpp>
-
-namespace ranges = std::ranges;
-
+#include "LexerError.hpp"
+#include "Token.hpp"
+#include "Parser.hpp"
 
 class LayoutBuilderState;
 
@@ -19,190 +15,157 @@ class LayoutBuilder {
 public:
     LayoutBuilder();
 
-    std::vector<Token> withLayout(const std::vector<Token>& tokens);
+    std::vector<IndentedToken> withLayout(std::vector<IndentedToken> tokens);
 
-    void pushIndent(int indent);
-    void pushCurrentIndent();
-    void addToIndent(int indent);
-    void newLine();
-    int popIndent();
-    int topIndent();
+    void changeState(LayoutBuilderState* state) { 
+        this->state = std::unique_ptr<LayoutBuilderState>(state);
+    }
 
-    void chageState(LayoutBuilderState* newState);
+    std::vector<IndentedToken>& getTokens() {
+        return tokens;
+    }
 
-    std::vector<Token>& getTokens();
+    int pushIndent(int value) {
+        indentStack.push(value);
+    }
 
-    static constexpr int TAB_SIZE = 4;
-    static constexpr std::array<int, 4> keywords = {WHEREKW, DOKW, OFKW, LETKW};
+    void popIndent() {
+        indentStack.pop();
+    }
 
+    int topIndent() {
+        return indentStack.top();
+    }
+
+    const std::unordered_set<int> keywords = { WHEREKW, LETKW, INKW, OFKW };
 private:
-    std::vector<Token> tokens;
-    std::unique_ptr<LayoutBuilderState> state;
+    std::vector<IndentedToken> tokens;
     std::stack<int> indentStack;
-    int currentIndent;
-    
+    std::unique_ptr<LayoutBuilderState> state;
 };
+
 
 class LayoutBuilderState {
 public:
-    LayoutBuilderState(LayoutBuilder* owner) : owner(owner) {}
-    virtual void addToken(std::vector<Token>::iterator& token) = 0;
-    virtual ~LayoutBuilderState() {}    
+    LayoutBuilderState(LayoutBuilder* owner) : owner(owner) {};
+
+    virtual void addToken(std::vector<IndentedToken>::iterator& token, std::vector<IndentedToken>::iterator& end) = 0;
+
+    virtual ~LayoutBuilderState() {};
 
 protected:
-    std::unique_ptr<LayoutBuilder> owner;
-};
-
-/**
- * Состояние в котором билдер находится после первой лексемы и до самого конца (пока не встретит перенос строки)
- * 
- * Обязанности:
- *  1. Добавлять в вектор встреченные токены кроме пробельных
- *  2. Перебросить LayoutBuilder в состояние BeforeLexemState если встречено ключевое слово размещения
- * 
- */
-class MiddleLineState : public LayoutBuilderState {
-public:
-    MiddleLineState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
-    void addToken(std::vector<Token>::iterator& token) override;
+    LayoutBuilder* owner;
 };
 
 
-/**
- * Состояние в котором билдер находится в момент встречи первой лексемы в строке
- * 
- * Обязанности:
- *  1. Зафиксировать индетацию первой лексемы
- *  2. Вставить токен ';' если индентация лексемы равна индентации перед предыдущей лексемой
- *  3. Вставить токен { если лексема - первая после where, do, of или let
- *  4. Вставить токе } если индетация лексемы меньше индетации перед предыдущей лексемой
- * 
- */
-class FirstLexemState : public LayoutBuilderState {
+class KeywordState : public LayoutBuilderState {};
+
+class ExplicitLayoutState : public LayoutBuilderState {
 public:
-    FirstLexemState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
+    ExplicitLayoutState(LayoutBuilder* owner) : LayoutBuilderState(owner) {};
 
-    void addToken(std::vector<Token>::iterator& token) override {
-        Token prevToken = *(token - 1);
-        auto& tokens = owner->getTokens();
-
-        owner->pushCurrentIndent();
-
-        if (ranges::any_of(owner->keywords, [prevToken](int t){ return t == prevToken.id; })) {
-            tokens.emplace_back(VOCURLY);
-            owner->chageState(new MiddleLineState(owner.get()));
+    void addToken(std::vector<IndentedToken>::iterator& token, std::vector<IndentedToken>::iterator& end) override {
+        if ((token + 1) == end) {
+            throw LexerError("Unexpected end of file");
         }
 
-        int topIndent = owner->popIndent();
-        int prevIndent = owner->topIndent();
-        
-        if (topIndent == prevIndent) {
-            tokens.emplace_back(SEMICOL);
+        if (owner->keywords.contains(token->type)) {
+            if ((token + 1)->type == OCURLY) {
+                
+            }
         }
-        else if (topIndent < prevIndent) {
-            tokens.emplace_back(VCCURLY);
-        }
-        
-        tokens.push_back(*token);
-        ++token;
-    }
+    }  
 };
 
 
 /**
- * Состояние в котором билдер находится в индетации перед первой лексемой в строке
+ * Состояние, в котором находится LayoutBuilder от момента встречи первой лексемы после ключевого слова размещения
+ *                                            и до момента встречи ключевого слова размещения 
  * 
- * Обязанности:
- *  1. Прибавлять индентацию к текущему инденту LayoutBuilder в зависимости от типа токена
- *  2. Переводить LayoutBuilder в состояние FirstLexemState при встрече с непробельным токеном
- * 
+ * Обязанность:
+ *      Расстановка лексем размещения в зависимости от индетации
  */
-class BeforeLexemState : public LayoutBuilderState {
+class ImplicitLayoutState : public LayoutBuilderState {
 public:
-    BeforeLexemState(LayoutBuilder* owner) : LayoutBuilderState(owner) {}
+    ImplicitLayoutState(LayoutBuilder* owner) : LayoutBuilderState(owner) {};
 
-    void addToken(std::vector<Token>::iterator& token) override {
-        switch (token->id){
-            case SPACE:
-                owner->addToIndent(1);
-                break;
-            case TAB:
-                owner->addToIndent(LayoutBuilder::TAB_SIZE);
-                break;
-            case NEWLINE:
-                owner->newLine();
-                break;
-            default:
-                // Не сдвигаем итератор, чтобы FirstLexemState получило текущий (непробельный) токен
-                owner->chageState(new FirstLexemState(owner.get()));
-                return;
+    void addToken(std::vector<IndentedToken>::iterator& token, std::vector<IndentedToken>::iterator& end) override {
+        if (isFirstToken) {
+            owner->pushIndent(token->offset);
         }
-        // Сдвигаем итератор после пробельной лексемы
-        ++token;
+
+        if (owner->keywords.contains(token->type)) {
+            owner->changeState(new KeywordState(owner));
+            return;
+        }
+
+        if (owner->topIndent() < token->offset) {
+            owner->getTokens().emplace_back(VCCURLY, 0);
+            owner->popIndent();
+
+            if (owner->topIndent() >= 0) {
+                owner->changeState(new ImplicitLayoutState(owner));
+            }
+            else {
+                owner->changeState(new ExplicitLayoutState(owner));
+            }
+        }
+        else if (owner->topIndent() == token->offset) {
+            owner->getTokens().emplace_back(SEMICOL, 0);
+            owner->getTokens().push_back(*token);
+        }
     }
+
+private:
+    bool isFirstToken = true;
 };
 
-void MiddleLineState::addToken(std::vector<Token>::iterator& token) {
-    owner->getTokens().push_back(*token);
 
-    // Если токен - ключевое слово, переходим к FirstLexemState
-    if (ranges::any_of(owner->keywords, [token](int t){ return t == token->id; })) {
-        owner->chageState(new FirstLexemState(owner.get()));
+/**
+ * Состояние, в котором находится LayoutBuilder при встрече ключевого слова размешения (let, in, of, where)
+ * 
+ * Обязанность: 
+ *      Перевести LayoutBuilder в состояние явного или неявно размещения в зависимости от наличия скобок
+ */
+class KeywordState : public LayoutBuilderState {
+public:
+    KeywordState(LayoutBuilder* owner) : LayoutBuilderState(owner) {};
+    void addToken(std::vector<IndentedToken>::iterator& token, std::vector<IndentedToken>::iterator& end) override {
+        if ((token + 1) == end) {
+            throw LexerError("Unexpected end of file");
+        }
+
+        if ((token + 1)->type == OCURLY) {
+            owner->changeState(new ExplicitLayoutState(owner));
+            token += 2;
+        }
+        else {
+            owner->changeState(new ImplicitLayoutState(owner));
+            ++token;
+        }
+    }  
+};
+
+
+class InitBuilderState : public LayoutBuilderState {
+public:
+    InitBuilderState(LayoutBuilder* owner) : LayoutBuilderState(owner) {};
+    void addToken(std::vector<IndentedToken>::iterator& token, std::vector<IndentedToken>::iterator& end) override {
+        if (token->type != MODULEKW) {
+            owner->getTokens().emplace_back(VOCURLY, 0);
+            owner->changeState(new ImplicitLayoutState(owner));
+            return;
+        }
+
+        std::vector<IndentedToken>::iterator& curToken = token;
+        while (curToken->type != WHEREKW && curToken != end) {
+            ++curToken;
+        }
+
+        if (curToken == end) {
+            throw LexerError("Unexpected end of file");
+        }
+
+        owner->changeState(new KeywordState(owner));
     }
-    else if (token->id == SPACE) {
-        owner->addToIndent(1);
-    }
-    else if (token->id == TAB) {
-        owner->addToIndent(LayoutBuilder::TAB_SIZE);
-    }
-    else if (token->id == NEWLINE) {
-        owner->chageState(new BeforeLexemState(owner.get()));
-    }
-
-    ++token;
-}
-
-LayoutBuilder::LayoutBuilder() 
-    : state(std::make_unique<BeforeLexemState>(this)) {}
-
-std::vector<Token> LayoutBuilder::withLayout(const std::vector<Token>& tokens) {
-    auto it = this->tokens.begin();
-    while (it != this->tokens.end()) {
-        state->addToken(it);
-    }
-    return this->tokens;
-}
-
-void LayoutBuilder::pushIndent(int indent) {
-    indentStack.push(indent);
-}
-
-int LayoutBuilder::popIndent() {
-    int val = indentStack.top();
-    indentStack.pop();
-    return val;
-}
-
-int LayoutBuilder::topIndent() {
-    return indentStack.top();
-}
-
-std::vector<Token>& LayoutBuilder::getTokens() {
-    return tokens;
-}
-
-void LayoutBuilder::pushCurrentIndent() {
-    indentStack.push(currentIndent);
-}
-
-void LayoutBuilder::addToIndent(int indent) {
-    currentIndent += indent;
-}
-
-void LayoutBuilder::newLine() {
-    currentIndent = 0;
-}
-
-void LayoutBuilder::chageState(LayoutBuilderState* newState) {
-    state = std::unique_ptr<LayoutBuilderState>(newState);
-}
+};

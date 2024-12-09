@@ -7,23 +7,14 @@
 	#include <algorithm>
 	#include <charconv>
 	#include <iostream>
-	#include <exception>
 
+	#include "LexerError.hpp"
 	#include "LayoutBuild.hpp"
 	#include "Parser.hpp"
 	#include "Token.hpp"
+	#include "LexerError.hpp"
 
 	// #define DEBUG_LEXEMS
-
-	class LexerError : public std::exception {
-	private:
-		std::string message;
-	public:
-		explicit LexerError(const std::string& msg) : message(msg) {}
-		const char* what() const noexcept override {
-			return message.c_str();
-		}
-	};
 
 	#define YY_DECL IndentedToken original_yylex()
 	#define YY_NULL IndentedToken()
