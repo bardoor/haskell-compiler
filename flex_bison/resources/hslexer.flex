@@ -80,53 +80,53 @@ FLOAT       ((_+)?({D10}+(_+)?)+(_+)?[\.](_+)?({D10}+(_+)?)+{EXPONENT}?(_+)?|(_+
 
 %%
 
-_         { IndentedToken token(WILDCARD, offset);   LOG_LEXEM("found lexem: _\n");        offset += strlen(yytext); return token; }
-case      { IndentedToken token(CASEKW, offset);     LOG_LEXEM("found lexem: case\n");     offset += strlen(yytext); return token; }
-class     { IndentedToken token(CLASSKW, offset);    LOG_LEXEM("found lexem: class\n");    offset += strlen(yytext); return token; }
-data      { IndentedToken token(DATAKW, offset);     LOG_LEXEM("found lexem: data\n");     offset += strlen(yytext); return token; }
-newtype   { IndentedToken token(NEWTYPEKW, offset);  LOG_LEXEM("found lexem: newtype\n");  offset += strlen(yytext); return token; }
-type      { IndentedToken token(TYPEKW, offset);     LOG_LEXEM("found lexem: type\n");     offset += strlen(yytext); return token; }
-of        { IndentedToken token(OFKW, offset);       LOG_LEXEM("found lexem: of\n");       offset += strlen(yytext); return token; }
-then      { IndentedToken token(THENKW, offset);     LOG_LEXEM("found lexem: then\n");     offset += strlen(yytext); return token; }
-default   { IndentedToken token(DEFAULTKW, offset);  LOG_LEXEM("found lexem: default\n");  offset += strlen(yytext); return token; }
-deriving  { IndentedToken token(DERIVINGKW, offset); LOG_LEXEM("found lexem: deriving\n"); offset += strlen(yytext); return token; }
-do        { IndentedToken token(DOKW, offset);       LOG_LEXEM("found lexem: do\n");       offset += strlen(yytext); return token; }
-if        { IndentedToken token(IFKW, offset);       LOG_LEXEM("found lexem: if\n");       offset += strlen(yytext); return token; }
-else      { IndentedToken token(ELSEKW, offset);     LOG_LEXEM("found lexem: else\n"); 	   offset += strlen(yytext); return token; }
-where     { IndentedToken token(WHEREKW, offset);    LOG_LEXEM("found lexem: where\n");    offset += strlen(yytext); return token; }
-let       { IndentedToken token(LETKW, offset);   	 LOG_LEXEM("found lexem: let\n");      offset += strlen(yytext); return token; }
-in        { IndentedToken token(INKW, offset); 		 LOG_LEXEM("found lexem: in\n");  	   offset += strlen(yytext); return token; }
-foreign   { IndentedToken token(FOREIGNKW, offset);  LOG_LEXEM("found lexem: foreign\n");  offset += strlen(yytext); return token; }
-infix     { IndentedToken token(INFIXKW, offset);    LOG_LEXEM("found lexem: infix\n");    offset += strlen(yytext); return token; }
-infixl    { IndentedToken token(INFIXLKW, offset);   LOG_LEXEM("found lexem: infixl\n");   offset += strlen(yytext); return token; }
-infixr    { IndentedToken token(INFIXRKW, offset);   LOG_LEXEM("found lexem: infixr\n");   offset += strlen(yytext); return token; }
-instance  { IndentedToken token(INSTANCEKW, offset); LOG_LEXEM("found lexem: instance\n"); offset += strlen(yytext); return token; }
-import    { IndentedToken token(IMPORTKW, offset);   LOG_LEXEM("found lexem: import\n");   offset += strlen(yytext); return token; }
-module    { IndentedToken token(MODULEKW, offset);   LOG_LEXEM("found lexem: module\n");   offset += strlen(yytext); return token; }
+_         { IndentedToken token(WILDCARD, std::string(yytext), offset);   LOG_LEXEM("found lexem: _\n");        offset += strlen(yytext); return token; }
+case      { IndentedToken token(CASEKW, std::string(yytext), offset);     LOG_LEXEM("found lexem: case\n");     offset += strlen(yytext); return token; }
+class     { IndentedToken token(CLASSKW, std::string(yytext), offset);    LOG_LEXEM("found lexem: class\n");    offset += strlen(yytext); return token; }
+data      { IndentedToken token(DATAKW, std::string(yytext), offset);     LOG_LEXEM("found lexem: data\n");     offset += strlen(yytext); return token; }
+newtype   { IndentedToken token(NEWTYPEKW, std::string(yytext), offset);  LOG_LEXEM("found lexem: newtype\n");  offset += strlen(yytext); return token; }
+type      { IndentedToken token(TYPEKW, std::string(yytext), offset);     LOG_LEXEM("found lexem: type\n");     offset += strlen(yytext); return token; }
+of        { IndentedToken token(OFKW, std::string(yytext), offset);       LOG_LEXEM("found lexem: of\n");       offset += strlen(yytext); return token; }
+then      { IndentedToken token(THENKW, std::string(yytext), offset);     LOG_LEXEM("found lexem: then\n");     offset += strlen(yytext); return token; }
+default   { IndentedToken token(DEFAULTKW, std::string(yytext), offset);  LOG_LEXEM("found lexem: default\n");  offset += strlen(yytext); return token; }
+deriving  { IndentedToken token(DERIVINGKW, std::string(yytext), offset); LOG_LEXEM("found lexem: deriving\n"); offset += strlen(yytext); return token; }
+do        { IndentedToken token(DOKW, std::string(yytext), offset);       LOG_LEXEM("found lexem: do\n");       offset += strlen(yytext); return token; }
+if        { IndentedToken token(IFKW, std::string(yytext), offset);       LOG_LEXEM("found lexem: if\n");       offset += strlen(yytext); return token; }
+else      { IndentedToken token(ELSEKW, std::string(yytext), offset);     LOG_LEXEM("found lexem: else\n"); 	offset += strlen(yytext); return token; }
+where     { IndentedToken token(WHEREKW, std::string(yytext), offset);    LOG_LEXEM("found lexem: where\n");    offset += strlen(yytext); return token; }
+let       { IndentedToken token(LETKW, std::string(yytext), offset);   	  LOG_LEXEM("found lexem: let\n");      offset += strlen(yytext); return token; }
+in        { IndentedToken token(INKW, std::string(yytext), offset); 	  LOG_LEXEM("found lexem: in\n");  	    offset += strlen(yytext); return token; }
+foreign   { IndentedToken token(FOREIGNKW, std::string(yytext), offset);  LOG_LEXEM("found lexem: foreign\n");  offset += strlen(yytext); return token; }
+infix     { IndentedToken token(INFIXKW, std::string(yytext), offset);    LOG_LEXEM("found lexem: infix\n");    offset += strlen(yytext); return token; }
+infixl    { IndentedToken token(INFIXLKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: infixl\n");   offset += strlen(yytext); return token; }
+infixr    { IndentedToken token(INFIXRKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: infixr\n");   offset += strlen(yytext); return token; }
+instance  { IndentedToken token(INSTANCEKW, std::string(yytext), offset); LOG_LEXEM("found lexem: instance\n"); offset += strlen(yytext); return token; }
+import    { IndentedToken token(IMPORTKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: import\n");   offset += strlen(yytext); return token; }
+module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: module\n");   offset += strlen(yytext); return token; }
 
 
-"("     { IndentedToken token(OPAREN, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-")"     { IndentedToken token(CPAREN, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"{"     { IndentedToken token(OCURLY, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"}"     { IndentedToken token(CCURLY, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"["     { IndentedToken token(OBRACKET, offset);  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"]"     { IndentedToken token(CBRACKET, offset);  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"+"     { IndentedToken token(PLUS, offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"-"     { IndentedToken token(MINUS, offset);     LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"~"     { IndentedToken token(LAZY, offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-\\      { IndentedToken token(BACKSLASH, offset); LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-":"		{ IndentedToken token(COLON, offset);     LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"="		{ IndentedToken token(EQ, offset);        LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-","		{ IndentedToken token(COMMA, offset); 	  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-";"		{ IndentedToken token(SEMICOL, offset);   LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"`"     { IndentedToken token(BQUOTE, offset);    LOG_LEXEM("found BQUOTE\n");         offset += strlen(yytext); return token; }
-".."    { IndentedToken token(DOTDOT, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"->"    { IndentedToken token(RARROW, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"<-"    { IndentedToken token(LARROW, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"@"     { IndentedToken token(AS, offset);        LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"::"    { IndentedToken token(DCOLON, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"=>"    { IndentedToken token(DARROW, offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
-"|"     { IndentedToken token(VBAR, offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"("     { IndentedToken token(OPAREN, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+")"     { IndentedToken token(CPAREN, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"{"     { IndentedToken token(OCURLY, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"}"     { IndentedToken token(CCURLY, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"["     { IndentedToken token(OBRACKET, std::string(yytext), offset);  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"]"     { IndentedToken token(CBRACKET, std::string(yytext), offset);  LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"+"     { IndentedToken token(PLUS, std::string(yytext), offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"-"     { IndentedToken token(MINUS, std::string(yytext), offset);     LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"~"     { IndentedToken token(LAZY, std::string(yytext), offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+\\      { IndentedToken token(BACKSLASH, std::string(yytext), offset); LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+":"		{ IndentedToken token(COLON, std::string(yytext), offset);     LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"="		{ IndentedToken token(EQ, std::string(yytext), offset);        LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+","		{ IndentedToken token(COMMA, std::string(yytext), offset); 	   LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+";"		{ IndentedToken token(SEMICOL, std::string(yytext), offset);   LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"`"     { IndentedToken token(BQUOTE, std::string(yytext), offset);    LOG_LEXEM("found BQUOTE\n");         offset += strlen(yytext); return token; }
+".."    { IndentedToken token(DOTDOT, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"->"    { IndentedToken token(RARROW, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"<-"    { IndentedToken token(LARROW, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"@"     { IndentedToken token(AS, std::string(yytext), offset);        LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"::"    { IndentedToken token(DCOLON, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"=>"    { IndentedToken token(DARROW, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
+"|"     { IndentedToken token(VBAR, std::string(yytext), offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
 
 {SYMBOL}+ { 
 	IndentedToken token(SYMS, std::string(yytext), offset); 
