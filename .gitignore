@@ -6,7 +6,7 @@ bin
 
 Parser.hpp
 Parser.cpp
-haskell.flex.cpp
+Flexer.cpp
 
 *.hs
 *.dot
