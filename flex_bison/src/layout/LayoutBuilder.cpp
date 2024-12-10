@@ -7,7 +7,9 @@ std::vector<IndentedToken> LayoutBuilder::withLayout(std::vector<IndentedToken> 
 
     // До предпоследнего токена, т.к. последний - EOF
     while (token.hasNext()) {
+        onAddLexem();
         stateMachine.currentState()->addToken(token);
+        onAddLexem = [] {};
     }
     stateMachine.popAll();
 

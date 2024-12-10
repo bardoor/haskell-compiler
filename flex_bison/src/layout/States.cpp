@@ -8,12 +8,11 @@ void switchLayoutState(LayoutBuilder* owner, Iterator<IndentedToken>& token) {
 
     owner->getTokens().push_back(*token);
 
-    if ((token + 1)->type == OCURLY) {
+    token++;
+    if (token->type == OCURLY) {
         owner->changeState(std::make_unique<ExplicitLayoutState>(owner));
-        token += 2;
     } else {
         owner->changeState(std::make_unique<ImplicitLayoutState>(owner));
-        ++token;
     }
 }
 
@@ -85,4 +84,18 @@ void ImplicitLayoutState::onExit() {
 ExplicitLayoutState::ExplicitLayoutState(LayoutBuilder* owner)
     : LayoutBuilderState(owner) {}
 
-void ExplicitLayoutState::addToken(Iterator<IndentedToken>& token) {}
+void ExplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
+    if (owner->keywords.contains(token->type)) {
+        switchLayoutState(owner, token);
+        return;
+    } 
+    
+    // Если встречена закрывающая фигурная скобка - просим LayoutBuilder вернуться в предыдущее состояние
+    if (token->type == CCURLY) {
+        auto layoutBuilder = owner;
+        owner->onAddLexem = [layoutBuilder]() { layoutBuilder->toPrevState(); };
+    }
+
+    owner->getTokens().push_back(*token);
+    token++;
+}

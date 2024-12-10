@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_set>
+#include <functional>
 
 #include "Iterator.hpp"
 #include "LexerError.hpp"
@@ -40,6 +41,7 @@ public:
 
     void changeState(std::unique_ptr<LayoutBuilderState> state);
     void toPrevState();
+    std::function<void()> onAddLexem = [] {};
 
     std::vector<IndentedToken>& getTokens();
     const std::unordered_set<int> keywords;
