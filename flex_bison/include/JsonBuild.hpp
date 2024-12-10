@@ -552,3 +552,154 @@ inline Node* mk_top_decl_list(Node* decls, Node* decl) {
     return node;
 }
 
+inline Node* mk_class_decl(Node* context, Node* classNode, Node* body) {
+    LOG_PARSER("## PARSER ## make classDecl\n");
+
+    Node* node = new Node(); 
+    if (context) {
+        node->val = {
+            {"class_decl", {
+                {"context", context->val},
+                {"class", classNode->val},
+                {"body", body->val}
+            }}
+        };
+    } else {
+        node->val = {
+            {"class_decl", {
+                {"class", classNode->val},
+                {"body", body->val}
+            }}
+        };
+    }
+    return node;
+}
+
+inline Node* mk_class_body_empty() {
+    LOG_PARSER("## PARSER ## make classBody - nothing\n");
+
+    Node* node = new Node(); 
+    node->val = nullptr;
+    return node;
+}
+
+inline Node* mk_class_body_declList(Node* decls) {
+    LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n");
+
+    Node* node = new Node(); 
+    node->val = decls->val;
+    return node;
+}
+
+inline Node* mk_context_list(Node* contextList) {
+    LOG_PARSER("## PARSER ## make context - (contextList)\n");
+
+    Node* node = new Node(); 
+    node->val = contextList->val;
+    return node;
+}
+
+inline Node* mk_context_class(Node* classNode) {
+    LOG_PARSER("## PARSER ## make context - class\n");
+
+    Node* node = new Node(); 
+    node->val = classNode->val;
+    return node;
+}
+
+inline Node* mk_inst_decl_restrict(Node* context, Node* tycon, Node* restrictInst, Node* rinstOpt) {
+    LOG_PARSER("## PARSER ## make instDecl - INSTANCE context => tycon restrictInst rinstOpt\n");
+
+    Node* node = new Node();
+    node->val = {
+        {"inst_decl", {
+            {"context", context->val},
+            {"tycon", tycon->val},
+            {"restrictInst", restrictInst->val},
+            {"rinstOpt", rinstOpt->val}
+        }}
+    };
+    return node;
+}
+
+inline Node* mk_inst_decl_general(Node* tycon, Node* generalInst, Node* rinstOpt) {
+    LOG_PARSER("## PARSER ## make instDecl - INSTANCE tycon generalInst rinstOpt\n");
+
+    Node* node = new Node();
+    node->val = {
+        {"inst_decl", {
+            {"tycon", tycon->val},
+            {"generalInst", generalInst->val},
+            {"rinstOpt", rinstOpt->val}
+        }}
+    };
+    return node;
+}
+
+inline Node* mk_class(Node* tycon, Node* tyvar) {
+    LOG_PARSER("## PARSER ## make class - tycon tyvar\n");
+
+    Node* node = new Node(); 
+    node->val = {
+        {"tycon", tycon->val}, 
+        {"tyvar", tyvar->val}  
+    };
+    return node;
+}
+
+inline Node* mk_rinst_opt_empty() {
+    LOG_PARSER("## PARSER ## make rinstOpt - nothing\n");
+
+    Node* node = new Node();
+    node->val = {{"rinstOpt", nullptr}};
+    return node;
+}
+
+inline Node* mk_rinst_opt(Node* valDefList) {
+    LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n");
+
+    Node* node = new Node();
+    node->val = {{"rinstOpt", valDefList->val}};
+    return node;
+}
+
+inline Node* mk_val_def(Node* opat, Node* valrhs) {
+    LOG_PARSER("## PARSER ## make valDef - opat valrhs\n");
+
+    Node* node = new Node();
+    node->val = {{"valDef", {{"opat", opat->val}, {"valrhs", valrhs->val}}}};
+    return node;
+}
+
+inline Node* mk_val_rhs(Node* valrhs1, Node* whereOpt) {
+    LOG_PARSER("## PARSER ## make valrhs - valrhs1 whereOpt\n");
+    
+    Node* node = new Node();
+    node->val = {{"valrhs", {{"valrhs1", valrhs1->val}, {"whereOpt", whereOpt->val}}}};
+    return node;
+}
+
+inline Node* mk_val_rhs1_guardrhs(Node* guardrhs) {
+    LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n");
+
+    Node* node = new Node();
+    node->val = {{"valrhs1", {{"guardrhs", guardrhs->val}}}};
+    return node;
+}
+
+inline Node* mk_val_rhs1_expr(Node* expr) {
+    LOG_PARSER("## PARSER ## make valrhs1 - = expr\n");
+
+    Node* node = new Node();
+    node->val = {{"valrhs1", {{"expr", expr->val}}}};
+    return node;
+}
+
+
+inline Node* mk_tyvar(Node* funid) {
+    LOG_PARSER("## PARSER ## make tyvar - funid\n");
+
+    Node* node = new Node(); 
+    node->val = funid->val;
+    return node;
+}

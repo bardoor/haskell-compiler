@@ -394,27 +394,27 @@ topDecl : typeDecl
  * ------------------------------- */
 
 classDecl : CLASSKW context DARROW class classBody
-          { LOG_PARSER("## PARSER ## make classDecl - CLASS context => class classBody\n"); $$ = new Node(); $$->val = {{"class_decl", {{"context", $2->val}, {"class", $4->val},{"body", $5->val}}}}; }
+          { $$ = mk_class_decl($2, $4, $5); }
           | CLASSKW class classBody
-          { LOG_PARSER("## PARSER ## make classDecl - CLASS class classBody\n"); $$ = new Node(); $$->val = {{"class_decl", {{"class", $2->val},{"body", $3->val}}}}; }
+          { $$ = mk_class_decl(NULL, $2, $3); }
           ;
 
 classBody : %empty
-          { LOG_PARSER("## PARSER ## make classBody - nothing\n"); $$ = new Node(); $$->val = nullptr; }
+          { $$ = mk_class_body_empty(); }          
           | WHEREKW OCURLY declList CCURLY
-          { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); $$ = new Node(); $$->val =  $3->val; }
+          { $$ = mk_class_body_declList($3); }
           ;
 
 instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
-         { LOG_PARSER("## PARSER ## make instDecl - INSTANCE context => tycon restrictInst rinstOpt\n"); $$ = new Node(); $$->val = {{"inst_decl", {{"context", $2->val}, {"tycon", $4->substr()}, {"restrictInst", $5->val}, {"rinstOpt", $6->val}}}}; }
+         { $$ = mk_inst_decl_restrict($2, $4->substr(), $5, $6); }
          | INSTANCEKW tycon generalInst rinstOpt
-         { LOG_PARSER("## PARSER ## make instDecl - INSTANCE tycon generalInst rinstOpt\n"); $$ = new Node(); $$->val = {{"inst_decl", {{"tycon", $2->substr()}, {"generalInst", $3->val}, {"rinstOpt", $4->val}}}}; }
+         { $$ = mk_inst_decl_general($2->substr(), $3, $4); }
          ;
 
 rinstOpt : %empty
-         { LOG_PARSER("## PARSER ## make rinstOpt - nothing\n"); $$ = new Node(); $$->val = {{"rinstOpt", nullptr}}; }
+         { $$ = mk_rinst_opt_empty(); }
          | WHEREKW OCURLY valDefList CCURLY
-         { LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); $$ = new Node(); $$->val = {{"rinstOpt", $3->val}}; }
+         { $$ = mk_rinst_opt($3); }
          ;
 
 valDefList : %empty
@@ -426,13 +426,13 @@ valDefList : %empty
             ;
 
 valDef : opat valrhs
-       { LOG_PARSER("## PARSER ## make valDef - opat valrhs\n"); $$ = new Node(); $$->val = {{"valDef", {{"opat", $1->val},{"valrhs", $2->val}}}}; }
+       { $$ = mk_val_def($1, $2); }
        ;
 
 
 /* Правосторонее значение */
 valrhs : valrhs1 whereOpt
-       { LOG_PARSER("## PARSER ## make valrhs - valrhs1 whereOpt\n"); $$ = new Node(); $$->val = {{"valrhs", {{"valrhs1", $1->val},{"whereOpt", $2->val}}}}; }
+       { $$ = mk_val_rhs($1, $2); } 
        ;
 
 valrhs1 : guardrhs
@@ -476,9 +476,9 @@ generalInst : tycon
             ;
 
 context : OPAREN contextList CPAREN
-        { LOG_PARSER("## PARSER ## make context - (contextList)\n"); $$ = new Node(); $$->val = $2->val; }
+        { $$ = mk_context_list($2); }
         | class
-        { LOG_PARSER("## PARSER ## make context - class\n"); $$ = new Node(); $$->val = $1->val; }
+        { $$ = mk_context_class($1); }
         ;
 
 contextList : class
@@ -488,7 +488,7 @@ contextList : class
             ;
 
 class : tycon tyvar
-      { LOG_PARSER("## PARSER ## make class - tycon tyvar\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()},{"tyvar", $2->val}}; }
+      { $$ = mk_class($1->substr(), $2); }
       ;
 
 /* ------------------------------- *
@@ -568,7 +568,7 @@ tyvarListComma : tyvar
                ;
 
 tyvar : funid
-      { LOG_PARSER("## PARSER ## make tyvar - funid\n"); $$ = new Node();  $$->val = {{"funid", $1->substr()}}; }
+      { $$ = mk_tyvar($1->substr()); }
       ;
 
 defaultDecl : DEFAULTKW defaultTypes
