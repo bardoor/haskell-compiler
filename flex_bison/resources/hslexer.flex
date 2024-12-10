@@ -294,7 +294,7 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LE
 		throw LexerError(std::string("Char literal can't be longer than 1 character! Line: ") + std::to_string(opened_line));
 	} 
 
-	bufferToken.value = buffer;
+	bufferToken.repr = buffer;
 	LOG_LEXEM("found char: %s\n", buffer.c_str());
 	offset += 1;
 
@@ -321,7 +321,7 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LE
 	BEGIN(INITIAL); 
 	LOG_LEXEM("found string: %s\n", buffer.c_str()); 
 	offset += 1; 
-	bufferToken.value = buffer; 
+	bufferToken.repr = buffer; 
 	return bufferToken; 
 }
 <STRING><<EOF>>			{ throw LexerError(std::string("Unexpected end of the file after opening string literal! Line: ") + std::to_string(opened_line)); }

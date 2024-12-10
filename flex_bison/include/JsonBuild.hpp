@@ -193,8 +193,6 @@ inline Node* mk_fapply(Node* fapply, Node* expr) {
 inline Node* mk_expr(Node* expr) {
     LOG_PARSER("## PARSER ## make expr\n");
 
-    std::cout << expr << std::endl;
-
     Node* node = new Node();
     node->val = {{"expr", expr->val}};
     return node;

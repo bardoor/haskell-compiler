@@ -10,19 +10,19 @@
  */
 struct IndentedToken {
     IndentedToken() 
-        : type(-1), value(""), offset(-1) {}
+        : type(-1), repr(""), offset(-1) {}
 
     IndentedToken(int type, int offset)
-        : type(type), value(""), offset(offset) {}
+        : type(type), repr(""), offset(offset) {}
 
-    IndentedToken(int type, const std::string& value, int offset)
-        : type(type), value(value), offset(offset) {}
+    IndentedToken(int type, const std::string& repr, int offset)
+        : type(type), repr(repr), offset(offset) {}
 
     std::string toString() const {
-        return "type: " + std::to_string(type) + ", value: " + value + ", offset: " + std::to_string(offset);
+        return "type: " + std::to_string(type) + ", repr: " + repr + ", offset: " + std::to_string(offset);
     }
 
     int type;
-    std::string value;
+    std::string repr;
     int offset;
 };
