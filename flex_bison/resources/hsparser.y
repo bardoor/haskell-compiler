@@ -6,8 +6,8 @@
 #include <JsonBuild.hpp>
 #include <Token.hpp>
 
-// extern std::vector<Token>::iterator tokensIter;
-extern int original_yylex();
+extern std::vector<IndentedToken>::iterator tokensIter;
+extern std::vector<IndentedToken>::iterator tokensEnd;
 extern int yylineno;
 
 void yyerror(const char* s);
@@ -39,7 +39,7 @@ json root;
 
 %left SEMICOL COMMA
 
-%left OPAREN OBRACKET OCURLY
+%left OPAREN OBRACKET OCURLY VOCURLY
 
 %left EQ
 
@@ -116,12 +116,15 @@ dexpr : MINUS kexpr      { $$ = mk_negate_expr($2); }
       4. do-выражение: do { x = 1; print 5; x }
       5. case-выражение: case x of { 1 -> Just 2; _ -> Nothing }
 */
-kexpr : BACKSLASH lampats RARROW expr           { $$ = mk_lambda($2, $4); }
-      | LETKW OCURLY declList CCURLY INKW expr  { $$ = mk_let_in($3, $6); }
-      | IFKW expr THENKW expr ELSEKW expr       { $$ = mk_if_else($2, $4, $6); }
-      | DOKW OCURLY stmts CCURLY                { $$ = mk_do($3); }
-      | CASEKW expr OFKW OCURLY altList CCURLY  { $$ = mk_case($2, $5); }
-      | fapply                                  { $$ = $1; }
+kexpr : BACKSLASH lampats RARROW expr             { $$ = mk_lambda($2, $4); }
+      | LETKW OCURLY declList CCURLY INKW expr    { $$ = mk_let_in($3, $6); }
+      | LETKW VOCURLY declList VCCURLY INKW expr  { $$ = mk_let_in($3, $6); }
+      | IFKW expr THENKW expr ELSEKW expr         { $$ = mk_if_else($2, $4, $6); }
+      | DOKW OCURLY stmts CCURLY                  { $$ = mk_do($3); }
+      | DOKW VOCURLY stmts VCCURLY                { $$ = mk_do($3); }
+      | CASEKW expr OFKW OCURLY altList CCURLY    { $$ = mk_case($2, $5); }
+      | CASEKW expr OFKW VOCURLY altList VCCURLY  { $$ = mk_case($2, $5); }
+      | fapply                                    { $$ = $1; }
       ;
 
 /*
@@ -166,8 +169,8 @@ symbols : SYMS    { $$ = $1; }
 funid : FUNC_ID   { $$ = $1; }
       ;
 
-stmts : stmt        { $$ = mk_stmts($1, NULL); }
-      | stmts stmt  { $$ = mk_stmts($2, $1); }
+stmts : stmt                { $$ = mk_stmts($1, NULL); }
+      | stmts SEMICOL stmt  { $$ = mk_stmts($3, $1); }
       ;
 
 /*
@@ -176,9 +179,9 @@ stmts : stmt        { $$ = mk_stmts($1, NULL); }
             Примечание: По левую сторону на этапе парсинга невозможно понять - выражение это или паттерн
       2. Любое выражение
 */
-stmt : expr LARROW expr SEMICOL   { $$ = mk_binding_stmt($1, $3); }
-     | expr SEMICOL               { $$ = $1; }
-     | SEMICOL                    { $$ = new Node(); }
+stmt : expr LARROW expr    { $$ = mk_binding_stmt($1, $3); }
+     | expr                { $$ = $1; }
+     | %empty              { $$ = new Node(); }
      ;
 
 /* ------------------------------- *
@@ -332,7 +335,7 @@ varList : varList COMMA var  { $$ = mk_var_list($1, $3); }
 /* 
       Оператор в префиксной форме или идентификатор функции 
 */
-var : funid                  { std::cout << $1 << std::endl; std::cout << $1->substr() << std::endl; $$ = mk_var("funid", $1->substr()); }
+var : funid                  { $$ = mk_var("funid", $1->substr()); }
     | OPAREN symbols CPAREN  { $$ = mk_var("symbols", *$2); }
     ;
 
@@ -341,15 +344,16 @@ var : funid                  { std::cout << $1 << std::endl; std::cout << $1->su
       1. Биндинг функции
       2. Список функций с типом
 */
-declE : var MINUS expr                  { $$ = mk_fun_decl($1, $3); }
-      | funlhs MINUS expr               { $$ = mk_fun_decl($1, $3); }
+declE : var EQ expr                     { $$ = mk_fun_decl($1, $3); }
+      | funlhs EQ expr                  { $$ = mk_fun_decl($1, $3); }
       | varList DCOLON type DARROW type { $$ = mk_typed_var_list($1, $3, $5); }
       | varList DCOLON type             { $$ = mk_typed_var_list($1, $3); }
       | %empty                          { $$ = mk_empty_decl(); }
       ;
 
-whereOpt : WHEREKW OCURLY declList CCURLY { $$ = mk_where($3); }
-         | %empty                         { $$ = mk_where(NULL); }
+whereOpt : WHEREKW OCURLY declList CCURLY   { $$ = mk_where($3); }
+         | WHEREKW VOCURLY declList VCCURLY { $$ = mk_where($3); }
+         | %empty                           { $$ = mk_where(NULL); }
          ;
 
 funlhs : var apatList               { $$ = mk_funlhs($1, $2); }
@@ -366,6 +370,8 @@ module : MODULEKW tycon WHEREKW body
        ;
 
 body : OCURLY topDeclList CCURLY
+     { $$ = $2; }
+     | VOCURLY topDeclList VCCURLY
      { $$ = $2; }
      ;
 
@@ -403,6 +409,8 @@ classBody : %empty
           { LOG_PARSER("## PARSER ## make classBody - nothing\n"); $$ = new Node(); $$->val = nullptr; }
           | WHEREKW OCURLY declList CCURLY
           { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); $$ = new Node(); $$->val =  $3->val; }
+          | WHEREKW VOCURLY declList VCCURLY
+          { LOG_PARSER("## PARSER ## make classBody - WHERE { declList }\n"); $$ = new Node(); $$->val =  $3->val; }
           ;
 
 instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
@@ -414,6 +422,8 @@ instDecl : INSTANCEKW context DARROW tycon restrictInst rinstOpt
 rinstOpt : %empty
          { LOG_PARSER("## PARSER ## make rinstOpt - nothing\n"); $$ = new Node(); $$->val = {{"rinstOpt", nullptr}}; }
          | WHEREKW OCURLY valDefList CCURLY
+         { LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); $$ = new Node(); $$->val = {{"rinstOpt", $3->val}}; }
+         | WHEREKW VOCURLY valDefList VCCURLY
          { LOG_PARSER("## PARSER ## make rinstOpt - WHERE { valDefList }\n"); $$ = new Node(); $$->val = {{"rinstOpt", $3->val}}; }
          ;
 
@@ -639,12 +649,14 @@ typeListComma : type
 %%
 
 int yylex() {
-    // Token next = *tokensIter;
-    // 
-    // yylval.str = new std::string(next.value);
-    //   
-    // tokensIter++;
-    return 1;
+    if (tokensIter == tokensEnd) {
+        return YYEOF;
+    }
+
+    IndentedToken next = *tokensIter;
+    yylval.str = new std::string(next.repr);
+    tokensIter++;
+    return next.type;
 }
 
 void yyerror(const char* s) {

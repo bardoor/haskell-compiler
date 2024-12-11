@@ -1,6 +1,6 @@
 #include "LayoutBuild.hpp"
 
-LayoutBuilder::LayoutBuilder() : stateMachine(this), keywords({ WHEREKW, LETKW, INKW, OFKW }) {}
+LayoutBuilder::LayoutBuilder() : stateMachine(this), keywords({ WHEREKW, LETKW, INKW, OFKW, DOKW }) {}
 
 std::vector<IndentedToken> LayoutBuilder::withLayout(std::vector<IndentedToken> rawTokens) {
     Iterator<IndentedToken> token(rawTokens);
