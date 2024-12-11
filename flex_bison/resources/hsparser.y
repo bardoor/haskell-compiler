@@ -51,7 +51,7 @@ json root;
              tuple list op comprehension altList declList range lampats apat opat pats fpat dpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef con conList varList
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
-             dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts
+             dataDecl simpleType constrList constr tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts
 
 %type <str> funid symbols tycon
 
@@ -515,16 +515,22 @@ dataDecl : DATAKW context DARROW simpleType EQ constrList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList DERIVING tyClassList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}, {"deriving", $6->val}}}}; }
          ;
 
-constrList : tycon atypeList
-           { LOG_PARSER("## PARSER ## make constrList - tycon atypeList\n"); $$ = new Node(); $$->val = {{"constrList", {{"tycon", $1->substr()}, {"atypeList", $2->val}}}}; }
+constrList : constr
+           { $$ = mk_constr_list(NULL, $1); }
+           | constrList VBAR constr
+           { $$ = mk_constr_list($1, $3); }
+           ;
+
+constr : tycon atypeList
+           { LOG_PARSER("## PARSER ## make constr - tycon atypeList\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()}, {"atypeList", $2->val}};  }
            | OPAREN SYMS CPAREN atypeList
-           { LOG_PARSER("## PARSER ## make constrList - (SYMS) atypeList\n"); $$ = new Node(); $$->val = {{"constrList", {{"syms", $2->substr()}, {"atypeList", $4->val}}}}; }
+           { LOG_PARSER("## PARSER ## make constr - (SYMS) atypeList\n"); $$ = new Node(); $$->val = {{"syms", $2->substr()}, {"atypeList", $4->val}}; }
            | OPAREN SYMS CPAREN
-           { LOG_PARSER("## PARSER ## make constrList - (SYMS)\n"); $$ = new Node(); $$->val = {{"constrList", {{"syms", $2->substr()}}}}; }
+           { LOG_PARSER("## PARSER ## make constr - (SYMS)\n"); $$ = new Node(); $$->val = {{"syms", $2->substr()}}; }
            | tycon
-           { LOG_PARSER("## PARSER ## make constrList - tycon\n"); $$ = new Node(); $$->val = {{"constrList", {{"tycon", $1->substr()}}}}; }
+           { LOG_PARSER("## PARSER ## make constr - tycon\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()}}; }
            | btype conop btype
-           { LOG_PARSER("## PARSER ## make constrList - btype conop btype\n"); $$ = new Node(); $$->val = {{"constrList", {{"btype1", $1->val}, {"conop", $2->val}, {"btype2", $3->val}}}}; }
+           { LOG_PARSER("## PARSER ## make constr - btype conop btype\n"); $$ = new Node(); $$->val = {{"btype1", $1->val}, {"conop", $2->val}, {"btype2", $3->val}}; }
            ;
 
 conop : SYMS
@@ -556,9 +562,9 @@ typeDecl : TYPEKW simpleType EQ type
          ;
 
 simpleType : tycon
-           { LOG_PARSER("## PARSER ## make simpleType - tycon\n"); $$ = new Node(); $$->val = {{"simpleType", {{"tycon", $1->substr()}}}}; }
+           { LOG_PARSER("## PARSER ## make simpleType - tycon\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()}}; }
            | tycon tyvarList
-           { LOG_PARSER("## PARSER ## make simpleType - tycon tyvarList\n"); $$ = new Node(); $$->val = {{"simpleType", {{"tycon", $1->substr()}, {"tyvarList", $2->val}}}}; }
+           { LOG_PARSER("## PARSER ## make simpleType - tycon tyvarList\n"); $$ = new Node(); $$->val = {{"tycon", $1->substr()}, {"tyvarList", $2->val}}; }
            ;
 
 tycon : CONSTRUCTOR_ID
