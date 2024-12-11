@@ -8,6 +8,11 @@ def run_parser(code: str, parser_name: str = "bin/haskellc") -> tuple[str, str]:
     return (output.stdout.decode(), output.stderr.decode())
 
 
+def parse_file_to_dict(path: str, parser_name: str = "bin/haskellc") -> dict:
+    with open(path, "r") as f:
+        return parse_to_dict(f.read(), parser_name)
+
+
 def parse_to_dict(code: str, parser_name: str = "bin/haskellc") -> dict:
     (out, errors) = run_parser(code, parser_name)
 
@@ -53,6 +58,6 @@ def dict_to_dot(source: dict, parent=None, graph=None):
 
 
 if __name__ == "__main__":
-    (status, result) = parse_to_dict('{ a = do { (1,2,3) <- lol; put 1; }}')
+    (status, result) = parse_file_to_dict('flex_bison/resources/code_examples/sample.hs')
     pprint.pp(result)
     dict_to_dot(result).save()
