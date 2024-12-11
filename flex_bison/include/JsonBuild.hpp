@@ -736,3 +736,14 @@ inline Node* mk_tyvar(std::string funid) {
     node->val["funid"] = funid;
     return node;
 }
+
+inline Node* mk_constr_list(Node* constrList, Node* constr){
+    if (constrList == NULL) {
+        LOG_PARSER("## PARSER ## make constrList - constr\n");
+        return constr;
+    }
+
+     LOG_PARSER("## PARSER ## make constrList - constrList | constr\n");
+
+    return mk_node_list_append(constr, constrList);
+}
