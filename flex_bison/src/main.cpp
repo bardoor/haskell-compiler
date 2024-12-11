@@ -19,6 +19,7 @@ extern void yy_scan_string(const char* str);
 extern json root;
 
 std::vector<IndentedToken>::iterator tokensIter;
+std::vector<IndentedToken>::iterator tokensEnd;
 
 int main(int argc, char* argv[]) {
     const char* default_file = "flex_bison/resources/code_examples/sample.hs";
@@ -54,16 +55,19 @@ int main(int argc, char* argv[]) {
         //std::cout << tokens.back().toString() << std::endl;
     } while (tokens.back().type != EOF);
 
-    std::cout << "Create layout builder" << std::endl;
     LayoutBuilder layoutBuilder = LayoutBuilder(); 
     tokens = layoutBuilder.withLayout(tokens);
 
     for (auto token : tokens) {
-        std::cout << token.value << " ";
+        std::cout << token.repr << " ";
     }
+    std::cout << std::endl;
 
-    // tokensIter = tokens.begin();
-    // yyparse();
+    tokensIter = tokens.begin();
+    tokensEnd = tokens.end();
+
+    yyparse();
+
     std::cout << "json: " << root;
 
     if (input_file) {
