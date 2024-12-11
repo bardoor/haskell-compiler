@@ -382,15 +382,15 @@ topDeclList : topDecl
             ;
 
 topDecl : typeDecl
-        { LOG_PARSER("## PARSER ## make topDecl - typeDecl\n"); }
+        { LOG_PARSER("## PARSER ## make topDecl - typeDecl\n"); $$ = $1; }
         | dataDecl
-        { LOG_PARSER("## PARSER ## make topDecl - dataDecl\n"); }
+        { LOG_PARSER("## PARSER ## make topDecl - dataDecl\n"); $$ = $1; }
         | classDecl
-        { LOG_PARSER("## PARSER ## make topDecl - classDecl\n"); }
+        { LOG_PARSER("## PARSER ## make topDecl - classDecl\n"); $$ = $1; }
         | instDecl
-        { LOG_PARSER("## PARSER ## make topDecl - instDecl\n"); }
+        { LOG_PARSER("## PARSER ## make topDecl - instDecl\n"); $$ = $1; }
         | defaultDecl
-        { LOG_PARSER("## PARSER ## make topDecl - defaultDecl\n"); }
+        { LOG_PARSER("## PARSER ## make topDecl - defaultDecl\n"); $$ = $1; }
         | declE
         { $$ = $1; }
         ;
@@ -447,13 +447,13 @@ valrhs : valrhs1 whereOpt
 
 valrhs1 : guardrhs
         { LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n"); $$ = new Node(); $$->val = {{"valrhs1", {{"guardrhs", $1->val}}}}; }
-        | MINUS expr
+        | EQ expr
         { LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); $$ = new Node(); $$->val = {{"valrhs1", {{"expr", $2->val}}}}; }
         ;
 
-guardrhs : guard MINUS expr
+guardrhs : guard EQ expr
          { LOG_PARSER("## PARSER ## make guardrhs - guard = expr\n"); $$ = new Node(); $$->val = {{"guardrhs", {{"guard", $1->val}, {"expr", $3->val}}}}; }
-         | guard MINUS expr guardrhs
+         | guard EQ expr guardrhs
          { LOG_PARSER("## PARSER ## make guardrhs - guard = expr guardrhs\n"); $$ = new Node(); $$->val = {{"guardrhs", {{"guard", $1->val}, {"expr", $3->val},{"guardrhs", $4->val}}}}; }
          ;
 
@@ -505,13 +505,13 @@ class : tycon tyvar
  *              data               *
  * ------------------------------- */
 
-dataDecl : DATAKW context DARROW simpleType MINUS constrList
+dataDecl : DATAKW context DARROW simpleType EQ constrList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"context", $2->val}, {"simpleType", $4->val}, {"constrList", $6->val}}}}; }
-         | DATAKW simpleType MINUS constrList
+         | DATAKW simpleType EQ constrList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}}}}; }
-         | DATAKW context DARROW simpleType MINUS constrList DERIVINGKW tyClassList
+         | DATAKW context DARROW simpleType EQ constrList DERIVINGKW tyClassList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA context => simpleType = constrList DERIVING tyClassList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"context", $2->val}, {"simpleType", $4->val}, {"constrList", $6->val}, {"deriving", $8->val}}}}; }
-         | DATAKW simpleType MINUS constrList DERIVINGKW tyClassList
+         | DATAKW simpleType EQ constrList DERIVINGKW tyClassList
          { LOG_PARSER("## PARSER ## make dataDecl - DATA simpleType = constrList DERIVING tyClassList\n"); $$ = new Node(); $$->val = {{"dataDecl", {{"simpleType", $2->val}, {"constrList", $4->val}, {"deriving", $6->val}}}}; }
          ;
 
@@ -551,7 +551,7 @@ tyClass : tycon
         { LOG_PARSER("## PARSER ## make tyClass - tycon\n"); $$ = new Node(); $$->val = {{"tyClass", $1->substr()}}; }
         ;
 
-typeDecl : TYPEKW simpleType MINUS type
+typeDecl : TYPEKW simpleType EQ type
          { LOG_PARSER("## PARSER ## make typeDecl - TYPE simpleType = type\n"); $$ = new Node(); $$->val = {{"typeDecl", {{"simpleType", $2->val}, {"type", $4->val}}}}; }
          ;
 
