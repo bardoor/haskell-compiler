@@ -135,7 +135,7 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LE
 	return token; 
 }
 
-{SMALL}({WORD}|')*  { 
+{SMALL}({WORD}|'|_)*  { 
 	IndentedToken token(FUNC_ID, std::string(yytext), offset); 
 	LOG_LEXEM("found function identifier: %s\n", yytext);
 	offset += strlen(yytext); 

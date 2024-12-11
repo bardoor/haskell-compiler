@@ -49,9 +49,9 @@ json root;
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs topDeclList topDecl declE var apatList commaSepExprs
              tuple list op comprehension altList declList range lampats apat opat pats fpat dpat
-             classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef con conList varList
+             classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef varList
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
-             dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts
+             dataDecl simpleType constrList tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts commaSepStmts
 
 %type <str> funid symbols tycon
 
@@ -200,7 +200,7 @@ tuple : OPAREN expr COMMA commaSepExprs CPAREN  { $$ = mk_tuple($2, $4); }
       Списковое включение
       [x * x | x <- [1..10], even x]
 */
-comprehension : OBRACKET expr VBAR commaSepExprs CBRACKET
+comprehension : OBRACKET expr VBAR commaSepStmts CBRACKET  { $$ = mk_comprehension($2, $4); }
               ;
 
 list : OBRACKET CBRACKET                          { $$ = mk_list(NULL); }
@@ -214,6 +214,10 @@ commaSepExprs : expr                      { $$ = mk_comma_sep_exprs($1, NULL); }
                     [1, 3 ..]  - range типа 1, 3, 6, 9 ... и до бесконечности
                     [1, 2, 3]  - конструктор списка
               */  
+              ;
+
+commaSepStmts : stmt                      { $$ = mk_comma_sep_stmts($1, NULL); }
+              | stmt COMMA commaSepStmts  { $$ = mk_comma_sep_stmts($1, $3); }
               ;
 
 /*
@@ -320,14 +324,6 @@ declList : declE                    { $$ = $1; }
          | declList SEMICOL declE   { $$ = mk_decl_list($1, $3); }
          ;
 
-con : tycon                  { $$ = mk_con($1->substr()); }
-    | OPAREN symbols CPAREN  { $$ = mk_con($2); }
-    ;
-
-conList : con                { $$ = $1; }
-        | conList COMMA con  { $$ = mk_con_list($1, $3); }
-        ;
-
 varList : varList COMMA var  { $$ = mk_var_list($1, $3); }
         | var                { $$ = $1; }
         ;
@@ -344,8 +340,8 @@ var : funid                  { $$ = mk_var("funid", $1->substr()); }
       1. Биндинг функции
       2. Список функций с типом
 */
-declE : var EQ expr                     { $$ = mk_fun_decl($1, $3); }
-      | funlhs EQ expr                  { $$ = mk_fun_decl($1, $3); }
+declE : var valrhs                      { $$ = mk_fun_decl($1, $2); }
+      | funlhs valrhs                   { $$ = mk_fun_decl($1, $2); }
       | varList DCOLON type DARROW type { $$ = mk_typed_var_list($1, $3, $5); }
       | varList DCOLON type             { $$ = mk_typed_var_list($1, $3); }
       | %empty                          { $$ = mk_empty_decl(); }

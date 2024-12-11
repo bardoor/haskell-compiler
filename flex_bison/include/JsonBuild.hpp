@@ -288,6 +288,19 @@ inline Node* mk_comma_sep_exprs(Node* expr, Node* exprs) {
     return exprs;
 }
 
+inline Node* mk_comma_sep_stmts(Node* stmt, Node* stmts) {
+    if (stmts == NULL) {
+        LOG_PARSER("## PARSER ## make commaSepStmts - stmt\n"); 
+
+        Node* node = new Node();
+        node->val.push_back(stmt->val);
+        return node;
+    }
+
+    stmts->val.insert(stmts->val.begin(), stmt->val);
+    return stmts;
+}
+
 inline Node* mk_range(Node* start, Node* snd, Node* end) {
     Node* node = new Node();
     node->val["range"]["start"] = start->val;
@@ -306,6 +319,15 @@ inline Node* mk_var(std::string type, std::string repr) {
     Node* node = new Node();
     node->val["type"] = type;
     node->val["repr"] = repr;
+    return node;
+}
+
+inline Node* mk_comprehension(Node* expr, Node* generators) {
+    Node* node = new Node();
+
+    node->val["head"] = expr->val;
+    node->val["generators"] = generators->val;
+
     return node;
 }
 
@@ -345,15 +367,28 @@ inline Node* mk_tuple_pat(Node* pat, Node* pats) {
     LOG_PARSER("## PARSER ## make apat - tuple\n");
 
     Node* node = new Node();
+
+    if (pats == NULL && pat == NULL) {
+        node->val["pattern"]["tuple"] = json::array();
+        return node;
+    }
+
     node->val["pattern"]["tuple"] = json::array();
 
-    if (pats != NULL && pat != NULL) {
+    if (pat != NULL) {
         node->val["pattern"]["tuple"].push_back(pat->val);
-        node->val["pattern"]["tuple"].insert(
-            node->val["pattern"]["tuple"].begin(), 
-            pats->val
-        );
     }
+
+    if (pats != NULL) {
+        if (pats->val.is_array()) {
+            for (auto& p : pats->val) {
+                node->val["pattern"]["tuple"].push_back(p);
+            }
+        } else {
+            node->val["pattern"]["tuple"].push_back(pats->val);
+        }
+    }
+
     return node;
 }
 
