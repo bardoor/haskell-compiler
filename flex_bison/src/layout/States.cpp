@@ -27,7 +27,6 @@ InitBuilderState::InitBuilderState(LayoutBuilder* owner)
 
 void InitBuilderState::addToken(Iterator<IndentedToken>& token) {
     if (token->type != MODULEKW) {
-        owner->getTokens().emplace_back(VOCURLY, 0);
         owner->changeState(std::make_unique<ImplicitLayoutState>(owner));
         return;
     }
