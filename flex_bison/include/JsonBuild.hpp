@@ -605,14 +605,14 @@ inline Node* mk_context_class(Node* classNode) {
     return node;
 }
 
-inline Node* mk_inst_decl_restrict(Node* context, Node* tycon, Node* restrictInst, Node* rinstOpt) {
+inline Node* mk_inst_decl_restrict(Node* context, std::string tycon, Node* restrictInst, Node* rinstOpt) {
     LOG_PARSER("## PARSER ## make instDecl - INSTANCE context => tycon restrictInst rinstOpt\n");
 
     Node* node = new Node();
     node->val = {
         {"inst_decl", {
             {"context", context->val},
-            {"tycon", tycon->val},
+            {"tycon", tycon},
             {"restrictInst", restrictInst->val},
             {"rinstOpt", rinstOpt->val}
         }}
@@ -620,13 +620,13 @@ inline Node* mk_inst_decl_restrict(Node* context, Node* tycon, Node* restrictIns
     return node;
 }
 
-inline Node* mk_inst_decl_general(Node* tycon, Node* generalInst, Node* rinstOpt) {
+inline Node* mk_inst_decl_general(std::string tycon, Node* generalInst, Node* rinstOpt) {
     LOG_PARSER("## PARSER ## make instDecl - INSTANCE tycon generalInst rinstOpt\n");
 
     Node* node = new Node();
     node->val = {
         {"inst_decl", {
-            {"tycon", tycon->val},
+            {"tycon", tycon},
             {"generalInst", generalInst->val},
             {"rinstOpt", rinstOpt->val}
         }}
@@ -634,12 +634,12 @@ inline Node* mk_inst_decl_general(Node* tycon, Node* generalInst, Node* rinstOpt
     return node;
 }
 
-inline Node* mk_class(Node* tycon, Node* tyvar) {
+inline Node* mk_class(std::string tycon, Node* tyvar) {
     LOG_PARSER("## PARSER ## make class - tycon tyvar\n");
 
     Node* node = new Node(); 
     node->val = {
-        {"tycon", tycon->val}, 
+        {"tycon", tycon}, 
         {"tyvar", tyvar->val}  
     };
     return node;
@@ -694,10 +694,10 @@ inline Node* mk_val_rhs1_expr(Node* expr) {
 }
 
 
-inline Node* mk_tyvar(Node* funid) {
+inline Node* mk_tyvar(std::string funid) {
     LOG_PARSER("## PARSER ## make tyvar - funid\n");
 
     Node* node = new Node(); 
-    node->val = funid->val;
+    node->val["funid"] = funid;
     return node;
 }
