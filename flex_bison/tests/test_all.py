@@ -2,7 +2,7 @@ from tools import parse_to_dict
 
 
 def test_constant_declarations():
-    result = parse_to_dict("{ a = x + 1; b = 5 + 7; c = a - b }")
+    result = parse_to_dict("a = x + 1 \nb = 5 + 7 \nc = a - b")
 
     assert result[0] != "error", result[1]
 
@@ -61,7 +61,7 @@ def test_constant_declarations():
 
 
 def test_func_declarations():
-    result = parse_to_dict("{ func a b c = 2 * (a + b - c); otherFunc 1 2 3 = 15 }")
+    result = parse_to_dict("func a b c = 2 * (a + b - c) \notherFunc 1 2 3 = 15")
 
     assert result[0] != "error", result[1]
 
@@ -140,7 +140,7 @@ def test_func_declarations():
 
 
 def test_patterns_func_def():
-    result = parse_to_dict("{ func (1,2,_,xs) = xs }")
+    result = parse_to_dict("func (1,2,_,xs) = xs")
 
     assert result[0] != "error", result[1]
 
@@ -193,7 +193,7 @@ def test_patterns_func_def():
 
 
 def test_do_stmt():
-    result = parse_to_dict('{ a = do { (1,2,3) <- lol; put "hehe"; }}')
+    result = parse_to_dict('a = do \n\t(1,2,3) <- lol \n\tput "hehe" ')
 
     assert result[0] != "error", result[1]
 
@@ -265,7 +265,7 @@ def test_do_stmt():
 
 
 def test_typed_vars_decl():
-    result = parse_to_dict("{ a :: Num a => a }")
+    result = parse_to_dict("a :: Num a => a")
 
     assert result[0] != "error", result[1]
 
@@ -275,7 +275,7 @@ def test_typed_vars_decl():
         "module": {
             "decls": {
                 "context": {
-                    "overlay": {"constructor": "a", "type_list": [{"funid": "a"}]}
+                    "overlay": {"constructor": "Num", "type_list": [{"funid": "a"}]}
                 },
                 "type": {"funid": "a"},
                 "vars": {"repr": "a", "type": "funid"},
@@ -287,7 +287,7 @@ def test_typed_vars_decl():
 
 
 def test_class_decl_body_none():
-    result = parse_to_dict("{class MyClass foo}")
+    result = parse_to_dict("class MyClass foo")
 
     assert result[0] != "error", result[1]
 
@@ -298,7 +298,7 @@ def test_class_decl_body_none():
             "decls": {
                 "class_decl": {
                     "body": None,
-                    "class": {"tycon": "foo", "tyvar": {"funid": "foo"}},
+                    "class": {"tycon": "MyClass", "tyvar": {"funid": "foo"}},
                 }
             }
         }
@@ -308,7 +308,7 @@ def test_class_decl_body_none():
 
 
 def test_class_decl_with_where():
-    result = parse_to_dict("{class MyClass foo where {}}")
+    result = parse_to_dict("class MyClass foo where")
 
     assert result[0] != "error", result[1]
 
@@ -319,7 +319,7 @@ def test_class_decl_with_where():
             "decls": {
                 "class_decl": {
                     "body": {"decl": {}},
-                    "class": {"tycon": "foo", "tyvar": {"funid": "foo"}},
+                    "class": {"tycon": "MyClass", "tyvar": {"funid": "foo"}},
                 }
             }
         }
@@ -329,7 +329,7 @@ def test_class_decl_with_where():
 
 
 def test_class_decl_with_contextList():
-    result = parse_to_dict("{class (Read a, Show a) => Textual a}")
+    result = parse_to_dict("class (Read a, Show a) => Textual a")
 
     assert result[0] != "error", result[1]
 
@@ -340,11 +340,11 @@ def test_class_decl_with_contextList():
             "decls": {
                 "class_decl": {
                     "body": None,
-                    "class": {"tycon": "a", "tyvar": {"funid": "a"}},
+                    "class": {"tycon": "Textual", "tyvar": {"funid": "a"}},
                     "context": {
                         "contextList": [
-                            {"tycon": "a", "tyvar": {"funid": "a"}},
-                            {"tycon": "a", "tyvar": {"funid": "a"}},
+                            {"tycon": "Read", "tyvar": {"funid": "a"}},
+                            {"tycon": "Show", "tyvar": {"funid": "a"}},
                         ]
                     },
                 }
