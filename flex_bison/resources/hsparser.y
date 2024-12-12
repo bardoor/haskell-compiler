@@ -30,10 +30,30 @@ json root;
 
 %nonassoc LOWER_THAN_TYPED_EXPR
 
+%right APPLICATION
+
+%right OR
+
+%right AND
+
+%nonassoc LOG_EQ NEQ LT GT LEQ GEQ
+
+%right CONCAT CONS
+
+%left PLUS MINUS
+
+%left MUL DIV
+
+%right POWER
+
+%left INDEX
+
+%right COMPOSE
+
 %left	CASE		LET	IN		LAMBDA
   	IF		ELSE
 
-%left SYMS PLUS MINUS BQUOTE
+%left BQUOTE
 
 %left DCOLON
 
@@ -47,7 +67,7 @@ json root;
 %right RARROW
 
 %type <node> literal expr oexpr dexpr kexpr fapply aexpr module body funlhs topDeclList topDecl declE var apatList commaSepExprs
-             tuple list op comprehension altList declList range lampats apat opat pats fpat dpat
+             tuple list comprehension altList declList range lampats apat opat pats fpat dpat
              classDecl classBody context class instDecl restrictInst rinstOpt generalInst valDefList valDef varList
              valrhs valrhs1 whereOpt guardrhs guard tyvar tyvarList tyvarListComma type atype btype ttype ntatype typeListComma atypeList contextList
              dataDecl simpleType constrList constr tyClassList conop tyClassListComma tyClass typeDecl defaultDecl defaultTypes stmt stmts commaSepStmts
@@ -59,6 +79,7 @@ json root;
  * ------------------------------- */
 %token <str> STRINGC SYMS CHARC INTC FLOATC FUNC_ID CONSTRUCTOR_ID
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE PLUS MINUS COMMA EQ
+%token LOG_EQ NEQ LT GT LEQ GEQ OR AND INDEX POWER MUL DIV COMPOSE APPLICATION CONCAT CONS
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY OPAREN CPAREN OBRACKET CBRACKET OCURLY CCURLY LAZY BACKSLASH COLON
 
@@ -96,8 +117,26 @@ expr : oexpr DCOLON type { $$ = mk_typed_expr($1, $3); }
       a + b
       a `fun` b
 */
-oexpr : oexpr op oexpr %prec PLUS   { $$ = mk_bin_expr($1, $2, $3); }
-      | dexpr                       { $$ = $1; }
+oexpr : oexpr BQUOTE funid BQUOTE oexpr { $$ = mk_bin_expr($1, mk_operator("quoted", $3->substr()), $5); }
+      | oexpr LOG_EQ oexpr  { $$ = mk_bin_expr($1, mk_operator("eq", "=="), $3); }
+      | oexpr NEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("neq", "/="), $3); }
+      | oexpr LT oexpr      { $$ = mk_bin_expr($1, mk_operator("lt", "<"), $3); }
+      | oexpr GT oexpr      { $$ = mk_bin_expr($1, mk_operator("gt", ">"), $3); }
+      | oexpr LEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("leq", ">="), $3); }
+      | oexpr GEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("geq", "<="), $3); }
+      | oexpr OR oexpr      { $$ = mk_bin_expr($1, mk_operator("or", "||"), $3); }
+      | oexpr AND oexpr     { $$ = mk_bin_expr($1, mk_operator("and", "&&"), $3); }
+      | oexpr PLUS oexpr    { $$ = mk_bin_expr($1, mk_operator("plus", "+"), $3); }
+      | oexpr MINUS oexpr   { $$ = mk_bin_expr($1, mk_operator("minus", "-"), $3); }
+      | oexpr CONCAT oexpr  { $$ = mk_bin_expr($1, mk_operator("concat", "++"), $3); }
+      | oexpr CONS oexpr    { $$ = mk_bin_expr($1, mk_operator("cons", ":"), $3); }
+      | oexpr POWER oexpr   { $$ = mk_bin_expr($1, mk_operator("power", "**"), $3); }
+      | oexpr MUL oexpr     { $$ = mk_bin_expr($1, mk_operator("mul", "*"), $3); }
+      | oexpr DIV oexpr     { $$ = mk_bin_expr($1, mk_operator("div", "/"), $3); }
+      | oexpr COMPOSE oexpr { $$ = mk_bin_expr($1, mk_operator("compose", "."), $3); }
+      | oexpr INDEX oexpr   { $$ = mk_bin_expr($1, mk_operator("index", "["), $3); }
+      | oexpr APPLICATION oexpr { $$ = mk_bin_expr($1, mk_operator("application", "@"), $3); }
+      | dexpr               { $$ = $1; }
       ;
 
 /*
@@ -149,18 +188,6 @@ aexpr : literal               { $$ = mk_expr($1); }
       | comprehension         { $$ = mk_expr($1); }
       | WILDCARD              { $$ = mk_simple_pat("wildcard"); }
       ;
-
-/* 
-      Оператор
-      1. Последовательность символов
-      2. - ква-ква оператор, иначе говоря идентификатор функции в обратных кавычках: `fun`
-      3. Плюс или минус
-*/
-op : symbols                { $$ = mk_operator("symbols", $1->substr()); }
-   | BQUOTE funid BQUOTE    { $$ = mk_operator("quoted", $2->substr()); }
-   | PLUS                   { $$ = mk_operator("symbols", "+"); }
-   | MINUS                  { $$ = mk_operator("symbols", "-"); }
-   ;
 
 symbols : SYMS    { $$ = $1; }
         ;
@@ -254,7 +281,7 @@ pats : pats COMMA opat    { $$ = mk_pats($3, $1); }
       x:xs = lst
 */
 opat : dpat                    { $$ = $1; }
-     | opat op opat %prec PLUS { $$ = mk_bin_pat($1, $2, $3); }
+//     | opat op opat %prec PLUS { $$ = mk_bin_pat($1, $2, $3); }
      ;
 
 /*
