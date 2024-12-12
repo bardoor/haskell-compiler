@@ -128,6 +128,22 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LE
 "=>"    { IndentedToken token(DARROW, std::string(yytext), offset);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
 "|"     { IndentedToken token(VBAR, std::string(yytext), offset);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
 
+"$"  { IndentedToken token(APPLICATION, std::string(yytext), offset); offset += 1; return token; }
+"==" { IndentedToken token(LOG_EQ, std::string(yytext), offset); offset += 2; return token; }
+"/=" { IndentedToken token(NEQ, std::string(yytext), offset); offset += 2; return token; }
+">"  { IndentedToken token(GT, std::string(yytext), offset); offset += 1; return token; }
+">=" { IndentedToken token(LEQ, std::string(yytext), offset); offset += 2; return token; }
+"<"  { IndentedToken token(LT, std::string(yytext), offset); offset += 1; return token; }
+"<=" { IndentedToken token(GEQ, std::string(yytext), offset); offset += 2; return token; }
+"||" { IndentedToken token(OR, std::string(yytext), offset); offset += 2; return token; }
+"&&" { IndentedToken token(AND, std::string(yytext), offset); offset += 2; return token; }
+"!!" { IndentedToken token(INDEX, std::string(yytext), offset); offset += 2; return token; }
+"^"  |
+"^^" |
+"**" { IndentedToken token(POWER, std::string(yytext), offset); offset += strlen(yytext); return token; }
+"++" { IndentedToken token(CONCAT, std::string(yytext), offset); offset += strlen(yytext); return token; }
+":"  { IndentedToken token(CONS, std::string(yytext), offset); offset += strlen(yytext); return token; }
+
 {SYMBOL}+ { 
 	IndentedToken token(SYMS, std::string(yytext), offset); 
 	LOG_LEXEM("found symbol: %s\n", yytext); 
