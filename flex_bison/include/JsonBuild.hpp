@@ -706,9 +706,13 @@ inline Node* mk_val_def(Node* opat, Node* valrhs) {
 
 inline Node* mk_val_rhs(Node* valrhs1, Node* whereOpt) {
     LOG_PARSER("## PARSER ## make valrhs - valrhs1 whereOpt\n");
-    
+
     Node* node = new Node();
-    node->val = {{"valrhs", {{"valrhs1", valrhs1->val}, {"whereOpt", whereOpt->val}}}};
+
+    node->val = valrhs1->val;
+    if (whereOpt != NULL) {
+        node->val["where"] = whereOpt->val;
+    }
     return node;
 }
 

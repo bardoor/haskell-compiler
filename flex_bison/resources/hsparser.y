@@ -470,7 +470,7 @@ valrhs : valrhs1 whereOpt
 valrhs1 : guardrhs
         { LOG_PARSER("## PARSER ## make valrhs1 - guardrhs\n"); $$ = new Node(); $$->val = {{"valrhs1", {{"guardrhs", $1->val}}}}; }
         | EQ expr
-        { LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); $$ = new Node(); $$->val = {{"valrhs1", {{"expr", $2->val}}}}; }
+        { LOG_PARSER("## PARSER ## make valrhs1 - = expr\n"); $$ = new Node(); $$->val = {{"valrhs1", $2->val}}; }
         ;
 
 guardrhs : guard EQ expr
