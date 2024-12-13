@@ -26,8 +26,6 @@
 		#define LOG_LEXEM(msg, ...)
 	#endif
 
-	#define ERROR(msg, ...) printf(msg, ##__VA_ARGS__);
-
 	#define UNPUT_STR(str) \
 		for (auto it = str.end(); it >= str.begin(); it--) { \
 			unput(*it); \
@@ -99,12 +97,12 @@ else      { IndentedToken token(ELSEKW, std::string(yytext), offset);     LOG_LE
 where     { IndentedToken token(WHEREKW, std::string(yytext), offset);    LOG_LEXEM("found lexem: where\n");    offset += strlen(yytext); return token; }
 let       { IndentedToken token(LETKW, std::string(yytext), offset);   	  LOG_LEXEM("found lexem: let\n");      offset += strlen(yytext); return token; }
 in        { IndentedToken token(INKW, std::string(yytext), offset); 	  LOG_LEXEM("found lexem: in\n");  	    offset += strlen(yytext); return token; }
-foreign   { IndentedToken token(FOREIGNKW, std::string(yytext), offset);  LOG_LEXEM("found lexem: foreign\n");  offset += strlen(yytext); return token; }
+foreign   { throw LexerError("Are you really? Foreign functions is not supported", yylineno, offset); }
 infix     |
 infixl    |
 infixr    { throw LexerError("custom operators declaration not supported", yylineno, offset); }
 instance  { IndentedToken token(INSTANCEKW, std::string(yytext), offset); LOG_LEXEM("found lexem: instance\n"); offset += strlen(yytext); return token; }
-import    { IndentedToken token(IMPORTKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: import\n");   offset += strlen(yytext); return token; }
+import    { throw LexerError("import modules not supported", yylineno, offset); }
 module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: module\n");   offset += strlen(yytext); return token; }
 
 
