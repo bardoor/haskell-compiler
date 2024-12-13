@@ -7,6 +7,7 @@
 	#include <algorithm>
 	#include <charconv>
 	#include <iostream>
+	#include <format>
 
 	#include "LexerError.hpp"
 	#include "LayoutBuild.hpp"
@@ -24,6 +25,8 @@
 	#else
 		#define LOG_LEXEM(msg, ...)
 	#endif
+
+	#define ERROR(msg, ...) printf(msg, ##__VA_ARGS__);
 
 	#define UNPUT_STR(str) \
 		for (auto it = str.end(); it >= str.begin(); it--) { \
@@ -97,9 +100,9 @@ where     { IndentedToken token(WHEREKW, std::string(yytext), offset);    LOG_LE
 let       { IndentedToken token(LETKW, std::string(yytext), offset);   	  LOG_LEXEM("found lexem: let\n");      offset += strlen(yytext); return token; }
 in        { IndentedToken token(INKW, std::string(yytext), offset); 	  LOG_LEXEM("found lexem: in\n");  	    offset += strlen(yytext); return token; }
 foreign   { IndentedToken token(FOREIGNKW, std::string(yytext), offset);  LOG_LEXEM("found lexem: foreign\n");  offset += strlen(yytext); return token; }
-infix     { IndentedToken token(INFIXKW, std::string(yytext), offset);    LOG_LEXEM("found lexem: infix\n");    offset += strlen(yytext); return token; }
-infixl    { IndentedToken token(INFIXLKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: infixl\n");   offset += strlen(yytext); return token; }
-infixr    { IndentedToken token(INFIXRKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: infixr\n");   offset += strlen(yytext); return token; }
+infix     |
+infixl    |
+infixr    { throw LexerError("custom operators declaration not supported", yylineno, offset); }
 instance  { IndentedToken token(INSTANCEKW, std::string(yytext), offset); LOG_LEXEM("found lexem: instance\n"); offset += strlen(yytext); return token; }
 import    { IndentedToken token(IMPORTKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: import\n");   offset += strlen(yytext); return token; }
 module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LEXEM("found lexem: module\n");   offset += strlen(yytext); return token; }
@@ -286,7 +289,8 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset);   LOG_LE
 <SINGLE_LINE_COMMENT>\n		{ LOG_LEXEM("found a single line comment\n"); BEGIN(INITIAL); yyless(0); }
 
 "{-"                        { BEGIN(MULTI_LINE_COMMENT); opened_line = yylineno; }
-<MULTI_LINE_COMMENT>[^-]+   
+<MULTI_LINE_COMMENT>\n		{ yylineno++; }
+<MULTI_LINE_COMMENT>[^-]   
 <MULTI_LINE_COMMENT>"-"[^}]  
 <MULTI_LINE_COMMENT>"-}"    { BEGIN(INITIAL); LOG_LEXEM("found a multi line comment\n"); }
 <MULTI_LINE_COMMENT><<EOF>> { throw LexerError(std::string("Unexpected end of the file after opening char literal! Line: ") + std::to_string(opened_line)); }
