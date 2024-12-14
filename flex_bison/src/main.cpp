@@ -23,24 +23,27 @@ extern json root;
 std::vector<IndentedToken>::iterator tokensIter;
 std::vector<IndentedToken>::iterator tokensEnd;
 
-std::string getLineFromFile(const std::string& fileName, int lineNumber) {
-    std::ifstream file(fileName); // Открываем файл
+std::vector<std::string> lines;
+
+std::vector<std::string> readFileToLines(const std::string& fileName) {
+    std::ifstream file(fileName);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file: " + fileName);
     }
 
+    std::vector<std::string> lines;
     std::string line;
-    int currentLine = 1;
-
-    // Читаем файл построчно
     while (std::getline(file, line)) {
-        if (currentLine == lineNumber) {
-            return line; // Возвращаем нужную строку
-        }
-        currentLine++;
+        lines.push_back(line);
     }
+    return lines;
+}
 
-    throw std::out_of_range("Line number out of range: " + std::to_string(lineNumber));
+std::string getLineFromVector(const std::vector<std::string>& lines, int lineNumber) {
+    if (lineNumber < 1 || lineNumber > static_cast<int>(lines.size())) {
+        throw std::out_of_range("Line number out of range: " + std::to_string(lineNumber));
+    }
+    return lines[lineNumber - 1];
 }
 
 std::vector<IndentedToken> getTokens() {
@@ -54,13 +57,14 @@ std::vector<IndentedToken> getTokens() {
 }
 
 int main(int argc, char* argv[]) {
-    const char* default_file = "flex_bison/resources/code_examples/sample.hs";
-    FILE* input_file = nullptr;
     std::string filePath;
+    FILE* input_file = nullptr;
 
     if (argc == 1) {
-        input_file = fopen(default_file, "r");
-        filePath = default_file;
+        filePath = "flex_bison/resources/code_examples/sample.hs";
+        lines = readFileToLines(filePath); 
+
+        input_file = fopen(filePath.c_str(), "r");
         if (!input_file) {
             perror("Error opening default input file");
             return EXIT_FAILURE;
@@ -68,8 +72,10 @@ int main(int argc, char* argv[]) {
         yyin = input_file;
     } 
     else if (argc == 2) {
-        input_file = fopen(argv[1], "r");
         filePath = argv[1];
+        lines = readFileToLines(filePath); 
+
+        input_file = fopen(filePath.c_str(), "r");
         if (!input_file) {
             perror("Error opening input file");
             return EXIT_FAILURE;
@@ -90,13 +96,9 @@ int main(int argc, char* argv[]) {
     } catch (LexerError& e) {
         std::cerr << RED << "Lexer error: " << e.what() << RESET << std::endl;
         if (!filePath.empty()) {
-            if (input_file) {
-                fclose(input_file);  
-            }
-
-            std::string line = std::to_string(e.getLine()) + " | ";
-            std::cerr << line << getLineFromFile(filePath, e.getLine()) << std::endl;
-            std::cerr << std::string(e.getColumn() + line.length(), ' ') << "^" << std::endl;
+            std::string linePrefix = std::to_string(e.getLine()) + " | ";
+            std::cerr << linePrefix << getLineFromVector(lines, e.getLine()) << std::endl;
+            std::cerr << std::string(e.getColumn() + linePrefix.length(), ' ') << "^" << std::endl;
         }
         if (input_file) {
             fclose(input_file);  
@@ -122,6 +124,6 @@ int main(int argc, char* argv[]) {
     if (input_file) {
         fclose(input_file);  
     }
-    
+
     return EXIT_SUCCESS;
 }

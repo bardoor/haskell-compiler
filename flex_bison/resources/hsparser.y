@@ -6,9 +6,14 @@
 #include <JsonBuild.hpp>
 #include <Token.hpp>
 
+#define RED "\033[31m"
+#define RESET "\033[0m"
+
 extern std::vector<IndentedToken>::iterator tokensIter;
 extern std::vector<IndentedToken>::iterator tokensEnd;
+extern std::vector<std::string> lines;
 extern int yylineno;
+int column = 0;
 
 void yyerror(const char* s);
 
@@ -683,10 +688,24 @@ int yylex() {
 
     IndentedToken next = *tokensIter;
     yylval.str = new std::string(next.repr);
+    yylineno = next.line;
+    column = next.column;
+    
     tokensIter++;
     return next.type;
 }
 
 void yyerror(const char* s) {
-    std::cerr << "Error: " << s << " on line " << yylineno << std::endl;
+    std::cerr << RED << "error " << yylineno << ":" << column << ": " << s << RESET << std::endl;
+
+    if (yylineno > 0 && yylineno <= static_cast<int>(lines.size())) {
+        std::string linePrefix = std::to_string(yylineno) + " | ";
+        
+        std::cerr << linePrefix << lines[yylineno - 1] << std::endl;
+        
+        std::cerr << std::string(linePrefix.length(), ' ') 
+                  << std::string(column - 1, ' ') << "^" << std::endl;
+    } else {
+        std::cerr << "Invalid line number: " << yylineno << std::endl;
+    }
 }

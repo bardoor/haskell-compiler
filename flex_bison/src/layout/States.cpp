@@ -53,7 +53,7 @@ void ImplicitLayoutState::onEnter() {
 void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
     if (isFirstToken) {
         isFirstToken = false;
-        sectionIndent = token->offset;
+        sectionIndent = token->column;
         owner->getTokens().push_back(*token);
         token++;
         return;
@@ -64,9 +64,9 @@ void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
         return;
     }
 
-    if (token->offset < sectionIndent) {
+    if (token->column < sectionIndent) {
         owner->toPrevState();
-    } else if (token->offset == sectionIndent) {
+    } else if (token->column == sectionIndent) {
         owner->getTokens().emplace_back(SEMICOL, ";", 0);
         owner->getTokens().push_back(*token);
         token++;
