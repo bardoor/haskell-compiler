@@ -47,7 +47,7 @@ ImplicitLayoutState::ImplicitLayoutState(LayoutBuilder* owner)
     : LayoutBuilderState(owner) {}
 
 void ImplicitLayoutState::onEnter() {
-    owner->getTokens().emplace_back(VOCURLY, "virtual {", 0);
+    owner->getTokens().emplace_back(VOCURLY, "{virtual\\", 0);
 }
 
 void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
@@ -77,7 +77,7 @@ void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
 }
 
 void ImplicitLayoutState::onExit() {
-    owner->getTokens().emplace_back(VCCURLY, "virtual }", 0);
+    owner->getTokens().emplace_back(VCCURLY, "/virtual}", 0);
 }
 
 ExplicitLayoutState::ExplicitLayoutState(LayoutBuilder* owner)
