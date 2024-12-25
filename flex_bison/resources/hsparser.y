@@ -1,5 +1,6 @@
 %require "3.2"
 %locations
+%define parse.error custom
 
 %{
 
@@ -84,9 +85,9 @@ json root;
  * ------------------------------- */
 %token <str> STRINGC SYMS CHARC INTC FLOATC FUNC_ID CONSTRUCTOR_ID
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE PLUS MINUS COMMA EQ
-%token LOG_EQ NEQ LT GT LEQ GEQ OR AND INDEX POWER MUL DIV COMPOSE APPLICATION CONCAT COLON
+%token LOG_EQ NEQ LT GT LEQ GEQ OR AND INDEX POWER MUL DIV COMPOSE APPLICATION CONCAT COLON DOT
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
-%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY OPAREN CPAREN OBRACKET CBRACKET OCURLY CCURLY LAZY BACKSLASH COLON
+%token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY OPAREN CPAREN OBRACKET CBRACKET OCURLY CCURLY LAZY BACKSLASH
 
 %start module
 
@@ -142,7 +143,7 @@ oexpr : oexpr BQUOTE funid BQUOTE oexpr { $$ = mk_bin_expr($1, mk_operator("quot
       | oexpr POWER oexpr   { $$ = mk_bin_expr($1, mk_operator("power", "**"), $3); }
       | oexpr MUL oexpr     { $$ = mk_bin_expr($1, mk_operator("mul", "*"), $3); }
       | oexpr DIV oexpr     { $$ = mk_bin_expr($1, mk_operator("div", "/"), $3); }
-      | oexpr COMPOSE oexpr { $$ = mk_bin_expr($1, mk_operator("compose", "."), $3); }
+      | oexpr DOT oexpr     { $$ = mk_bin_expr($1, mk_operator("dot", "."), $3); }
       | oexpr INDEX oexpr   { $$ = mk_bin_expr($1, mk_operator("index", "["), $3); }
       | oexpr APPLICATION oexpr { $$ = mk_bin_expr($1, mk_operator("application", "$"), $3); }
       | dexpr               { $$ = $1; }
@@ -712,4 +713,33 @@ void yyerror(const char* err) {
     } else {
         std::cerr << "Invalid line number: " << yylineno << std::endl;
     }
+}
+
+int
+yyreport_syntax_error (const yypcontext_t *ctx)
+{
+  int res = 0;
+  //YYLOCATION_PRINT (stderr, *yypcontext_location (ctx));
+  fprintf (stderr, ": syntax error");
+  // Report the tokens expected at this point.
+  {
+    enum { TOKENMAX = 10 };
+    yysymbol_kind_t expected[TOKENMAX];
+    int n = yypcontext_expected_tokens (ctx, expected, TOKENMAX);
+    if (n < 0)
+      // Forward errors to yyparse.
+      res = n;
+    else
+      for (int i = 0; i < n; ++i)
+        fprintf (stderr, "%s %s",
+                 i == 0 ? ": expected" : " or", yysymbol_name (expected[i]));
+  }
+  // Report the unexpected token.
+  {
+    yysymbol_kind_t lookahead = yypcontext_token (ctx);
+    if (lookahead != YYSYMBOL_YYEMPTY)
+      fprintf (stderr, " before %s", yysymbol_name (lookahead));
+  }
+  fprintf (stderr, "\n");
+  return res;
 }
