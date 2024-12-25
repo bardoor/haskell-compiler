@@ -129,6 +129,9 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset, yylineno)
 "=>"    { IndentedToken token(DARROW, std::string(yytext), offset, yylineno);    LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
 "|"     { IndentedToken token(VBAR, std::string(yytext), offset, yylineno);      LOG_LEXEM("found: '%s'\n", yytext);  offset += strlen(yytext); return token; }
 
+"."  { IndentedToken token(DOT, std::string(yytext), offset, yylineno); offset += 1; return token; }
+"*"  { IndentedToken token(MUL, std::string(yytext), offset, yylineno); offset += 1; return token; }
+"/"  { IndentedToken token(DIV, std::string(yytext), offset, yylineno); offset += 1; return token; }
 "$"  { IndentedToken token(APPLICATION, std::string(yytext), offset, yylineno); offset += 1; return token; }
 "==" { IndentedToken token(LOG_EQ, std::string(yytext), offset, yylineno); offset += 2; return token; }
 "/=" { IndentedToken token(NEQ, std::string(yytext), offset, yylineno); offset += 2; return token; }

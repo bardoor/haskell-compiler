@@ -45,6 +45,7 @@ public:
 
     std::vector<IndentedToken>& getTokens();
     const std::unordered_set<int> keywords;
+    const std::unordered_set<int> stopWords;
 
 private:
     std::vector<IndentedToken> tokens;

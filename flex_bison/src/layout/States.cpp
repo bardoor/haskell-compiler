@@ -66,7 +66,7 @@ void ImplicitLayoutState::addToken(Iterator<IndentedToken>& token) {
 
     if (token->column < sectionIndent) {
         owner->toPrevState();
-    } else if (token->column == sectionIndent) {
+    } else if (token->column == sectionIndent && !owner->stopWords.contains(token->type)) {
         owner->getTokens().emplace_back(SEMICOL, ";", 0);
         owner->getTokens().push_back(*token);
         token++;
