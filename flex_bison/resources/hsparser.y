@@ -15,7 +15,7 @@ extern std::vector<std::string> lines;
 extern int yylineno;
 int column = 0;
 
-void yyerror(const char* s);
+void yyerror(const char* err);
 
 int yylex();
 
@@ -43,7 +43,7 @@ json root;
 
 %nonassoc LOG_EQ NEQ LT GT LEQ GEQ
 
-%right CONCAT CONS
+%right CONCAT COLON
 
 %left PLUS MINUS
 
@@ -84,7 +84,7 @@ json root;
  * ------------------------------- */
 %token <str> STRINGC SYMS CHARC INTC FLOATC FUNC_ID CONSTRUCTOR_ID
 %token DARROW DOTDOT RARROW LARROW DCOLON VBAR AS BQUOTE PLUS MINUS COMMA EQ
-%token LOG_EQ NEQ LT GT LEQ GEQ OR AND INDEX POWER MUL DIV COMPOSE APPLICATION CONCAT CONS
+%token LOG_EQ NEQ LT GT LEQ GEQ OR AND INDEX POWER MUL DIV COMPOSE APPLICATION CONCAT COLON
 %token WILDCARD CASEKW CLASSKW DATAKW NEWTYPEKW TYPEKW OFKW THENKW DEFAULTKW DERIVINGKW DOKW IFKW ELSEKW WHEREKW 
 %token LETKW INKW FOREIGNKW INFIXKW INFIXLKW INFIXRKW INSTANCEKW IMPORTKW MODULEKW VARKW VOCURLY VCCURLY OPAREN CPAREN OBRACKET CBRACKET OCURLY CCURLY LAZY BACKSLASH COLON
 
@@ -92,6 +92,10 @@ json root;
 
 %%
 
+/*
+TODO
+    1. case
+*/
 
 /* ------------------------------- *
  *            Выражения            *
@@ -134,13 +138,13 @@ oexpr : oexpr BQUOTE funid BQUOTE oexpr { $$ = mk_bin_expr($1, mk_operator("quot
       | oexpr PLUS oexpr    { $$ = mk_bin_expr($1, mk_operator("plus", "+"), $3); }
       | oexpr MINUS oexpr   { $$ = mk_bin_expr($1, mk_operator("minus", "-"), $3); }
       | oexpr CONCAT oexpr  { $$ = mk_bin_expr($1, mk_operator("concat", "++"), $3); }
-      | oexpr CONS oexpr    { $$ = mk_bin_expr($1, mk_operator("cons", ":"), $3); }
+      | oexpr COLON oexpr   { $$ = mk_bin_expr($1, mk_operator("cons", ":"), $3); }
       | oexpr POWER oexpr   { $$ = mk_bin_expr($1, mk_operator("power", "**"), $3); }
       | oexpr MUL oexpr     { $$ = mk_bin_expr($1, mk_operator("mul", "*"), $3); }
       | oexpr DIV oexpr     { $$ = mk_bin_expr($1, mk_operator("div", "/"), $3); }
       | oexpr COMPOSE oexpr { $$ = mk_bin_expr($1, mk_operator("compose", "."), $3); }
       | oexpr INDEX oexpr   { $$ = mk_bin_expr($1, mk_operator("index", "["), $3); }
-      | oexpr APPLICATION oexpr { $$ = mk_bin_expr($1, mk_operator("application", "@"), $3); }
+      | oexpr APPLICATION oexpr { $$ = mk_bin_expr($1, mk_operator("application", "$"), $3); }
       | dexpr               { $$ = $1; }
       ;
 
@@ -695,8 +699,8 @@ int yylex() {
     return next.type;
 }
 
-void yyerror(const char* s) {
-    std::cerr << RED << "error " << yylineno << ":" << column << ": " << s << RESET << std::endl;
+void yyerror(const char* err) {
+    std::cerr << RED << "error " << yylineno << ":" << column << ": " << err << RESET << std::endl;
 
     if (yylineno > 0 && yylineno <= static_cast<int>(lines.size())) {
         std::string linePrefix = std::to_string(yylineno) + " | ";

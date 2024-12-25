@@ -143,7 +143,6 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset, yylineno)
 "^^" |
 "**" { IndentedToken token(POWER, std::string(yytext), offset, yylineno); offset += strlen(yytext); return token; }
 "++" { IndentedToken token(CONCAT, std::string(yytext), offset, yylineno); offset += strlen(yytext); return token; }
-":"  { IndentedToken token(CONS, std::string(yytext), offset, yylineno); offset += strlen(yytext); return token; }
 
 {SYMBOL}+ { 
 	IndentedToken token(SYMS, std::string(yytext), offset, yylineno); 
