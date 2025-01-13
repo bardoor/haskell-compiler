@@ -120,7 +120,9 @@ int main(int argc, char* argv[]) {
 
     yyparse();
 
-    std::cout << "json: " << root;
+    if (!root.is_null()) {
+        std::cout << "json: " << root << std::endl;
+    }
 
     if (input_file) {
         fclose(input_file);  
