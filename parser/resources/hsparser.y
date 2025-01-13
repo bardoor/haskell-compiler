@@ -637,7 +637,7 @@ defaultTypes : OPAREN type COMMA typeListComma CPAREN
  * ------------------------------- */
 
 type : btype
-     { LOG_PARSER("## PARSER ## make type - btype\n"); $$ = new Node(); $$->val = $1->val; }
+     { LOG_PARSER("## PARSER ## make type - btype\n"); $$ = new Node(); $$->val = json::array(); $$->val.push_back($1->val); }
      | btype RARROW type
      { LOG_PARSER("## PARSER ## make type - btype -> type\n"); $$ = $3; if ($$->val.is_array()) { $$->val.insert($$->val.begin(), $1->val); } else { $$ = new Node(); $$->val.push_back($1->val); $$->val.push_back($3->val); } }
      ;
