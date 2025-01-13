@@ -12,15 +12,15 @@ defmodule ParserBridge do
     {start, len} = :binary.match(str, "json:")
 
     str
-    |> String.slice((start + len)..-1)
+    |> String.slice((start + len)..-1//1)
     |> Jason.decode!()
   end
 
   defp get_error(str) do
-    {start, len} = :binary.match(str, "error:")
+    {start, _len} = :binary.match(str, "syntax error")
 
     str
-    |> String.slice((start + len)..-1)
+    |> String.slice(start..-1//1)
     |> String.trim()
   end
 end
