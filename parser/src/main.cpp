@@ -20,6 +20,7 @@ extern void yy_scan_string(const char* str);
 
 extern json root;
 
+bool syntaxError = false;
 std::vector<IndentedToken>::iterator tokensIter;
 std::vector<IndentedToken>::iterator tokensEnd;
 
@@ -125,5 +126,5 @@ int main(int argc, char* argv[]) {
         fclose(input_file);  
     }
 
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE ? syntaxError : EXIT_SUCCESS;
 }

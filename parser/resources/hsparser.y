@@ -14,6 +14,8 @@ extern std::vector<IndentedToken>::iterator tokensIter;
 extern std::vector<IndentedToken>::iterator tokensEnd;
 extern std::vector<std::string> lines;
 extern int yylineno;
+extern bool syntaxError;
+
 int column = 0;
 
 void yyerror(const char* err);
@@ -718,6 +720,7 @@ void yyerror(const char* err) {
 int
 yyreport_syntax_error (const yypcontext_t *ctx)
 {
+  syntaxError = true;
   int res = 0;
   //YYLOCATION_PRINT (stderr, *yypcontext_location (ctx));
   fprintf (stderr, ": syntax error");
