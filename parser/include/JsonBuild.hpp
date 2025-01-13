@@ -572,6 +572,15 @@ inline Node* mk_module(Node* decls) {
     return node;
 }
 
+inline Node* mk_top_decl_list(Node* decl) {
+    LOG_PARSER("## PARSER ## make top decl list\n");
+
+    Node* node = new Node();
+    node->val = json::array();
+    node->val.push_back(decl->val);
+    return node;
+}
+
 inline Node* mk_top_decl_list(Node* decls, Node* decl) {
     LOG_PARSER("## PARSER ## make top decl list\n");
 

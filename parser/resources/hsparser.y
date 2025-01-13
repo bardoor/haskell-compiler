@@ -410,7 +410,7 @@ body : OCURLY topDeclList CCURLY
      ;
 
 topDeclList : topDecl
-            { $$ = $1; }
+            { $$ = mk_top_decl_list($1); }
             | topDeclList SEMICOL topDecl
             { $$ = mk_top_decl_list($1, $3); }
             ;
