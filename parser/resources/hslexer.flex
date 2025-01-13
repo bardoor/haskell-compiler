@@ -178,7 +178,7 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset, yylineno)
 
 	std::string after_literal;
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
-	LOOKAHEAD(after_literal);
+	// LOOKAHEAD(after_literal);
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return c == '8' || c == '9' || std::isalpha(c); })) {
@@ -207,12 +207,12 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset, yylineno)
 
 	std::string after_literal;
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
-	LOOKAHEAD(after_literal);
+	// LOOKAHEAD(after_literal);
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {
 		IndentedToken token(INTC, cleaned, offset, yylineno); 
-		LOG_LEXEM("found decimal integer literal: %s\n", buffer.c_str());
+		LOG_LEXEM("found decimal integer literal: %s\n", cleaned.c_str());
 
 		if (after_literal.length() > 0) {
 			UNPUT_STR(after_literal);
@@ -236,7 +236,7 @@ module    { IndentedToken token(MODULEKW, std::string(yytext), offset, yylineno)
 
 	std::string after_literal;
 	// записать в after_literal последовательность непробельных символов после сматченного числового литерала
-	LOOKAHEAD(after_literal);
+	// LOOKAHEAD(after_literal);
 	
 	if (after_literal.length() > 0 || std::none_of(after_literal.begin(), after_literal.end(), 
 												   [](char c) {return std::isalpha(c); })) {

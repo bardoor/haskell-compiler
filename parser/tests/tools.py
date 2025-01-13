@@ -58,6 +58,6 @@ def dict_to_dot(source: dict, parent=None, graph=None):
 
 
 if __name__ == "__main__":
-    (status, result) = parse_file_to_dict('flex_bison/resources/code_examples/sample.hs')
+    (status, result) = parse_file_to_dict('parser/resources/code_examples/sample.hs')
     pprint.pp(result)
     dict_to_dot(result).save()

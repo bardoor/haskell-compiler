@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     FILE* input_file = nullptr;
 
     if (argc == 1) {
-        filePath = "flex_bison/resources/code_examples/sample.hs";
+        filePath = "parser/resources/code_examples/sample.hs";
         lines = readFileToLines(filePath); 
 
         input_file = fopen(filePath.c_str(), "r");
