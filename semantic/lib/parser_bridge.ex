@@ -13,7 +13,7 @@ defmodule ParserBridge do
 
     str
     |> String.slice((start + len)..-1//1)
-    |> Jason.decode!()
+    |> Jason.decode!(keys: :atoms)
   end
 
   defp get_error(str) do
