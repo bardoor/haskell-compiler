@@ -96,13 +96,10 @@ inline Node* mk_bin_expr(Node* left, Node* op, Node* right) {
     LOG_PARSER("## PARSER ## make oexpr - bin expr\n");
 
     Node* node = new Node();
-    node->val = {{
-        "expr", {
-            {"left", left->val}, 
-            {"op", op->val},
-            {"right", right->val} 
-        }
-    }};
+    node->val["left"] = left->val.is_array() ? left->val[0] : left->val;
+    node->val["right"] = right->val.is_array() ? right->val[0] : right->val;
+    node->val["op"] = op->val;
+
     return node;
 }
 
@@ -110,9 +107,7 @@ inline Node* mk_negate_expr(Node* expr) {
     LOG_PARSER("## PARSER ## make oexpr - negate expr\n"); 
 
     Node* node = new Node();
-    node->val = {{
-        "expr", {{"uminus", expr->val}}
-    }};
+    node->val =  {{"uminus", expr->val}};
     return node;
 }
 
@@ -146,13 +141,11 @@ inline Node* mk_if_else(Node* condition, Node* true_branch, Node* false_branch) 
     LOG_PARSER("## PARSER ## make kexpr - IF .. THEN .. ELSE ..\n");
 
     Node* node = new Node();
-    node->val = {{
-        "if_else", {
-            {"cond", condition->val},
-            {"true_branch", true_branch->val},
-            {"false_branch", false_branch->val}
-        }
-    }};
+
+    node->val["if"]["cond"] = condition->val.is_array() ? condition->val[0] : condition->val;
+    node->val["if"]["then"] = true_branch->val;
+    node->val["if"]["else"] = false_branch->val;
+
     return node;
 }
 
@@ -194,7 +187,7 @@ inline Node* mk_expr(Node* expr) {
     LOG_PARSER("## PARSER ## make expr\n");
 
     Node* node = new Node();
-    node->val = {{"expr", expr->val}};
+    node->val = expr->val;
     return node;
 }
 
@@ -202,7 +195,7 @@ inline Node* mk_expr(std::string funid) {
     LOG_PARSER("## PARSER ## make expr - funid\n");
 
     Node* node = new Node();
-    node->val["expr"]["funid"] = funid;
+    node->val["funid"] = funid;
     return node;
 }
 
@@ -431,11 +424,10 @@ inline Node* mk_bin_pat(Node* left, Node* op, Node* right) {
     LOG_PARSER("## PARSER ## make bin pat\n");
 
     Node* node = new Node();
-    node->val = {
-        {"left", left->val},
-        {"op", op->val},
-        {"right", right->val}
-    };
+    node->val["left"] = left->val.is_array() ? left->val[0] : left->val;
+    node->val["right"] = right->val.is_array() ? right->val[0] : right->val;
+    node->val["op"] = op->val;
+    
     return node;
 }
 
@@ -459,12 +451,16 @@ inline Node* mk_fun_decl(Node* left, Node* right) {
     LOG_PARSER("## PARSER ## make fun decl\n");
 
     Node* node = new Node();
-    node->val = {{
-        "fun_decl", {
-            {"left", left->val},
-            {"right", right->val}
-        }
-    }};
+    node->val["fun_decl"] = {
+        {"left", left->val}
+    };
+
+    if (right->val.contains("valrhs1")) {
+        node->val["fun_decl"]["right"] = right->val["valrhs1"];
+    } else {
+        node->val["fun_decl"]["right"] = right->val;
+    }
+
     return node;
 }
 
@@ -737,7 +733,7 @@ inline Node* mk_val_rhs1_expr(Node* expr) {
     LOG_PARSER("## PARSER ## make valrhs1 - = expr\n");
 
     Node* node = new Node();
-    node->val = {{"valrhs1", {{"expr", expr->val}}}};
+    node->val = {{"valrhs1", expr->val}};
     return node;
 }
 
