@@ -71,4 +71,26 @@ defmodule Generators.Instruction do
     Enum.reduce(instructions, 0, fn instruct, acc -> acc + instruct.size end)
   end
 
+  @doc """
+  Конкатенация инструкций
+
+  Отдельный элемент может быть как списком, так и одиночной инструкцией
+  """
+  def concat(instructs) do
+    Enum.reduce(instructs, [], fn instruct, acc ->
+      if is_enumerable?(instruct) do
+        acc ++ instruct
+      else
+        acc ++ [instruct]
+      end
+    end)
+  end
+
+  defp is_enumerable?(value) do
+    case Enumerable.impl_for(value) do
+      nil -> false
+      _module -> true
+    end
+  end
+
 end
