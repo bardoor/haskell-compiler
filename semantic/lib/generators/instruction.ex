@@ -68,6 +68,20 @@ defmodule Generators.Instruction do
   end
 
   @doc """
+  Побитовое или
+  """
+  def ior() do
+    new(1, :ior, nil)
+  end
+
+  @doc """
+  Побитовое и
+  """
+  def iand() do
+    new(1, :iand, nil)
+  end
+
+  @doc """
   Воротить вершину стека
   """
   def return() do
