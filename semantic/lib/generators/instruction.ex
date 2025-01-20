@@ -56,6 +56,10 @@ defmodule Generators.Instruction do
     end
   end
 
+  def return() do
+    new(1, :ireturn, nil)
+  end
+
   def size(instructions) do
     Enum.reduce(instructions, 0, fn instruct, acc -> acc + instruct.size end)
   end
