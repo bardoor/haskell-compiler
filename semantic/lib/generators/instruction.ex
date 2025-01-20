@@ -60,6 +60,13 @@ defmodule Generators.Instruction do
     new(1, :ireturn, nil)
   end
 
+  @doc """
+  Безусловный прыжок на offset
+  """
+  def goto(offset) do
+    new(3, :goto, offset)
+  end
+
   def size(instructions) do
     Enum.reduce(instructions, 0, fn instruct, acc -> acc + instruct.size end)
   end
