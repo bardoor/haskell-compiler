@@ -9,12 +9,10 @@ defmodule Generators.Instruction do
 
   # Загрузка числовых контстант из пула
   def load(const_pool, {type, value}) do
-    cond do
-      value == -1 -> new(1, :iconst_m1, nil)
-      value in 0..5 -> new(1, String.to_atom("iconst_#{value}"), nil)
-      value in -128..127 -> new(2, :bipush, value)
-      value in -32768..32767 -> new(3, :sipush, value)
-      true -> new(3, :ldc_w, constant_num(const_pool, {type, value}))
+    if value in -32768..32767 do
+      push(value)
+    else
+      new(3, :ldc_w, constant_num(const_pool, {type, value}))
     end
   end
 
@@ -27,7 +25,20 @@ defmodule Generators.Instruction do
     end
   end
 
-  # Вызов функции
+  @doc """
+  Положить на стек двубайтовое число (от -32768 до 32767)
+
+  В зависимости от значения выбирается наиболее оптимальная команда
+  """
+  def push(value) do
+    cond do
+      value == -1 -> new(1, :iconst_m1, nil)
+      value in 0..5 -> new(1, String.to_atom("iconst_#{value}"), nil)
+      value in -128..127 -> new(2, :bipush, value)
+      value in -32768..32767 -> new(3, :sipush, value)
+    end
+  end
+
   def invoke(const_pool, {name, type}) do
     # TODO: Пуш на стек параметры
     new(3, :invokestatic, constant_num(const_pool, {:class_method, name, type}))
