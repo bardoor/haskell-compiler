@@ -7,7 +7,11 @@ defmodule Generators.Instruction do
     %__MODULE__{size: size, command: command, arg: arg}
   end
 
-  # Загрузка числовых контстант из пула
+  @doc """
+  Загрузка консанты из пула
+
+  Создаёт iconst, bipush, sipush или ldc_w в зависимости от значения
+  """
   def load(const_pool, {type, value}) do
     if value in -32768..32767 do
       push(value)
@@ -16,7 +20,9 @@ defmodule Generators.Instruction do
     end
   end
 
-  # Загрузка локальной переменной
+  @doc """
+  Загрузка локальной переменной по индексу
+  """
   def load(var_num) when is_integer(var_num) do
     if var_num in 0..3 do
       new(1, String.to_atom("iload_#{var_num}"), nil)
@@ -39,12 +45,17 @@ defmodule Generators.Instruction do
     end
   end
 
+  @doc """
+  Вызов статической функции
+  """
   def invoke(const_pool, {name, type}) do
     # TODO: Пуш на стек параметры
     new(3, :invokestatic, constant_num(const_pool, {:class_method, name, type}))
   end
 
-  
+  @doc """
+  Условный прыжок на offset
+  """
   def jump_if(condition, offset) do
     case condition do
       :eq -> new(3, :if_icmpeq, offset)
@@ -56,6 +67,9 @@ defmodule Generators.Instruction do
     end
   end
 
+  @doc """
+  Воротить вершину стека
+  """
   def return() do
     new(1, :ireturn, nil)
   end
@@ -67,6 +81,9 @@ defmodule Generators.Instruction do
     new(3, :goto, offset)
   end
 
+  @doc """
+  Размер инструкций в байтах
+  """
   def size(instructions) do
     Enum.reduce(instructions, 0, fn instruct, acc -> acc + instruct.size end)
   end
