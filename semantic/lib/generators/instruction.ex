@@ -89,10 +89,32 @@ defmodule Generators.Instruction do
   end
 
   @doc """
-  Безусловный прыжок на offset
+  Безусловный прыжок на offset (не считая сам goto)
   """
   def goto(offset) do
-    new(3, :goto, offset)
+    new(3, :goto, offset + 3)
+  end
+
+  @doc """
+  Сравнение двух элементов на стеке
+
+  Кладёт результат сравнения на стек
+  """
+  def icompare(op) do
+    false_branch = push(0)
+
+    true_branch = concat([
+      push(1),
+      goto(size(false_branch) + 1)
+    ])
+
+    jump_op = negate_op(op)
+
+    concat([
+      jump_if(jump_op, size(true_branch) + 1),
+      true_branch,
+      false_branch
+    ])
   end
 
   @doc """
@@ -121,6 +143,17 @@ defmodule Generators.Instruction do
     case Enumerable.impl_for(value) do
       nil -> false
       _module -> true
+    end
+  end
+
+  defp negate_op(op) do
+    case op do
+      :eq -> :ne
+      :ne -> :eq
+      :lt -> :ge
+      :le -> :gt
+      :gt -> :le
+      :ge -> :lt
     end
   end
 
