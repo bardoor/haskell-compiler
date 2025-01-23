@@ -64,7 +64,7 @@ defmodule Generators.ConstPool do
   @doc """
   Получить номер константы из таблицы
   """
-  @spec constant_num(constant_pool(), constant()) :: integer()
+  @spec constant_num(constant_pool(), constant()) :: non_neg_integer()
   def constant_num(const_pool, {:utf8, str}) do
     Enum.find_index(const_pool, fn {:utf8, _, ^str} -> true end) + 1
   end
