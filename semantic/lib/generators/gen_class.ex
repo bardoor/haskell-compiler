@@ -4,7 +4,8 @@ defmodule Generators.GenClass do
             major_version: 65,
             constant_pool: [],
             access_flags: [:public],
-            super_class: :Object,
+            this_class: "rtl/core/Functions",
+            super_class: "java/lang/Object",
             interfaces: [],
             fields: [],
             methods: [],
@@ -17,7 +18,9 @@ defmodule Generators.GenClass do
   end
 
   def add_class_modifiers(%__MODULE__{} = gen_class, modifiers) do
-    Enum.all?(modifiers, fn mod -> mod in @modifiers end) or raise ArgumentError
+    unless Enum.all?(modifiers, &(&1 in @modifiers)) do
+      raise "Некорректный модификатор класса #{gen_class.this_class}: #{modifiers}"
+    end
     %{gen_class | access_flags: modifiers}
   end
 
