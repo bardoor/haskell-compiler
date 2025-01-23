@@ -90,4 +90,17 @@ defmodule Generators.ConstPool do
   defp add_if_miss(enum, value) do
     if Enum.member?(enum, value), do: enum, else: enum ++ [value]
   end
+
+  defp enclose(str, first, last) do
+    first <> str <> last
+  end
+
+  defp descriptor_type(type) do
+    case type do
+      :int -> "I"
+      :float -> "F"
+      :str -> "Ljava/lang/String;"
+      {:class, name} -> "L#{name};"
+    end
+  end
 end
