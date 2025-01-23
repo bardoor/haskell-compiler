@@ -66,24 +66,25 @@ defmodule Generators.ConstPool do
   """
   @spec constant_num(constant_pool(), constant()) :: non_neg_integer()
   def constant_num(const_pool, {:utf8, str}) do
-    Enum.find_index(const_pool, fn {:utf8, _, ^str} -> true end) + 1
+    Enum.find_index(const_pool, fn const -> match?({:utf8, _len, ^str}, const) end) + 1
   end
 
   def constant_num(const_pool, {:class, name}) do
     name_num = constant_num(const_pool, {:utf8, name})
-    Enum.find_index(const_pool, fn {:class, ^name_num} -> true end) + 1
+    Enum.find_index(const_pool, fn const -> match?({:class, ^name_num}, const) end) + 1
   end
 
   def constant_num(const_pool, {:name_and_type, name, type}) do
     name_num = constant_num(const_pool, {:utf8, name})
     type_num = constant_num(const_pool, {:utf8, type})
-    Enum.find_index(const_pool, fn {:name_and_type, ^name_num, ^type_num} -> true end) + 1
+    Enum.find_index(const_pool, fn const -> match?({:name_and_type, ^name_num, ^type_num}, const) end) + 1
   end
 
   def constant_num(const_pool, {:class_method, name, type}) do
     name_and_type_num = constant_num(const_pool, {:name_and_type, name, type})
-    Enum.find_index(const_pool, fn {:class_method, ^name_and_type_num} -> true end) + 1
+    Enum.find_index(const_pool, fn const -> match?({:class_method, ^name_and_type_num}, const) end) + 1
   end
+
 
   # Добавляет значение в коллекцию, если его там нет
   defp add_if_miss(enum, value) do
