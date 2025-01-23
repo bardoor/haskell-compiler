@@ -1,4 +1,10 @@
 defmodule Generators.GenClass do
+  @moduledoc """
+  Модуль генерации класса
+
+  Обходит дерево и собирает Java класс, готовый к трансляции в байткод
+  """
+
   alias Generators.ConstPool
   defstruct minor_version: 0,
             major_version: 65,

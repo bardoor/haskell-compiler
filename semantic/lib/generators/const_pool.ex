@@ -1,4 +1,8 @@
 defmodule Generators.ConstPool do
+  @moduledoc """
+  Модуль управления таблицей констант
+  """
+  @type type :: :int | :float | :str | {:class, String.t()}
   @type constant_pool :: [tuple()]
   @type constant ::
             {:utf8, String.t()}

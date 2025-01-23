@@ -13,7 +13,8 @@ defmodule ParserBridge do
 
     str
     |> String.slice((start + len)..-1//1)
-    |> Jason.decode!(keys: :atoms)
+    |> JSON.decode!()
+    |> keys_to_atoms()
   end
 
   defp get_error(str) do
@@ -23,4 +24,23 @@ defmodule ParserBridge do
     |> String.slice(start..-1//1)
     |> String.trim()
   end
+
+  defp keys_to_atoms(map) when is_map(map) do
+    map
+    |> Enum.map(fn {key, value} ->
+      if is_map(value) or is_list(value) do
+        {String.to_atom(key), keys_to_atoms(value)}
+      else
+        {String.to_atom(key), value}
+      end
+    end)
+    |> Enum.into(%{})
+  end
+
+  defp keys_to_atoms(collection) when is_list(collection) do
+    collection
+    |> Enum.map(&keys_to_atoms(&1))
+  end
+
+
 end

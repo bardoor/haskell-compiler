@@ -1,4 +1,10 @@
 defmodule Generators.GenInstr do
+  @moduledoc """
+  Модуль генерации инструкций JVM в логическом представлении
+
+  Работает с АСД, превращая его в последовательность инструкций
+  """
+
   alias Generators.Instruction, as: Instr
 
   def generate(const_pool, %{fun_decl: %{left: _left, right: right}}) do
