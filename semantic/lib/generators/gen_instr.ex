@@ -36,7 +36,8 @@ defmodule Generators.GenInstr do
     op_instrs = case type do
       :or -> Instr.ior()
       :and -> Instr.iand()
-      _ -> Instr.icompare(type)
+      type when type in [:eq, :ne, :lt, :le, :gt, :ge] -> Instr.icompare(type)
+      _ -> raise "Unknown operation: #{type}"
     end
 
     Instr.concat([
