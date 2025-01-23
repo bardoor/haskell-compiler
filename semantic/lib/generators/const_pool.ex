@@ -48,6 +48,18 @@ defmodule Generators.ConstPool do
     add_if_miss(new_pool, {:class_method, name_and_type_num})
   end
 
+  @doc """
+  Создаёт строку дескриптора для метода
+  """
+  @spec method_descriptor([type()], type()) :: {:utf8, String.t()}
+  def method_descriptor(params, return) do
+    params_str = params
+      |> Enum.map(&descriptor_type/1)
+      |> Enum.join("")
+
+    {:utf8, enclose(params_str, "(", ")") <> descriptor_type(return)}
+  end
+
 
   @doc """
   Получить номер константы из таблицы
