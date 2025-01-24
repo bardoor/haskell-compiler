@@ -5,12 +5,15 @@ defmodule Generators.GenClass do
   Обходит дерево и собирает Java класс, готовый к трансляции в байткод
   """
 
-  alias Generators.ConstPool
+  alias Generators.GenMethod
+  alias Generators.GenInstr
+
+  @enforce_keys [:constant_pool]
   defstruct minor_version: 0,
             major_version: 65,
             constant_pool: [],
             access_flags: [:public],
-            this_class: "rtl/core/Functions",
+            this_class: "rtl/core/Main",
             super_class: "java/lang/Object",
             interfaces: [],
             fields: [],
@@ -19,15 +22,22 @@ defmodule Generators.GenClass do
 
   @modifiers [:public, :protected, :private, :static, :abstract]
 
-  def new do
-    %__MODULE__{}
+  def new(constant_pool) do
+    %__MODULE__{constant_pool: constant_pool}
   end
 
-  def add_class_modifiers(%__MODULE__{} = gen_class, modifiers) do
-    unless Enum.all?(modifiers, &(&1 in @modifiers)) do
-      raise "Некорректный модификатор класса #{gen_class.this_class}: #{modifiers}"
-    end
-    %{gen_class | access_flags: modifiers}
+  def generate(constant_pool, %{module: module}) do
+    new(constant_pool) |> generate(module)
+  end
+
+  def generate(class, %{decls: decls}) do
+    decls |> Enum.map(&generate(class, &1))
+  end
+
+  def generate(class, %{fun_decl: %{left: left, right: right, type: type}}) do
+    code = GenInstr.generate(class.constant_pool, right)
+
+    add_method(class, left.repr, type.params, type.return, [:public, :static], code)
   end
 
   @doc """
