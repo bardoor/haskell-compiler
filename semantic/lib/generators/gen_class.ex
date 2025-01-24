@@ -30,12 +30,30 @@ defmodule Generators.GenClass do
     %{gen_class | access_flags: modifiers}
   end
 
-  def add_field(%__MODULE__{} = gen_class, name, type, modifiers) do
-    nil
+  @doc """
+  Добавляет метод в класс
+
+  ## Параметры
+
+    - class: Класс для добавления
+    - name: Название метода
+    - params_type: Типы параметров в порядке следования
+    - return_type: Тип возвращаемого значения
+    - modifiers: Список модификаторов метода
+    - code: Список инструкций
+  """
+  def add_method(%__MODULE__{} = class, name, params_type, return_type, modifiers, instructions) do
+    validate_modifiers!(modifiers)
+
+    class.constant_pool
+    |> GenMethod.new(name, params_type, return_type, modifiers)
+    |> GenMethod.add_instructions(instructions)
   end
 
-  def add_method(%__MODULE__{} = gen_class, name, type, modifiers, code) do
-    nil
+  def validate_modifiers!(modifiers) do
+    if not Enum.all?(modifiers, &(&1 in @modifiers)) do
+      raise "Некорректный модификатор класса: #{modifiers}"
+    end
   end
 
 end
