@@ -451,9 +451,16 @@ inline Node* mk_fun_decl(Node* left, Node* right) {
     LOG_PARSER("## PARSER ## make fun decl\n");
 
     Node* node = new Node();
-    node->val["fun_decl"] = {
-        {"left", left->val}
-    };
+    if(left->val.contains("repr")) {
+        node->val["fun_decl"]["left"] = {
+            {"name", left->val["repr"]}
+        };
+    } else {
+        node->val["fun_decl"] = {
+            {"left", left->val}
+        };
+    }
+
 
     if (right->val.contains("valrhs1")) {
         node->val["fun_decl"]["right"] = right->val["valrhs1"];
@@ -510,7 +517,7 @@ inline Node* mk_funlhs(Node* name, Node* params) {
 
     Node* node = new Node();
     node->val = {
-        {"name", name->val},
+        {"name", name->val["repr"]},
         {"params", params->val}
     };
     return node;
