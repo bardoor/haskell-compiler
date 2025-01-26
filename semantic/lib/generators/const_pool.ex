@@ -126,4 +126,17 @@ defmodule Generators.ConstPool do
       {:class, name} -> "L#{name};"
     end
   end
+
+  def str_to_type(type) do
+    type = type
+    |> String.downcase()
+    |> String.trim()
+
+    case type do
+      "int" -> :int
+      "float" -> :float
+      "string" -> :str
+    end
+  end
+  
 end

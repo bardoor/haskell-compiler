@@ -30,8 +30,9 @@ defmodule Semantic.Transformers do
     # В каждый func_decl добавить тип
     typed_funcs = zip_types_funcs(types, funcs)
     |> Enum.map(fn {%{type: type}, fun_decl} ->
-      Map.put(fun_decl, :type, type)
+                Map.update!(fun_decl, :fun_decl, &Map.put(&1, :type, type))
     end)
+    |> Enum.map(&deconstruct_type/1)
 
     # Убрать отдельные определения функций и объявления типов
     remaining_decls = Enum.reject(decls, fn decl ->
@@ -133,5 +134,17 @@ defmodule Semantic.Transformers do
       raise "Functions without corresponding types: #{Enum.join(funcs_without_types, ", ")}"
     end
   end
+
+  defp deconstruct_type(%{fun_decl: %{type: type}} = node) do
+    types = Enum.map(type, &(&1.tycon))
+    params = Enum.drop(types, -1)
+    return = List.last(types)
+
+    Map.update!(node, :fun_decl, &Map.delete(&1, :type))
+    |> Map.update!(:fun_decl, &Map.put_new(&1, :params, params))
+    |> Map.update!(:fun_decl, &Map.put_new(&1, :return, return))
+  end
+
+  defp deconstruct_type(node), do: node
 
 end
