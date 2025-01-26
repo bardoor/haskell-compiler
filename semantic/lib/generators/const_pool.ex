@@ -10,7 +10,7 @@ defmodule Generators.ConstPool do
           | {:float, float()}
           | {:class, String.t()}
           | {:name_and_type, String.t(), String.t()}
-          | {:class_method, String.t(), String.t()}
+          | {:class_method, String.t(), String.t(), String.t()}
 
   @u4_const [:int, :float]
 
@@ -23,10 +23,10 @@ defmodule Generators.ConstPool do
   end
 
   def add_constant(constant_pool, {:class, class_name}) do
-    new_pool = add_constant(constant_pool, {:utf8, class_name})
+    constant_pool = add_constant(constant_pool, {:utf8, class_name})
     name_const_num = constant_num(constant_pool, {:utf8, class_name})
 
-    add_if_miss(new_pool, {:class, name_const_num})
+    add_if_miss(constant_pool, {:class, name_const_num})
   end
 
   def add_constant(constant_pool, {type, _} = const) when type in @u4_const do
@@ -45,11 +45,15 @@ defmodule Generators.ConstPool do
     add_if_miss(new_pool, {:name_and_type, name_num, type_num})
   end
 
-  def add_constant(constant_pool, {:class_method, name, type}) do
-    new_pool = add_constant(constant_pool, {:name_and_type, name, type})
+  def add_constant(constant_pool, {:class_method, name, type, class}) do
+    new_pool = add_constants(constant_pool, [
+      {:name_and_type, name, type},
+      {:class, class}
+    ])
     name_and_type_num = constant_num(new_pool, {:name_and_type, name, type})
+    class_num = constant_num(new_pool, {:class, class})
 
-    add_if_miss(new_pool, {:class_method, name_and_type_num})
+    add_if_miss(new_pool, {:class_method, name_and_type_num, class_num})
   end
 
   @doc """
@@ -95,9 +99,13 @@ defmodule Generators.ConstPool do
     Enum.find_index(const_pool, fn const -> match?({:name_and_type, ^name_num, ^type_num}, const) end) + 1
   end
 
-  def constant_num(const_pool, {:class_method, name, type}) do
+  def constant_num(const_pool, {:class_method, name, type, class}) do
     name_and_type_num = constant_num(const_pool, {:name_and_type, name, type})
-    Enum.find_index(const_pool, fn const -> match?({:class_method, ^name_and_type_num}, const) end) + 1
+    class_num = constant_num(const_pool, {:class, class})
+
+    Enum.find_index(const_pool,
+      fn const -> match?({:class_method, ^name_and_type_num, ^class_num}, const)
+    end) + 1
   end
 
 
