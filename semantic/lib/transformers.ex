@@ -26,7 +26,6 @@ defmodule Semantic.Transformers do
 
     raise_types_funcs_mismatch!(types, funcs)
 
-    # TODO: поменять дерево, чтоб при наличии параметров вместо funlhs было как в функции без параметров
     typed_funcs = zip_types_funcs(types, funcs)
     |> Enum.map(fn {%{type: type}, fun_decl} ->
       Map.put(fun_decl, :type, type)
