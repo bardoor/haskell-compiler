@@ -49,12 +49,22 @@ defmodule Semantic.Transformers do
   end
 
   defp zip_types_funcs(types, funcs) do
-    zip_on(types, funcs, fn type, func -> type.vars.repr == func.left.repr end)
+    zip_on(types, funcs, fn
+      %{type: _, vars: %{repr: type}},
+      %{fun_decl: %{left: %{name: func}}} -> type == func
+    end)
   end
 
   defp raise_types_funcs_mismatch!(types, funcs) do
-    types_map = Map.new(types, fn type -> {type.vars.repr, type} end)
-    funcs_map = Map.new(funcs, fn func -> {func.left.repr, func} end)
+    types_map = Map.new(types, fn type ->
+      %{vars: %{repr: repr}, type: type_value} = type
+      {repr, type_value}
+    end)
+
+    funcs_map = Map.new(funcs, fn func ->
+      %{fun_decl: %{left: %{name: name}}} = func
+      {name, func}
+    end)
 
     types_without_funcs = Map.keys(types_map) -- Map.keys(funcs_map)
     funcs_without_types = Map.keys(funcs_map) -- Map.keys(types_map)
