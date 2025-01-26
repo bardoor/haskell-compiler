@@ -8,7 +8,6 @@ defmodule Generators.GenClass do
   alias Generators.GenMethod
   alias Generators.GenInstr
 
-  @enforce_keys [:constant_pool]
   defstruct minor_version: 0,
             major_version: 65,
             constant_pool: [],
@@ -22,12 +21,12 @@ defmodule Generators.GenClass do
 
   @modifiers [:public, :protected, :private, :static, :abstract]
 
-  def new(constant_pool) do
-    %__MODULE__{constant_pool: constant_pool}
+  def new() do
+    %__MODULE__{}
   end
 
-  def generate(constant_pool, %{module: module}) do
-    new(constant_pool) |> generate(module)
+  def generate(class, %{module: module}) do
+    class |> generate(module)
   end
 
   def generate(class, %{decls: decls}) do
