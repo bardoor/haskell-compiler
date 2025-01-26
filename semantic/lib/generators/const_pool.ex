@@ -53,6 +53,17 @@ defmodule Generators.ConstPool do
   end
 
   @doc """
+  Добавляет в пул множество констант
+  """
+  @spec add_constant(constant_pool(), [constant()]) :: constant_pool()
+  def add_constants(constant_pool, constants) do
+    Enum.reduce(constants, constant_pool,
+      fn constant, acc -> add_constant(acc, constant)
+    end)
+  end
+
+
+  @doc """
   Создаёт строку дескриптора для метода
   """
   @spec method_descriptor([type()], type()) :: {:utf8, String.t()}
