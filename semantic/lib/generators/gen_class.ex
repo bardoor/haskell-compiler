@@ -59,7 +59,7 @@ defmodule Generators.GenClass do
     |> GenMethod.add_instructions(instructions)
   end
 
-  def validate_modifiers!(modifiers) do
+  defp validate_modifiers!(modifiers) do
     if not Enum.all?(modifiers, &(&1 in @modifiers)) do
       raise "Некорректный модификатор класса: #{modifiers}"
     end
