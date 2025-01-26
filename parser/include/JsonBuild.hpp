@@ -509,7 +509,7 @@ inline Node* mk_funlhs(Node* name, Node* params) {
     LOG_PARSER("## PARSER ## make funlhs\n");
 
     Node* node = new Node();
-    node->val["funlhs"] = {
+    node->val = {
         {"name", name->val},
         {"params", params->val}
     };
