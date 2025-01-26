@@ -41,6 +41,55 @@ defmodule Semantic.Transformers do
     %{decls: typed_funcs ++ remaining_decls}
   end
 
+  @doc """
+  Добавляет поле `index` ко всем локальным переменным внутри функции
+  """
+  def index_locals(%{module: module} = node) do
+    Map.put(node, :module, index_locals(module))
+  end
+
+  def index_locals(%{decls: decls} = node) do
+    Map.put(node, :decls, index_locals(decls))
+  end
+
+  def index_locals(decls) when is_list(decls) do
+    Enum.map(decls, fn decl ->
+      if match?(%{fun_decl: _}, decl) do
+        index_locals(decl)
+      else
+        decl
+      end
+    end)
+  end
+
+  def index_locals(%{fun_decl: %{left: %{params: params}, right: right}} = fun_decl) do
+    params_id = Enum.map(params, &(&1.pattern))
+    Map.put(fun_decl, :right, map_locals_indexes(right, params_id))
+  end
+
+  def index_locals(node), do: node
+
+
+  defp map_locals_indexes(%{funid: id}, params) do
+    %{funid: Enum.find_index(params, &(&1 == id))}
+    |> IO.inspect()
+  end
+
+  defp map_locals_indexes(node, params) when is_map(node) do
+    Enum.reduce(node, %{}, fn {k, v}, acc ->
+      Map.put(acc, k, map_locals_indexes(v, params))
+    end)
+  end
+
+  defp map_locals_indexes(node, params) when is_list(node) do
+    Enum.map(node, &map_locals_indexes(&1, params))
+  end
+
+  defp map_locals_indexes(node, _params) do
+    node
+  end
+
+
   defp get_types_decls(decls) do
     Enum.filter(decls, &match?(%{type: _, vars: _}, &1))
   end
