@@ -14,7 +14,6 @@ defmodule Semantic.Transformers do
     type: {...}
   }
   ```
-
   """
   def link_funcs_and_types(%{module: module}) do
     %{module: link_funcs_and_types(module)}
@@ -24,13 +23,17 @@ defmodule Semantic.Transformers do
     types = get_types_decls(decls)
     funcs = get_func_decls(decls)
 
+    # Проверить, нет ли объявлений типов без соответсвующих функций
+    # Или функций без объявленного типа
     raise_types_funcs_mismatch!(types, funcs)
 
+    # В каждый func_decl добавить тип
     typed_funcs = zip_types_funcs(types, funcs)
     |> Enum.map(fn {%{type: type}, fun_decl} ->
       Map.put(fun_decl, :type, type)
     end)
 
+    # Убрать отдельные определения функций и объявления типов
     remaining_decls = Enum.reject(decls, fn decl ->
       decl in types or decl in funcs
     end)
