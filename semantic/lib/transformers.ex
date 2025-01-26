@@ -62,9 +62,10 @@ defmodule Semantic.Transformers do
     end)
   end
 
-  def index_locals(%{fun_decl: %{left: %{params: params}, right: right}} = fun_decl) do
-    params_id = Enum.map(params, &(&1.pattern))
-    Map.put(fun_decl, :right, map_locals_indexes(right, params_id))
+  def index_locals(%{fun_decl: %{left: %{params: params}, right: right}} = node) do
+    params_id = Enum.map(params, & &1.pattern)
+    updated_right = map_locals_indexes(right, params_id)
+    Map.update!(node, :fun_decl, &Map.put(&1, :right, updated_right))
   end
 
   def index_locals(node), do: node
