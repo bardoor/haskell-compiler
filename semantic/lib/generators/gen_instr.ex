@@ -28,8 +28,8 @@ defmodule Generators.GenInstr do
     ])
   end
 
-  def generate(_const_pool, %{varid: varid}) do
-    Instr.load(varid)
+  def generate(_const_pool, %{funid: funid}) when is_number(funid) do
+    Instr.load(funid)
   end
 
   def generate(const_pool, %{literal: %{type: type, value: value}}) do
