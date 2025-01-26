@@ -31,7 +31,11 @@ defmodule Semantic.Transformers do
       Map.put(fun_decl, :type, type)
     end)
 
-    %{decls: typed_funcs ++ (decls -- types -- funcs)}
+    remaining_decls = Enum.reject(decls, fn decl ->
+      decl in types or decl in funcs
+    end)
+
+    %{decls: typed_funcs ++ remaining_decls}
   end
 
   defp get_types_decls(decls) do
