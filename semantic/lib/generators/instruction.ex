@@ -120,8 +120,12 @@ defmodule Generators.Instruction do
   @doc """
   Размер инструкций в байтах
   """
-  def size(instructions) do
+  def size(instructions) when is_list(instructions) do
     Enum.reduce(instructions, 0, fn instruct, acc -> acc + instruct.size end)
+  end
+
+  def size(instruction) do
+    instruction.size
   end
 
   @doc """
