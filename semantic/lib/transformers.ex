@@ -1,4 +1,21 @@
 defmodule Semantic.Transformers do
+  @moduledoc"""
+  Скопище функций для преобразования дерева
+  """
+
+  @doc """
+  Связать определение функций с декларациями их типов
+
+  В итоге каждый func_decl преобразуется в
+  ```json
+  func_decl {
+    left: {...},
+    right: {...},
+    type: {...}
+  }
+  ```
+
+  """
   def link_funcs_and_types(%{module: module}) do
     %{module: link_funcs_and_types(module)}
   end
