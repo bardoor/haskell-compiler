@@ -5,11 +5,13 @@ defmodule Generators.GenBytecode do
   alias Generators.ConstPool
   alias Generators.GenClass
 
+  @spec generate(%GenClass{}) :: binary()
   def generate(%GenClass{} = class) do
     const_count = length(class.constant_pool) + 1
     interfaces_count = length(class.interfaces)
     fields_count = length(class.fields)
     methods_count = length(class.methods)
+
     this_class = ConstPool.constant_num(class.constant_pool, {:class, class.this_class})
     super_class = ConstPool.constant_num(class.constant_pool, {:class, class.super_class})
 
@@ -21,8 +23,10 @@ defmodule Generators.GenBytecode do
     <> bytify_class_access_flags(class.access_flags)
     <> <<this_class::16>>
     <> <<super_class::16>>
-    <> <<0::16>>
-    <> <<0::16>>
+    <> <<interfaces_count::16>>
+    <> bytify_interfaces(class.interfaces)
+    <> <<fields_count::16>>
+    <> bytify_fields(class.fields)
     <> <<methods_count::16>>
     <> bytify_methods(class.methods)
     <> <<0::16>>  # Количество атрибутов класса
@@ -32,13 +36,12 @@ defmodule Generators.GenBytecode do
   @spec bytify_const_pool(list()) :: binary()
   defp bytify_const_pool(const_pool) do
     Enum.reduce(const_pool, <<>>, fn const, acc ->
-      IO.puts("Обрабатываем: #{inspect(const)}")
       acc <> case const do
-        {:int, value}     -> <<3, value::32>> |> IO.inspect()
-        {:class, num}     -> <<7, num::16>> |> IO.inspect()
-        {:utf8, len, str} -> <<1, len::16>> <> str |> IO.inspect()
-        {:name_and_type, name, type}      -> <<12, name::16, type::16>> |> IO.inspect()
-        {:class_method, class, name_type} -> <<10, class::16, name_type::16>> |> IO.inspect()
+        {:int, value}     -> <<3, value::32>>
+        {:class, num}     -> <<7, num::16>>
+        {:utf8, len, str} -> <<1, len::16>> <> str
+        {:name_and_type, name, type}      -> <<12, name::16, type::16>>
+        {:class_method, class, name_type} -> <<10, class::16, name_type::16>>
         _ -> raise "Неизвестная команда"
       end
     end)
@@ -86,7 +89,7 @@ defmodule Generators.GenBytecode do
     Enum.reduce(code, <<>>, fn instr, acc -> acc <> bytify_instr(instr) end)
   end
 
-  @spec bytify_instr([%Instruction{}]) :: binary()
+  @spec bytify_instr(%Instruction{}) :: binary()
   defp bytify_instr(%Instruction{} = instr) do
     case instr do
       %Instruction{command: :iconst_m1} -> <<2>>
