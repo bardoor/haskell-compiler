@@ -26,6 +26,12 @@ defmodule Generators.GenClass do
     %__MODULE__{}
   end
 
+  @doc """
+  Создаёт класс, готовый к переводу в байткод
+
+  * Генерирует инструкции для методов
+  * Заполняет таблицу констант
+  """
   def generate(%__MODULE__{} = class, %{module: module}) do
     generate(class, module)
   end
