@@ -132,6 +132,7 @@ defmodule Generators.ConstPool do
     case type do
       :int -> "I"
       :float -> "F"
+      :void -> "V"
       :str -> "Ljava/lang/String;"
       {:class, name} -> "L#{name};"
     end
@@ -146,6 +147,7 @@ defmodule Generators.ConstPool do
       "int" -> :int
       "float" -> :float
       "string" -> :str
+      "io" -> :void
     end
   end
 
