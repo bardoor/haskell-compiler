@@ -44,8 +44,8 @@ defmodule Generators.GenClass do
     end)
   end
 
-  def generate(%__MODULE__{} = class, %{fun_decl: %{left: left, right: right, return: return, params: params}}) do
-    code = GenInstr.generate(class.constant_pool, right)
+  def generate(%__MODULE__{} = class, %{fun_decl: %{left: left, right: right, return: return, params: params}} = fun) do
+    code = GenInstr.generate(class.constant_pool, fun)
     params = Enum.map(params, &ConstPool.str_to_type/1)
     return = ConstPool.str_to_type(return)
 

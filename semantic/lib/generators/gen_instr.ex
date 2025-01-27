@@ -12,8 +12,10 @@ defmodule Generators.GenInstr do
   """
   @spec generate(ConstPool.constant_pool(), map()) :: [%Instr{}] | %Instr{}
   def generate(const_pool, %{fun_decl: %{left: _left, right: right}}) do
-    # TODO: left пока игорируется, нужно будет на паттерн матчинге?
-    generate(const_pool, right)
+    Instr.concat([
+      generate(const_pool, right),
+      Instr.return()
+    ])
   end
 
   def generate(const_pool, %{if: %{cond: condition, then: then, else: else_expr}}) do
@@ -28,7 +30,6 @@ defmodule Generators.GenInstr do
       Instr.jump_if(:eq, Instr.size(then_instrs)),
       then_instrs,
       else_instrs,
-      Instr.return()
     ])
   end
 
