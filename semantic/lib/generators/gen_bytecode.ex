@@ -97,8 +97,8 @@ defmodule Generators.GenBytecode do
       %Instruction{command: :iconst_4}  -> <<7>>
       %Instruction{command: :iconst_5}  -> <<8>>
 
-      %Instruction{command: :bipush, arg: val} -> <<0x10, val>>
-      %Instruction{command: :sipush, arg: val} -> <<0x11, val::16>>
+      %Instruction{command: :bipush, arg: val} -> <<16, val::8>>
+      %Instruction{command: :sipush, arg: val} -> <<17, val::16>>
 
       %Instruction{command: :if_icmpeq, arg: val} -> <<159, val::16>>
       %Instruction{command: :if_icmpne, arg: val} -> <<160, val::16>>
@@ -107,22 +107,22 @@ defmodule Generators.GenBytecode do
       %Instruction{command: :if_icmpgt, arg: val} -> <<163, val::16>>
       %Instruction{command: :if_icmple, arg: val} -> <<164, val::16>>
 
-      %Instruction{command: :ior}  -> <<0x80>>
-      %Instruction{command: :iand} -> <<0x7E>>
+      %Instruction{command: :ior}  -> <<128>>
+      %Instruction{command: :iand} -> <<126>>
 
-      %Instruction{command: :iload_0} -> <<0x1A>>
-      %Instruction{command: :iload_1} -> <<0x1B>>
-      %Instruction{command: :iload_2} -> <<0x1C>>
-      %Instruction{command: :iload_3} -> <<0x1D>>
-      %Instruction{command: :iload, arg: val} -> <<0x15, val>>
+      %Instruction{command: :iload_0} -> <<26>>
+      %Instruction{command: :iload_1} -> <<27>>
+      %Instruction{command: :iload_2} -> <<28>>
+      %Instruction{command: :iload_3} -> <<29>>
+      %Instruction{command: :iload, arg: val} -> <<21, val::8>>
 
-      %Instruction{command: :ldc_w, arg: val} -> <<0x13, val::16>>
+      %Instruction{command: :ldc_w, arg: val} -> <<19, val::16>>
 
-      %Instruction{command: :invokestatic, arg: val} -> <<0xB8, val::16>>
+      %Instruction{command: :invokestatic, arg: val} -> <<184, val::16>>
 
-      %Instruction{command: :ireturn} -> <<0xAC>>
+      %Instruction{command: :ireturn} -> <<172>>
 
-      %Instruction{command: :goto, arg: val} -> <<0xA7, val::16>>
+      %Instruction{command: :goto, arg: val} -> <<167, val::16>>
     end
   end
 
