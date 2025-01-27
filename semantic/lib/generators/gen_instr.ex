@@ -32,11 +32,10 @@ defmodule Generators.GenInstr do
     Instr.load(funid)
   end
 
-  def generate(const_pool, %{literal: %{type: type, value: value}}) do
-    type = String.to_atom(type)
+  def generate(const_pool, %{literal: %{type: "int", value: value}}) do
     {value, _} = Integer.parse(value)
 
-    Instr.load(const_pool, {type, value})
+    Instr.load(const_pool, {:int, value})
   end
 
   def generate(const_pool, %{op: %{type: type}, left: left, right: right}) do
@@ -55,8 +54,4 @@ defmodule Generators.GenInstr do
       op_instrs
     ])
   end
-
-
-
-
 end

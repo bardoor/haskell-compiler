@@ -382,7 +382,7 @@ declE : var valrhs                      { $$ = mk_fun_decl($1, $2); }
       | funlhs valrhs                   { $$ = mk_fun_decl($1, $2); }
       | varList DCOLON type DARROW type { $$ = mk_typed_var_list($1, $3, $5); }
       | varList DCOLON type             { $$ = mk_typed_var_list($1, $3); }
-      | %empty                          { $$ = mk_empty_decl(); }
+      | %empty                          {  }
       ;
 
 whereOpt : WHEREKW OCURLY declList CCURLY   { $$ = mk_where($3); }

@@ -147,4 +147,18 @@ defmodule Semantic.Transformers do
 
   defp deconstruct_type(node), do: node
 
+  @doc """
+  Манглирует объявления локальных функций
+
+  Например, функция `nested` внутри `inner` будет `inner.nested`
+  """
+  def mangle(%{module: module} = node) do
+    %{node | module: mangle(module)}
+  end
+
+  def mangle(%{decls: decls} = node) do
+    %{node | decls: Enum.map(decls, &mangle(&1))}
+  end
+
+
 end

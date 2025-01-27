@@ -12,11 +12,11 @@ defmodule Generators.Instruction do
 
   Создаёт iconst, bipush, sipush или ldc_w в зависимости от значения
   """
-  def load(const_pool, {type, value}) do
+  def load(const_pool, {:int, value}) when is_integer(value) do
     if value in -32768..32767 do
       push(value)
     else
-      new(3, :ldc_w, constant_num(const_pool, {type, value}))
+      new(3, :ldc_w, constant_num(const_pool, {:int, value}))
     end
   end
 
@@ -48,9 +48,9 @@ defmodule Generators.Instruction do
   @doc """
   Вызов статической функции
   """
-  def invoke(const_pool, {name, type}) do
+  def invoke(const_pool, {name, type, class}) do
     # TODO: Пуш на стек параметры
-    new(3, :invokestatic, constant_num(const_pool, {:class_method, name, type}))
+    new(3, :invokestatic, constant_num(const_pool, {:class_method, name, type, class}))
   end
 
   @doc """

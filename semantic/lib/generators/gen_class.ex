@@ -5,6 +5,7 @@ defmodule Generators.GenClass do
   Обходит дерево и собирает Java класс, готовый к трансляции в байткод
   """
 
+  alias Generators.ConstPool
   alias Generators.GenMethod
   alias Generators.GenInstr
 
@@ -72,9 +73,8 @@ defmodule Generators.GenClass do
   """
   def fill_constant_pool(%__MODULE__{} = class, %{module: module}) do
     c_pool = ConstPool.add_constants(class.constant_pool, [
-      {:utf8, "java/lang/Object"},
-      {:utf8, "<init>"},
-      {:utf8, "()V"}
+      {:class, "java/lang/Object"},
+      {:class_method, "<init>", "()V", "java/lang/Object"}
     ])
 
     fill_constant_pool(%{class | constant_pool: c_pool}, module)
@@ -103,6 +103,26 @@ defmodule Generators.GenClass do
     )
 
     %{class | constant_pool: c_pool}
+  end
+
+  def fill_constant_pool(%__MODULE__{} = class, %{literal: %{type: "int", value: val}}) do
+    {val, _} = Integer.parse(val)
+
+    if val not in -32768..32767 do
+      Map.update!(class, :constant_pool, &ConstPool.add_constant(&1, {:int, val}))
+    else
+      class
+    end
+  end
+
+  def fill_constant_pool(%__MODULE__{} = class, node) when is_map(node) do
+    Enum.reduce(node, class, fn {k, v}, acc ->
+      fill_constant_pool(acc, v)
+    end)
+  end
+
+  def fill_constant_pool(%__MODULE__{} = class, node) when is_list(node) do
+    Enum.map(node, &fill_constant_pool(class, &1))
   end
 
   def fill_constant_pool(%__MODULE__{} = class, _node) do

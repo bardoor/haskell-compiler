@@ -112,8 +112,10 @@ defmodule Generators.ConstPool do
     end) + 1
   end
 
-  def constant_num(const_pool, {:int, value}) do
-    Enum.find_index(const_pool, fn const -> match?({:int, ^value}, const) end) + 1
+  def constant_num(const_pool, {:int, value}) when is_integer(value) do
+    Enum.find_index(const_pool, fn const ->
+      match?({:int, ^value}, const)
+    end) + 1
   end
 
 
@@ -146,5 +148,5 @@ defmodule Generators.ConstPool do
       "string" -> :str
     end
   end
-  
+
 end

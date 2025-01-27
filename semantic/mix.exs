@@ -19,7 +19,8 @@ defmodule Semantic.MixProject do
 
   defp deps do
     [
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:graphvix, "~> 1.1.0"}
     ]
   end
 end

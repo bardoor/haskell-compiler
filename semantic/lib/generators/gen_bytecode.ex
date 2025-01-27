@@ -21,24 +21,25 @@ defmodule Generators.GenBytecode do
     <> bytify_class_access_flags(class.access_flags)
     <> <<this_class::16>>
     <> <<super_class::16>>
-    <> <<interfaces_count::16>>
-    <> bytify_interfaces(class.interfaces)
-    <> <<fields_count::16>>
-    <> bytify_fields(class.fields)
+    <> <<0::16>>
+    <> <<0::16>>
     <> <<methods_count::16>>
     <> bytify_methods(class.methods)
+    <> <<0::16>>  # Количество атрибутов класса
   end
 
 
   @spec bytify_const_pool(list()) :: binary()
   defp bytify_const_pool(const_pool) do
     Enum.reduce(const_pool, <<>>, fn const, acc ->
+      IO.puts("Обрабатываем: #{inspect(const)}")
       acc <> case const do
-        {:int, value}     -> <<0x03, value::32>>
-        {:class, num}     -> <<0x07, num::16>>
-        {:utf8, len, str} -> <<0x01, len::16, str>>
-        {:name_and_type, name, type}      -> <<0x12, name::16, type::16>>
-        {:class_method, class, name_type} -> <<0x10, class::16, name_type::16>>
+        {:int, value}     -> <<3, value::32>> |> IO.inspect()
+        {:class, num}     -> <<7, num::16>> |> IO.inspect()
+        {:utf8, len, str} -> <<1, len::16>> <> str |> IO.inspect()
+        {:name_and_type, name, type}      -> <<12, name::16, type::16>> |> IO.inspect()
+        {:class_method, class, name_type} -> <<10, class::16, name_type::16>> |> IO.inspect()
+        _ -> raise "Неизвестная команда"
       end
     end)
   end
@@ -64,7 +65,8 @@ defmodule Generators.GenBytecode do
     Enum.reduce(methods, <<>>, fn method, acc ->
       code_size = Instruction.size(method.code)
 
-      bytify_method_access_flags(method.access_flags)
+      acc
+      <> bytify_method_access_flags(method.access_flags)
       <> <<method.name_num::16>>
       <> <<method.descriptor_num::16>>
       <> <<1::16>>
@@ -74,6 +76,8 @@ defmodule Generators.GenBytecode do
       <> <<method.max_locals::16>>
       <> <<code_size::16>>
       <> bytify_code(method.code)
+      <> <<0::16>>  # Длина таблицы обработчиков исключений
+      <> <<0::16>>  # Количество атрибутов
     end)
   end
 
