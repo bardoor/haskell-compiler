@@ -53,7 +53,7 @@ defmodule Semantic do
   end
 
   def put_error(message) do
-    IO.puts("\e[31m" <> message <> "\e[0m")
+    IO.puts(:stderr, "\e[31m" <> message <> "\e[0m")
   end
 
 end
