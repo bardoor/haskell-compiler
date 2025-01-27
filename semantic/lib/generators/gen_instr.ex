@@ -52,7 +52,7 @@ defmodule Generators.GenInstr do
       :minus -> Instr.isub()
       :plus  -> Instr.iadd()
       :mul   -> Instr.imul()
-      :div   -> Inter.idiv()
+      :div   -> Instr.idiv()
       type when type in [:eq, :ne, :lt, :le, :gt, :ge] -> Instr.icompare(type)
       _ -> raise "Unknown operation: #{type}"
     end
