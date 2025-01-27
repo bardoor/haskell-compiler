@@ -63,6 +63,48 @@ defmodule Generators.GenClass do
     Map.update!(class, :methods, &(&1 ++ [method]))
   end
 
+  @doc """
+  Заполняет таблицу констант по АСД
+  """
+  def fill_constant_pool(%__MODULE__{} = class, %{module: module}) do
+    c_pool = ConstPool.add_constants(class.constant_pool, [
+      {:utf8, "java/lang/Object"},
+      {:utf8, "<init>"},
+      {:utf8, "()V"}
+    ])
+
+    fill_constant_pool(%{class | constant_pool: c_pool}, module)
+  end
+
+  def fill_constant_pool(%__MODULE__{} = class, %{decls: decls}) do
+    Enum.reduce(decls, class, fn decl, acc ->
+      if match?(%{fun_decl: _}, decl) do
+        fill_constant_pool(acc, decl)
+      else
+        acc
+      end
+    end)
+  end
+
+  def fill_constant_pool(%__MODULE__{} = class, %{fun_decl: %{left: left, right: right, params: params, return: return}}) do
+    name = left.name
+    params = Enum.map(params, &ConstPool.str_to_type/1)
+    return = ConstPool.str_to_type(return)
+    {:utf8, type_desc} = ConstPool.method_descriptor(params, return)
+
+    class = fill_constant_pool(class, right)
+
+    c_pool = ConstPool.add_constant(class.constant_pool,
+      {:class_method, name, type_desc, class.this_class}
+    )
+
+    %{class | constant_pool: c_pool}
+  end
+
+  def fill_constant_pool(%__MODULE__{} = class, _node) do
+    class
+  end
+
   defp validate_modifiers!(modifiers) do
     if not Enum.all?(modifiers, &(&1 in @modifiers)) do
       raise "Некорректный модификатор класса: #{modifiers}"
