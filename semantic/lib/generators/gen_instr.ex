@@ -4,9 +4,13 @@ defmodule Generators.GenInstr do
 
   Работает с АСД, превращая его в последовательность инструкций
   """
-
+  alias Generators.ConstPool
   alias Generators.Instruction, as: Instr
 
+  @doc """
+  Генерирует инструкции JVM
+  """
+  @spec generate(ConstPool.constant_pool(), map()) :: [%Instr{}] | %Instr{}
   def generate(const_pool, %{fun_decl: %{left: _left, right: right}}) do
     # TODO: left пока игорируется, нужно будет на паттерн матчинге?
     generate(const_pool, right)
