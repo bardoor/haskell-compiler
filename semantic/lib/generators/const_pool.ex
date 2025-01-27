@@ -56,6 +56,10 @@ defmodule Generators.ConstPool do
     add_if_miss(new_pool, {:class_method, name_and_type_num, class_num})
   end
 
+  def add_constant(constant_pool, {:int, value}) do
+    add_if_miss(constant_pool, {:int, value})
+  end
+
   @doc """
   Добавляет в пул множество констант
   """
@@ -106,6 +110,10 @@ defmodule Generators.ConstPool do
     Enum.find_index(const_pool,
       fn const -> match?({:class_method, ^name_and_type_num, ^class_num}, const)
     end) + 1
+  end
+
+  def constant_num(const_pool, {:int, value}) do
+    Enum.find_index(const_pool, fn const -> match?({:int, ^value}, const) end) + 1
   end
 
 
