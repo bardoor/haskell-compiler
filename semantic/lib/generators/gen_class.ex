@@ -32,8 +32,10 @@ defmodule Generators.GenClass do
   * Генерирует инструкции для методов
   * Заполняет таблицу констант
   """
-  def generate(%__MODULE__{} = class, %{module: module}) do
-    generate(class, module)
+  def generate(%__MODULE__{} = class, %{module: module} = root) do
+    class
+    |> fill_constant_pool(root)
+    |> generate(module)
   end
 
   def generate(%__MODULE__{} = class, %{decls: decls}) do

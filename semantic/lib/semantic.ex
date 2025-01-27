@@ -25,7 +25,6 @@ defmodule Semantic do
 
 
     class = GenClass.new()
-    |> GenClass.fill_constant_pool(transformed)
     |> GenClass.generate(transformed)
 
     {:ok, file} = File.open("#{class.this_class}.class", [:write, :binary])
