@@ -1,14 +1,21 @@
 defmodule SemanticTest do
   use ExUnit.Case
-  doctest Semantic
+  doctest Compiler
 
-  test "simple if one variable" do
-    Semantic.start("a = if b == 7 then 1 else 2")
-    |>IO.inspect()
+  @build_dir "../program"
+
+  test "func with type" do
+    Compiler.compile("""
+      func :: Int -> Int
+      func a = if a < 1 || a == 25 then a else 999
+    """, @build_dir)
   end
 
-  test "complex if condition" do
-    Semantic.start("a = if (a == 5 && b == 7 || b == 9) && c == 11 then 1 else 2")
-    |>IO.inspect()
+  test "constant" do
+    Compiler.compile("""
+      const :: Int
+      const = 12 - 11
+    """, @build_dir)
   end
+
 end
