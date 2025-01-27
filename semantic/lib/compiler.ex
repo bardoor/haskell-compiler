@@ -23,33 +23,10 @@ defmodule Semantic do
     |> Transformers.index_locals
     |> IO.inspect()
 
-
     class = GenClass.new()
     |> GenClass.generate(transformed)
 
-    {:ok, file} = File.open("#{class.this_class}.class", [:write, :binary])
-    IO.binwrite(file, GenBytecode.generate(class))
 
-    # TODO
-    # Манглирование where
-    # Валидация типов + разрешение имен (нет повторяющихся)
-    # Запихнуть тип функции в её свойства - ГОТОВО
-    # ? Проверка корректного обращения к структурам
-    # ? Проверка паттерн матчинга?
-    # ? Проверка сходимости рекурсии?
-
-
-    # Int -> Float -> String
-    # func a b = ...
-
-    # funid {
-    #   left {}
-    #   right {}
-    #   type {
-    #     params: []
-    #     return: []
-    #   }
-    # }
   end
 
   def put_error(message) do
