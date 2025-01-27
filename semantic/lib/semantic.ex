@@ -24,14 +24,12 @@ defmodule Semantic do
     |> IO.inspect()
 
 
-    bytecode = GenClass.new()
+    class = GenClass.new()
     |> GenClass.fill_constant_pool(transformed)
     |> GenClass.generate(transformed)
-    |> IO.inspect()
-    |> GenBytecode.generate()
 
-    {:ok, file} = File.open("Main.class", [:write, :binary])
-    IO.binwrite(file, bytecode)
+    {:ok, file} = File.open("#{class.this_class}.class", [:write, :binary])
+    IO.binwrite(file, GenBytecode.generate(class))
 
     # TODO
     # Манглирование where

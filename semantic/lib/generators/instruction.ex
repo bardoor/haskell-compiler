@@ -105,13 +105,13 @@ defmodule Generators.Instruction do
 
     true_branch = concat([
       push(1),
-      goto(size(false_branch) + 1)
+      goto(size(false_branch))
     ])
 
     jump_op = negate_op(op)
 
     concat([
-      jump_if(jump_op, size(true_branch) + 1),
+      jump_if(jump_op, size(true_branch)),
       true_branch,
       false_branch
     ])

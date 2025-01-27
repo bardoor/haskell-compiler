@@ -71,10 +71,10 @@ defmodule Generators.GenBytecode do
       <> <<method.descriptor_num::16>>
       <> <<1::16>>
       <> <<method.code_const_num::16>>
-      <> <<code_size + 12::16>>  # Длина атрибута
+      <> <<code_size + 12::32>>  # Длина атрибута
       <> <<method.max_stack::16>>
       <> <<method.max_locals::16>>
-      <> <<code_size::16>>
+      <> <<code_size::32>>
       <> bytify_code(method.code)
       <> <<0::16>>  # Длина таблицы обработчиков исключений
       <> <<0::16>>  # Количество атрибутов
@@ -89,23 +89,23 @@ defmodule Generators.GenBytecode do
   @spec bytify_instr([%Instruction{}]) :: binary()
   defp bytify_instr(%Instruction{} = instr) do
     case instr do
-      %Instruction{command: :iconst_m1} -> <<0x2>>
-      %Instruction{command: :iconst_0}  -> <<0x3>>
-      %Instruction{command: :iconst_1}  -> <<0x4>>
-      %Instruction{command: :iconst_2}  -> <<0x5>>
-      %Instruction{command: :iconst_3}  -> <<0x6>>
-      %Instruction{command: :iconst_4}  -> <<0x7>>
-      %Instruction{command: :iconst_5}  -> <<0x8>>
+      %Instruction{command: :iconst_m1} -> <<2>>
+      %Instruction{command: :iconst_0}  -> <<3>>
+      %Instruction{command: :iconst_1}  -> <<4>>
+      %Instruction{command: :iconst_2}  -> <<5>>
+      %Instruction{command: :iconst_3}  -> <<6>>
+      %Instruction{command: :iconst_4}  -> <<7>>
+      %Instruction{command: :iconst_5}  -> <<8>>
 
       %Instruction{command: :bipush, arg: val} -> <<0x10, val>>
       %Instruction{command: :sipush, arg: val} -> <<0x11, val::16>>
 
-      %Instruction{command: :if_icmpeq, arg: val} -> <<0x159, val::16>>
-      %Instruction{command: :if_icmpne, arg: val} -> <<0x160, val::16>>
-      %Instruction{command: :if_icmplt, arg: val} -> <<0x161, val::16>>
-      %Instruction{command: :if_icmple, arg: val} -> <<0x162, val::16>>
-      %Instruction{command: :if_icmpgt, arg: val} -> <<0x163, val::16>>
-      %Instruction{command: :if_icmpge, arg: val} -> <<0x164, val::16>>
+      %Instruction{command: :if_icmpeq, arg: val} -> <<159, val::16>>
+      %Instruction{command: :if_icmpne, arg: val} -> <<160, val::16>>
+      %Instruction{command: :if_icmplt, arg: val} -> <<161, val::16>>
+      %Instruction{command: :if_icmpge, arg: val} -> <<162, val::16>>
+      %Instruction{command: :if_icmpgt, arg: val} -> <<163, val::16>>
+      %Instruction{command: :if_icmple, arg: val} -> <<164, val::16>>
 
       %Instruction{command: :ior}  -> <<0x80>>
       %Instruction{command: :iand} -> <<0x7E>>

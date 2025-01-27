@@ -10,10 +10,10 @@ defmodule Generators.GenClass do
   alias Generators.GenInstr
 
   defstruct minor_version: 0,
-            major_version: 65,
+            major_version: 49,
             constant_pool: [],
             access_flags: [:public],
-            this_class: "Main",
+            this_class: "Functions",
             super_class: "java/lang/Object",
             interfaces: [],
             fields: [],

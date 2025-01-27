@@ -53,7 +53,7 @@ defmodule Generators.ConstPool do
     name_and_type_num = constant_num(new_pool, {:name_and_type, name, type})
     class_num = constant_num(new_pool, {:class, class})
 
-    add_if_miss(new_pool, {:class_method, name_and_type_num, class_num})
+    add_if_miss(new_pool, {:class_method, class_num, name_and_type_num})
   end
 
   def add_constant(constant_pool, {:int, value}) do
@@ -108,7 +108,7 @@ defmodule Generators.ConstPool do
     class_num = constant_num(const_pool, {:class, class})
 
     Enum.find_index(const_pool,
-      fn const -> match?({:class_method, ^name_and_type_num, ^class_num}, const)
+      fn const -> match?({:class_method, ^class_num, ^name_and_type_num}, const)
     end) + 1
   end
 
