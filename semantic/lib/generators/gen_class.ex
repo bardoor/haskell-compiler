@@ -12,7 +12,7 @@ defmodule Generators.GenClass do
             major_version: 65,
             constant_pool: [],
             access_flags: [:public],
-            this_class: "rtl/core/Main",
+            this_class: "Main",
             super_class: "java/lang/Object",
             interfaces: [],
             fields: [],
@@ -25,18 +25,22 @@ defmodule Generators.GenClass do
     %__MODULE__{}
   end
 
-  def generate(class, %{module: module}) do
-    class |> generate(module)
+  def generate(%__MODULE__{} = class, %{module: module}) do
+    generate(class, module)
   end
 
-  def generate(class, %{decls: decls}) do
-    decls |> Enum.map(&generate(class, &1))
+  def generate(%__MODULE__{} = class, %{decls: decls}) do
+    Enum.reduce(decls, class, fn decl, acc ->
+      generate(acc, decl)
+    end)
   end
 
-  def generate(class, %{fun_decl: %{left: left, right: right, type: type}}) do
+  def generate(%__MODULE__{} = class, %{fun_decl: %{left: left, right: right, return: return, params: params}}) do
     code = GenInstr.generate(class.constant_pool, right)
+    params = Enum.map(params, &ConstPool.str_to_type/1)
+    return = ConstPool.str_to_type(return)
 
-    add_method(class, left.repr, type.params, type.return, [:public, :static], code)
+    add_method(class, left.name, params, return, [:public, :static], code)
   end
 
   @doc """
