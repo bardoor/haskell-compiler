@@ -23,7 +23,6 @@ defmodule Generators.GenInstr do
       Instr.push(0),
       Instr.jump_if(:eq, Instr.size(then_instrs) + 1),
       then_instrs,
-      Instr.goto(Instr.size(else_instrs) + 1),
       else_instrs,
       Instr.return()
     ])
@@ -34,7 +33,10 @@ defmodule Generators.GenInstr do
   end
 
   def generate(const_pool, %{literal: %{type: type, value: value}}) do
-    Instr.load(const_pool, {type, Integer.parse(value)})
+    type = String.to_atom(type)
+    {value, _} = Integer.parse(value)
+
+    Instr.load(const_pool, {type, value})
   end
 
   def generate(const_pool, %{op: %{type: type}, left: left, right: right}) do
