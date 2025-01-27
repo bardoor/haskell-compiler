@@ -16,6 +16,7 @@ defmodule Generators.GenInstr do
     cond_instrs = generate(const_pool, condition)
     then_instrs = generate(const_pool, then)
     else_instrs = generate(const_pool, else_expr)
+    then_instrs = Instr.concat([then_instrs, Instr.goto(Instr.size(else_instrs) + 1)])
 
     Instr.concat([
       cond_instrs,
