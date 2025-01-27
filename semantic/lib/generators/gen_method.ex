@@ -8,7 +8,9 @@ defmodule Generators.GenMethod do
             code_const_num: nil,
             code: nil
 
-
+  @doc """
+  Создает новый метод
+  """
   def new(const_pool, name, params_type, return_type, modifiers) do
     name_num = ConstPool.constant_num(const_pool, {:utf8, name})
     descriptor_num = ConstPool.constant_num(const_pool, ConstPool.method_descriptor(params_type, return_type))
@@ -17,12 +19,14 @@ defmodule Generators.GenMethod do
     %__MODULE__{access_flags: modifiers, name_num: name_num, descriptor_num: descriptor_num, code_const_num: code_const_num}
   end
 
+  @doc """
+  Добавляет одну или несколько инструкций в метод
+  """
   def add_instructions(%__MODULE__{} = gen_method, instructions) do
     if not is_list(instructions) do
       %{gen_method | code: [instructions]}
     else
       %{gen_method | code: instructions}
     end
-
   end
 end
