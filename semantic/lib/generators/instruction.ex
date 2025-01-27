@@ -58,12 +58,12 @@ defmodule Generators.Instruction do
   """
   def jump_if(condition, offset) do
     case condition do
-      :eq -> new(3, :if_icmpeq, offset)
-      :ne -> new(3, :if_icmpne, offset)
-      :lt -> new(3, :if_icmplt, offset)
-      :le -> new(3, :if_icmple, offset)
-      :gt -> new(3, :if_icmpgt, offset)
-      :ge -> new(3, :if_icmpge, offset)
+      :eq -> new(3, :if_icmpeq, offset + 3)
+      :ne -> new(3, :if_icmpne, offset + 3)
+      :lt -> new(3, :if_icmplt, offset + 3)
+      :le -> new(3, :if_icmple, offset + 3)
+      :gt -> new(3, :if_icmpgt, offset + 3)
+      :ge -> new(3, :if_icmpge, offset + 3)
     end
   end
 
