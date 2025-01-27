@@ -1,4 +1,4 @@
-defmodule Semantic do
+defmodule Compiler do
   alias Generators.GenBytecode
   alias Generators.GenClass
   alias Semantic.Transformers
