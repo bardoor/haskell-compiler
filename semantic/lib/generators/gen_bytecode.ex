@@ -113,6 +113,11 @@ defmodule Generators.GenBytecode do
       %Instruction{command: :ior}  -> <<128>>
       %Instruction{command: :iand} -> <<126>>
 
+      %Instruction{command: :iadd} -> <<96>>
+      %Instruction{command: :isub} -> <<100>>
+      %Instruction{command: :imul} -> <<104>>
+      %Instruction{command: :idiv} -> <<108>>
+
       %Instruction{command: :iload_0} -> <<26>>
       %Instruction{command: :iload_1} -> <<27>>
       %Instruction{command: :iload_2} -> <<28>>

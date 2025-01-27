@@ -47,8 +47,12 @@ defmodule Generators.GenInstr do
     type = String.to_atom(type)
 
     op_instrs = case type do
-      :or -> Instr.ior()
-      :and -> Instr.iand()
+      :or    -> Instr.ior()
+      :and   -> Instr.iand()
+      :minus -> Instr.isub()
+      :plus  -> Instr.iadd()
+      :mul   -> Instr.imul()
+      :div   -> Inter.idiv()
       type when type in [:eq, :ne, :lt, :le, :gt, :ge] -> Instr.icompare(type)
       _ -> raise "Unknown operation: #{type}"
     end

@@ -82,6 +82,34 @@ defmodule Generators.Instruction do
   end
 
   @doc """
+  Сложить два числа на стеке и положить вместо них результат
+  """
+  def iadd() do
+    new(1, :iadd, nil)
+  end
+
+  @doc """
+  Вычесть два числа на стеке и положить вместо них результат
+  """
+  def isub() do
+    new(1, :isub, nil)
+  end
+
+  @doc """
+  Умножить два числа на стеке и положить вместо них результат
+  """
+  def imul() do
+    new(1, :imul, nil)
+  end
+
+  @doc """
+  Поделить два числа на стеке и положить вместо них результат
+  """
+  def idiv() do
+    new(1, :idiv, nil)
+  end
+
+  @doc """
   Воротить вершину стека
   """
   def return() do
