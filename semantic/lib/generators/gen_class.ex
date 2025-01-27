@@ -54,9 +54,13 @@ defmodule Generators.GenClass do
   def add_method(%__MODULE__{} = class, name, params_type, return_type, modifiers, instructions) do
     validate_modifiers!(modifiers)
 
-    class.constant_pool
+    class = Map.update!(class, :constant_pool, &ConstPool.add_constant(&1, {:utf8, "Code"}))
+
+    method = class.constant_pool
     |> GenMethod.new(name, params_type, return_type, modifiers)
     |> GenMethod.add_instructions(instructions)
+
+    Map.update!(class, :methods, &(&1 ++ [method]))
   end
 
   defp validate_modifiers!(modifiers) do
