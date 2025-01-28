@@ -45,4 +45,17 @@ defmodule SemanticTest do
     """, @build_dir)
   end
 
+  test "insert sort" do
+    Compiler.compile("""
+      insert :: Int -> [Int] -> [Int]
+      insert x lst = if length lst == 0 then x : []
+                     else if x <= head lst then x : (head lst) : (tail lst)
+                     else (head lst) : insert x (tail lst)
+
+      isort :: [Int] -> [Int]
+      isort lst = if length lst == 0 then []
+                  else insert (head lst) (isort (tail lst))
+    """, @build_dir)
+  end
+
 end
