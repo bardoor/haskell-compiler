@@ -128,13 +128,23 @@ defmodule Generators.ConstPool do
   """
   def find_method(const_pool, name) do
     name_num = constant_num(const_pool, {:utf8, name})
-    name_and_type_num = Enum.find(const_pool, fn const ->
+
+    {_,_,type_num} = Enum.find(const_pool, fn const ->
       match?({:name_and_type, ^name_num, _type}, const)
     end)
 
-    Enum.find(const_pool, fn const ->
+    {:utf8, _, type} = Enum.at(const_pool, type_num - 1)
+
+    name_and_type_num = constant_num(const_pool, {:name_and_type, name, type})
+
+    {_, class_num, _} = Enum.find(const_pool, fn const ->
       match?({:class_method, _class_num, ^name_and_type_num}, const)
     end)
+
+    {:class, class_name_num} = Enum.at(const_pool, class_num - 1)
+    {:utf8, _, class_name} = Enum.at(const_pool, class_name_num - 1)
+
+    {name, type, class_name}
   end
 
 

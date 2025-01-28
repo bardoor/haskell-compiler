@@ -49,7 +49,6 @@ defmodule Generators.Instruction do
   Вызов статической функции
   """
   def invoke(const_pool, {name, type, class}) do
-    # TODO: Пуш на стек параметры
     new(3, :invokestatic, constant_num(const_pool, {:class_method, name, type, class}))
   end
 

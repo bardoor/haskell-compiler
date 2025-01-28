@@ -63,4 +63,22 @@ defmodule Generators.GenInstr do
       op_instrs
     ])
   end
+
+  def generate(const_pool, %{funid: id, params: params}) do
+    method = ConstPool.find_method(const_pool, id)
+
+    load_instrs = if length(params) == 1 do
+      generate(const_pool, Enum.at(params, 0))
+    else
+      Enum.reverse(params) |> Enum.flat_map(&generate(const_pool, &1))
+    end
+
+    Instr.concat([load_instrs, Instr.invoke(const_pool, method)])
+  end
+
+  def generate(const_pool, %{funid: id}) when is_binary(id) do
+    method = ConstPool.find_method(const_pool, id)
+
+    Instr.invoke(const_pool, method)
+  end
 end
