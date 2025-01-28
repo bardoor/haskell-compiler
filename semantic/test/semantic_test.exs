@@ -18,4 +18,14 @@ defmodule SemanticTest do
     """, @build_dir)
   end
 
+  test "invoke function no params" do
+    Compiler.compile("""
+      const :: Int
+      const = 1 - 3
+
+      calculation :: Int
+      calculation = const - 12
+    """, @build_dir)
+  end
+
 end
