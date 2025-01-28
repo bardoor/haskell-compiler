@@ -28,4 +28,14 @@ defmodule SemanticTest do
     """, @build_dir)
   end
 
+  test "invoke function with params" do
+    Compiler.compile("""
+      sub :: Int -> Int -> Int
+      sub a b = a - b
+
+      calculation :: Int
+      calculation = (sub 9 5) - 12
+    """, @build_dir)
+  end
+
 end
