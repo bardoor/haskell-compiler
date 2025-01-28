@@ -67,11 +67,14 @@ defmodule Generators.GenInstr do
   def generate(const_pool, %{funid: id, params: params}) do
     method = ConstPool.find_method(const_pool, id)
 
-    load_instrs = if length(params) == 1 do
-      generate(const_pool, Enum.at(params, 0))
-    else
-      Enum.reverse(params) |> Enum.flat_map(&generate(const_pool, &1))
-    end
+    load_instrs = params
+    |> List.wrap()
+    |> Enum.reverse()
+    |> Enum.map(&generate(const_pool, &1))
+    |> Enum.flat_map(fn
+      %Instr{} = instr -> [instr]
+      instrs when is_list(instrs) -> instrs
+    end)
 
     Instr.concat([load_instrs, Instr.invoke(const_pool, method)])
   end
