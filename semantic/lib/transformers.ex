@@ -73,7 +73,13 @@ defmodule Semantic.Transformers do
 
 
   defp map_locals_indexes(%{funid: id}, params) do
-    %{funid: Enum.find_index(params, &(&1 == id))}
+    index = Enum.find_index(params, &(&1 == id))
+
+    if is_nil(index) do
+      %{funid: id}
+    else
+      %{funid: index}
+    end
   end
 
   defp map_locals_indexes(node, params) when is_map(node) do
