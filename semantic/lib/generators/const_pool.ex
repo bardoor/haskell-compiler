@@ -119,6 +119,25 @@ defmodule Generators.ConstPool do
   end
 
 
+  @doc """
+  Найти метод по имени
+
+  Делаются допущенья:
+  * Имена всех методов уникальны
+  * Нет перегрузки методов
+  """
+  def find_method(const_pool, name) do
+    name_num = constant_num(const_pool, {:utf8, name})
+    name_and_type_num = Enum.find(const_pool, fn const ->
+      match?({:name_and_type, ^name_num, _type}, const)
+    end)
+
+    Enum.find(const_pool, fn const ->
+      match?({:class_method, _class_num, ^name_and_type_num}, const)
+    end)
+  end
+
+
   # Добавляет значение в коллекцию, если его там нет
   defp add_if_miss(enum, value) do
     if Enum.member?(enum, value), do: enum, else: enum ++ [value]
