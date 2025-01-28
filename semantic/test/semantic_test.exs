@@ -38,4 +38,11 @@ defmodule SemanticTest do
     """, @build_dir)
   end
 
+  test "invoke recursive function" do
+    Compiler.compile("""
+      fib :: Int -> Int
+      fib n = if n < 2 then n else fib (n - 1) + fib (n - 2)
+    """, @build_dir)
+  end
+
 end
