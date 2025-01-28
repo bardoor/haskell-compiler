@@ -130,7 +130,7 @@ defmodule Generators.GenClass do
   end
 
   def fill_constant_pool(%__MODULE__{} = class, node) when is_list(node) do
-    Enum.map(node, &fill_constant_pool(class, &1))
+    Enum.reduce(node, class, &fill_constant_pool(&2, &1))
   end
 
   def fill_constant_pool(%__MODULE__{} = class, _node) do
