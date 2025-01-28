@@ -179,8 +179,14 @@ inline Node* mk_fapply(Node* fapply, Node* expr) {
     }
 
     LOG_PARSER("## PARSER ## made func apply - many exprs\n");
+    
+    if (!fapply->val.contains("params")) {
+        fapply->val["params"] = nlohmann::json::array();
+    }
 
-    return mk_node_list_append(expr, fapply);
+    fapply->val["params"].push_back(expr->val);
+
+    return fapply;
 }
 
 inline Node* mk_expr(Node* expr) {
