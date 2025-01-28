@@ -89,33 +89,46 @@ defmodule Generators.ConstPool do
   """
   @spec constant_num(constant_pool(), constant()) :: non_neg_integer()
   def constant_num(const_pool, {:utf8, str}) do
-    Enum.find_index(const_pool, fn const -> match?({:utf8, _len, ^str}, const) end) + 1
+    case Enum.find_index(const_pool, fn const -> match?({:utf8, _len, ^str}, const) end) do
+      nil -> raise "{:utf8, #{str}} not found!"
+      index -> index + 1
+    end
   end
 
   def constant_num(const_pool, {:class, name}) do
     name_num = constant_num(const_pool, {:utf8, name})
-    Enum.find_index(const_pool, fn const -> match?({:class, ^name_num}, const) end) + 1
+
+    case Enum.find_index(const_pool, fn const -> match?({:class, ^name_num}, const) end) do
+      nil -> raise "{:class, #{name}} not found!"
+      index -> index + 1
+    end
   end
 
   def constant_num(const_pool, {:name_and_type, name, type}) do
     name_num = constant_num(const_pool, {:utf8, name})
     type_num = constant_num(const_pool, {:utf8, type})
-    Enum.find_index(const_pool, fn const -> match?({:name_and_type, ^name_num, ^type_num}, const) end) + 1
+
+    case Enum.find_index(const_pool, fn const -> match?({:name_and_type, ^name_num, ^type_num}, const) end) do
+      nil -> raise "{:name_and_type, #{name}, #{type}} not found!"
+      index -> index + 1
+    end
   end
 
   def constant_num(const_pool, {:class_method, name, type, class}) do
     name_and_type_num = constant_num(const_pool, {:name_and_type, name, type})
     class_num = constant_num(const_pool, {:class, class})
 
-    Enum.find_index(const_pool,
-      fn const -> match?({:class_method, ^class_num, ^name_and_type_num}, const)
-    end) + 1
+    case Enum.find_index(const_pool, fn const -> match?({:class_method, ^class_num, ^name_and_type_num}, const) end) do
+      nil -> raise "{:class_method, #{class}, #{name}, #{type}} not found!"
+      index -> index + 1
+    end
   end
 
   def constant_num(const_pool, {:int, value}) when is_integer(value) do
-    Enum.find_index(const_pool, fn const ->
-      match?({:int, ^value}, const)
-    end) + 1
+    case Enum.find_index(const_pool, fn const -> match?({:int, ^value}, const) end) do
+      nil -> raise "{:int, #{value}} not found!"
+      index -> index + 1
+    end
   end
 
 
