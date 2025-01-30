@@ -58,4 +58,23 @@ defmodule SemanticTest do
     """, @build_dir)
   end
 
+  test "simple list" do
+    Compiler.compile("""
+      index :: [Int] -> Int -> Int
+      index xs x = indexHelper xs x 0
+
+      indexHelper :: [Int] -> Int -> Int -> Int
+      indexHelper xs x index = if length xs == 0 then -1
+                               else if head xs == x then index
+                                    else indexHelper (tail xs) x (index + 1)
+    """, @build_dir)
+  end
+
+  test "arguments" do
+    Compiler.compile("""
+      arguments :: [Int] -> Int -> Int -> [Int] -> Int -> [Int]
+      arguments xs a b ys c = xs
+    """, @build_dir)
+  end
+
 end
