@@ -14,5 +14,6 @@ Flexer.cpp
 *.output
 *.gv
 *.pdf
+*.class
 
 __pycache__
