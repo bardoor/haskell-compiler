@@ -176,11 +176,12 @@ defmodule Generators.ConstPool do
       :float -> "F"
       :void -> "V"
       :str -> "Ljava/lang/String;"
+      :list -> "Lhaskell/prelude/List;"
       {:class, name} -> "L#{name};"
     end
   end
 
-  def str_to_type(type) do
+  def str_to_type(type) when is_binary(type) do
     type = type
     |> String.downcase()
     |> String.trim()
@@ -191,6 +192,10 @@ defmodule Generators.ConstPool do
       "string" -> :str
       "io" -> :void
     end
+  end
+
+  def str_to_type(%{list: _type}) do
+    :list
   end
 
 end
