@@ -131,11 +131,11 @@ expr : oexpr DCOLON type { $$ = mk_typed_expr($1, $3); }
 */
 oexpr : oexpr BQUOTE funid BQUOTE oexpr { $$ = mk_bin_expr($1, mk_operator("quoted", $3->substr()), $5); }
       | oexpr LOG_EQ oexpr  { $$ = mk_bin_expr($1, mk_operator("eq", "=="), $3); }
-      | oexpr NEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("neq", "/="), $3); }
+      | oexpr NEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("ne", "/="), $3); }
       | oexpr LT oexpr      { $$ = mk_bin_expr($1, mk_operator("lt", "<"), $3); }
       | oexpr GT oexpr      { $$ = mk_bin_expr($1, mk_operator("gt", ">"), $3); }
-      | oexpr LEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("leq", ">="), $3); }
-      | oexpr GEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("geq", "<="), $3); }
+      | oexpr LEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("le", ">="), $3); }
+      | oexpr GEQ oexpr     { $$ = mk_bin_expr($1, mk_operator("ge", "<="), $3); }
       | oexpr OR oexpr      { $$ = mk_bin_expr($1, mk_operator("or", "||"), $3); }
       | oexpr AND oexpr     { $$ = mk_bin_expr($1, mk_operator("and", "&&"), $3); }
       | oexpr PLUS oexpr    { $$ = mk_bin_expr($1, mk_operator("plus", "+"), $3); }
