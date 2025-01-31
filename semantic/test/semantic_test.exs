@@ -64,9 +64,9 @@ defmodule SemanticTest do
       index xs x = indexHelper xs x 0
 
       indexHelper :: [Int] -> Int -> Int -> Int
-      indexHelper xs x index = if length xs == 0 then -1
-                               else if head xs == x then index
-                                    else indexHelper (tail xs) x (index + 1)
+      indexHelper xs x idx = if length xs == 0 then -1
+                             else if head xs == x then idx
+                                  else indexHelper (tail xs) x (idx + 1)
     """, @build_dir)
   end
 
