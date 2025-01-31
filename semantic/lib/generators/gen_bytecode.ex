@@ -113,22 +113,29 @@ defmodule Generators.GenBytecode do
       %Instruction{command: :ior}  -> <<128>>
       %Instruction{command: :iand} -> <<126>>
 
+      %Instruction{command: :ineg} -> <<116>>
       %Instruction{command: :iadd} -> <<96>>
       %Instruction{command: :isub} -> <<100>>
       %Instruction{command: :imul} -> <<104>>
       %Instruction{command: :idiv} -> <<108>>
 
+      %Instruction{command: :dup}     -> <<89>>
       %Instruction{command: :iload_0} -> <<26>>
       %Instruction{command: :iload_1} -> <<27>>
       %Instruction{command: :iload_2} -> <<28>>
       %Instruction{command: :iload_3} -> <<29>>
       %Instruction{command: :iload, arg: val} -> <<21, val::8>>
+      %Instruction{command: :aload, arg: val} -> <<25, val::8>>
 
       %Instruction{command: :ldc_w, arg: val} -> <<19, val::16>>
 
-      %Instruction{command: :invokestatic, arg: val} -> <<184, val::16>>
+      %Instruction{command: :invokestatic, arg: val}  -> <<184, val::16>>
+      %Instruction{command: :invokespecial, arg: val} -> <<183, val::16>>
+
+      %Instruction{command: :new, arg: val} -> <<187, val::16>>
 
       %Instruction{command: :ireturn} -> <<172>>
+      %Instruction{command: :areturn} -> <<176>>
 
       %Instruction{command: :goto, arg: val} -> <<167, val::16>>
     end
