@@ -134,6 +134,18 @@ defmodule Generators.Instruction do
     new(3, :goto, offset + 3)
   end
 
+  def create(class) do
+    new(3, :new, class)
+  end
+
+  def dup() do
+    new(1, :dup, nil)
+  end
+
+  def init(method) do
+    new(3, :invokespecial, method)
+  end
+
   @doc """
   Сравнение двух элементов на стеке
 
