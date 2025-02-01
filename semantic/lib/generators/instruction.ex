@@ -12,7 +12,7 @@ defmodule Generators.Instruction do
 
   Создаёт iconst, bipush, sipush или ldc_w в зависимости от значения
   """
-  def load(const_pool, {:int, value}) when is_integer(value) do
+  def iload(const_pool, {:int, value}) when is_integer(value) do
     if value in -32768..32767 do
       push(value)
     else
@@ -23,7 +23,7 @@ defmodule Generators.Instruction do
   @doc """
   Загрузка локальной переменной по индексу
   """
-  def load(var_num) when is_integer(var_num) do
+  def iload(var_num) when is_integer(var_num) do
     if var_num in 0..3 do
       new(1, String.to_atom("iload_#{var_num}"), nil)
     else
