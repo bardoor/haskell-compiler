@@ -123,6 +123,10 @@ defmodule Generators.Instruction do
     new(1, :ireturn, nil)
   end
 
+  def areturn() do
+    new(1, :areturn, nil)
+  end
+
   @doc """
   Безусловный прыжок на offset (не считая сам goto)
   """
