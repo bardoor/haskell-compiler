@@ -99,7 +99,6 @@ defmodule Generators.GenInstr do
 
     load_instrs = params
     |> List.wrap()
-    |> Enum.reverse()
     |> Enum.map(&generate(const_pool, &1))
     |> Enum.flat_map(fn
       %Instr{} = instr -> [instr]
