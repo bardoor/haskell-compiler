@@ -82,8 +82,8 @@ defmodule Generators.GenClass do
   def fill_constant_pool(%__MODULE__{} = class, %{module: module}) do
     c_pool = ConstPool.add_constants(class.constant_pool, [
       {:class, "java/lang/Object"},
-      {:class_method, "<init>", "()V", "java/lang/Object"}
-    ])
+      {:class_method, "<init>", "()V", "java/lang/Object"},
+    ] ++ class.std_lib.constants)
 
     fill_constant_pool(%{class | constant_pool: c_pool}, module)
   end
