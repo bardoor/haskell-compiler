@@ -119,7 +119,7 @@ defmodule Generators.Instruction do
   @doc """
   Воротить вершину стека
   """
-  def return() do
+  def ireturn() do
     new(1, :ireturn, nil)
   end
 
