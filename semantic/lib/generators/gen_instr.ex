@@ -113,4 +113,11 @@ defmodule Generators.GenInstr do
 
     Instr.invoke(const_pool, method)
   end
+
+  def generate(const_pool, %{list: []}) do
+    constructor = {"create", "()Lhaskell/prelude/List;", "haskell/prelude/List"}
+
+    Instr.invoke(const_pool, constructor)
+  end
+
 end
