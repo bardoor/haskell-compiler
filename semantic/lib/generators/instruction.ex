@@ -34,7 +34,11 @@ defmodule Generators.Instruction do
   def aload(local_id) when is_integer(local_id) do
     new(2, :aload, local_id)
   end
-  
+
+  def ineg() do
+    new(1, :ineg, nil)
+  end
+
   @doc """
   Положить на стек двубайтовое число (от -32768 до 32767)
 
