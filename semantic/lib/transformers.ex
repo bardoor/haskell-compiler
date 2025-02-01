@@ -73,7 +73,7 @@ defmodule Semantic.Transformers do
 
 
   defp map_locals_indexes(%{funid: id} = node, params) do
-    index = Enum.find_index(params, &(&1 == id))
+    index = Enum.find_index(params, fn {%{pattern: param}, _type} -> param == id end)
 
     node = case Map.get(node, :params) do
       nil -> node
@@ -81,9 +81,17 @@ defmodule Semantic.Transformers do
     end
 
     if is_nil(index) do
-      node
+      case Map.get(node, params) do
+        nil -> node
+        _params ->
+          Map.update!(node, :params, &Enum.reverse/1)
+      end
     else
-      Map.put(node, :funid, index)
+      case Enum.at(params, index) do
+        {_, %{list: _id}} -> Map.put(node, :type, :ref)
+        _ -> Map.put(node, :type, :int)
+      end
+      |> Map.put(:funid, index)
     end
   end
 
