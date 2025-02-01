@@ -155,7 +155,7 @@ defmodule Semantic.Transformers do
   end
 
   defp deconstruct_type(%{fun_decl: %{type: type}} = node) do
-    types = Enum.map(type, &(&1.tycon))
+    types = Enum.map(type, &extract_type/1)
     params = Enum.drop(types, -1)
     return = List.last(types)
 
@@ -165,6 +165,10 @@ defmodule Semantic.Transformers do
   end
 
   defp deconstruct_type(node), do: node
+
+  def extract_type(%{tycon: type}), do: type
+
+  def extract_type(%{list: [type]}), do: %{list: extract_type(type)}
 
   @doc """
   Манглирует объявления локальных функций
