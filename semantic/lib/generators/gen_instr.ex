@@ -11,10 +11,15 @@ defmodule Generators.GenInstr do
   Генерирует инструкции JVM
   """
   @spec generate(ConstPool.constant_pool(), map()) :: [%Instr{}] | %Instr{}
-  def generate(const_pool, %{fun_decl: %{left: _left, right: right}}) do
+  def generate(const_pool, %{fun_decl: %{left: _left, right: right, return: return_type}}) do
+    return = case return_type do
+      %{list: _type} -> Instr.areturn()
+      _ -> Instr.ireturn()
+    end
+
     Instr.concat([
       generate(const_pool, right),
-      Instr.return()
+      return
     ])
   end
 
@@ -33,8 +38,20 @@ defmodule Generators.GenInstr do
     ])
   end
 
-  def generate(_const_pool, %{funid: funid}) when is_number(funid) do
-    Instr.load(funid)
+  def generate(_const_pool, %{funid: local_id, type: type}) when is_number(local_id) do
+    case type do
+      :int -> Instr.iload(local_id)
+      :ref -> Instr.aload(local_id)
+    end
+  end
+
+  def generate(const_pool, %{uminus: %{literal: %{type: "int", value: value}}}) do
+    {value, _} = Integer.parse(value)
+
+    Instr.concat([
+      Instr.iload(const_pool, {:int, value}),
+      Instr.ineg()
+    ])
   end
 
   def generate(const_pool, %{literal: %{type: "int", value: value}}) do
