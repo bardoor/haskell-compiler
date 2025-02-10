@@ -145,4 +145,14 @@ defmodule Generators.GenClass do
     end
   end
 
+  def method_type(class, method) when is_binary(method) do
+    {_name, type, _class} = ConstPool.find_method(class.constant_pool, method)
+
+    descriptor = ConstPool.descriptor_to_atoms(type)
+
+    params = Enum.drop(descriptor, -1)
+    return = Enum.take(descriptor, -1)
+    {params, return}
+  end
+
 end

@@ -173,11 +173,7 @@ defmodule Generators.ConstPool do
   defp descriptor_type(type) do
     case type do
       :int -> "I"
-      :float -> "F"
-      :void -> "V"
-      :str -> "Ljava/lang/String;"
       :list -> "Lhaskell/prelude/List;"
-      {:class, name} -> "L#{name};"
     end
   end
 
@@ -188,9 +184,7 @@ defmodule Generators.ConstPool do
 
     case type do
       "int" -> :int
-      "float" -> :float
-      "string" -> :str
-      "io" -> :void
+      "list" -> :list
     end
   end
 
@@ -198,4 +192,23 @@ defmodule Generators.ConstPool do
     :list
   end
 
+  def descriptor_to_atoms(desc, result \\ [])
+
+  def descriptor_to_atoms("", result), do: Enum.reverse(result)
+
+  def descriptor_to_atoms("I" <> rest, result) do
+    descriptor_to_atoms(rest, [:int | result])
+  end
+
+  def descriptor_to_atoms("Lhaskell/prelude/List;" <> rest, result) do
+    descriptor_to_atoms(rest, [:list | result])
+  end
+
+  def descriptor_to_atoms(desc, result) do
+    case desc do
+      "(" <> rest -> descriptor_to_atoms(rest, result)
+      ")" <> rest -> descriptor_to_atoms(rest, result)
+      _ -> raise "Unknown descriptor: #{desc}"
+    end
+  end
 end
