@@ -15,6 +15,7 @@ defmodule Generators.GenClass do
             access_flags: [:public],
             this_class: "Functions",
             super_class: "java/lang/Object",
+            std_lib: nil,
             interfaces: [],
             fields: [],
             methods: [],
@@ -24,6 +25,7 @@ defmodule Generators.GenClass do
 
   def new() do
     %__MODULE__{}
+    |> Map.put(:std_lib, Prelude.new())
   end
 
   @doc """
