@@ -1,7 +1,7 @@
 defmodule Compiler do
   alias Generators.GenBytecode
   alias Generators.GenClass
-  alias Semantic.Transformers
+  alias Semantic.{Transformers, TypeValidation}
 
   def compile(code, output_dir) do
     IO.puts("""
@@ -19,12 +19,13 @@ defmodule Compiler do
     {:ok, tree} = ParserBridge.parse(code)
 
     transformed = tree
-    |> Transformers.link_funcs_and_types
-    |> Transformers.index_locals
+    |> Transformers.link_funcs_and_types()
+    |> Transformers.index_locals()
     |> IO.inspect()
 
     GenClass.new()
     |> GenClass.generate(transformed)
+    |> TypeValidation.validate!(transformed)
     |> save_bytecode(output_dir)
 
   end
