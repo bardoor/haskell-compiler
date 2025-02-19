@@ -194,7 +194,16 @@ defmodule Generators.ConstPool do
 
   def descriptor_to_atoms(desc, result \\ [])
 
-  def descriptor_to_atoms("", result), do: Enum.reverse(result)
+  def descriptor_to_atoms("", result) do
+    params =
+      result
+      |> Enum.drop(1)
+      |> Enum.reverse()
+
+    return = Enum.take(result, 1)
+
+    {params, return}
+  end
 
   def descriptor_to_atoms("I" <> rest, result) do
     descriptor_to_atoms(rest, [:int | result])
