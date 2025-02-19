@@ -77,4 +77,11 @@ defmodule SemanticTest do
     """, @build_dir)
   end
 
+  test "list build" do
+    Compiler.compile("""
+      lst :: [Int]
+      lst = 1 : 2 : 3 : []
+    """, @build_dir)
+  end
+
 end
