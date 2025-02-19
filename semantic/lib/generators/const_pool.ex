@@ -200,7 +200,7 @@ defmodule Generators.ConstPool do
       |> Enum.drop(1)
       |> Enum.reverse()
 
-    return = Enum.take(result, 1)
+    return = List.first(result)
 
     {params, return}
   end
