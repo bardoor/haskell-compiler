@@ -88,7 +88,7 @@ defmodule Semantic.Transformers do
       end
     else
       case Enum.at(params, index) do
-        {_, %{list: _id}} -> Map.put(node, :type, :ref)
+        {_, %{list: _id}} -> Map.put(node, :type, :list)
         _ -> Map.put(node, :type, :int)
       end
       |> Map.put(:funid, index)

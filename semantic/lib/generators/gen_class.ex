@@ -5,6 +5,7 @@ defmodule Generators.GenClass do
   Обходит дерево и собирает Java класс, готовый к трансляции в байткод
   """
 
+  alias Generators.Prelude
   alias Generators.ConstPool
   alias Generators.GenMethod
   alias Generators.GenInstr

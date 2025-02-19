@@ -41,7 +41,7 @@ defmodule Generators.GenInstr do
   def generate(_const_pool, %{funid: local_id, type: type}) when is_number(local_id) do
     case type do
       :int -> Instr.iload(local_id)
-      :ref -> Instr.aload(local_id)
+      :list -> Instr.aload(local_id)
     end
   end
 
