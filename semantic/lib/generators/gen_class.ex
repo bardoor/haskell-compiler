@@ -146,14 +146,22 @@ defmodule Generators.GenClass do
     end
   end
 
-  def method_type(class, method) when is_binary(method) do
-    {_name, type, _class} = ConstPool.find_method(class.constant_pool, method)
+  @doc """
+  Возвращает тип параметров и возвращаемого значения метода
+  """
+  def method_type(class, method_name) when is_binary(method_name) do
+    {_name, type, _class} = ConstPool.find_method(class.constant_pool, method_name)
 
-    descriptor = ConstPool.descriptor_to_atoms(type)
+    ConstPool.descriptor_to_atoms(type)
+  end
 
-    params = Enum.drop(descriptor, -1)
-    return = Enum.take(descriptor, -1)
-    {params, return}
+  def method_type(class, method_index) when is_integer(method_index) do
+    with method when is_integer(method) <- Enum.at(class.methods, method_index),
+         method_name when is_binary(method_name) <- Enum.at(class.constant_pool, method.name_num - 1) do
+      method_type(class, method_name)
+    else
+      _ -> raise "Метод с индексом #{method_index} не найден"
+    end
   end
 
 end
