@@ -1,21 +1,47 @@
 defmodule Semantic.TypeValidation do
 
-alias Generators.ConstPool
+  alias Generators.ConstPool
+  alias Generators.GenClass
 
   def validate!(class, %{fun_decl: %{right: body, params: params, return: return}}) do
     params = Enum.map(params, &(String.downcase(&1) |> String.to_atom()))
+
     ensure_type!(class, return, params, body)
   end
 
   def validate!(class, node) when is_map(node) do
-    validate!(class, node)
+    Enum.reduce(node, class, fn {_key, value}, cls ->
+      validate!(cls, value)
+    end)
+
+    class
   end
 
   def validate!(class, node) when is_list(node) do
     Enum.map(node, &validate!(class, &1))
   end
 
+  defp ensure_type!(_class, _type, _params_types, %{literal: %{value: _value}}) do
+    true
+  end
+
+  defp ensure_type!(_class, type, params_types, %{type: _, funid: funid}) do
+    Enum.at(params_types, funid) == type
+  end
+
+  defp ensure_type!(class, type, _params_types, %{funid: funid}) do
+    {_fun_param_types, fun_return_type} = GenClass.method_type(class, funid)
+
+    fun_return_type == type or raise "#{funid} returns #{fun_return_type}, but #{type} expected"
+  end
+
+  defp ensure_type!(class, type, params_types, %{if: %{else: else_branch, then: then_branch}}) do
+    ensure_type!(class, type, params_types, then_branch)
+    ensure_type!(class, type, params_types, else_branch)
+  end
+
   defp ensure_type!(class, type, params_types, %{left: left, right: right, op: op}) do
+    type = if is_binary(type), do: type |> String.downcase() |> String.to_atom(), else: type
     op_type = operator_atom(op)
 
     {left_type, right_type, result_type} =
@@ -30,7 +56,7 @@ alias Generators.ConstPool
           -> {:int, :list, :list}
       end
 
-    type == result_type or raise "Result type of #{op_type} is #{result_type}, but #{type} expected"
+    type == result_type or raise "Result type of #{op_type} operator is #{result_type}, but #{type} expected"
 
     ensure_type!(class, left_type, params_types, left)
     ensure_type!(class, right_type, params_types, right)
